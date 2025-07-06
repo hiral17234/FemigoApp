@@ -24,30 +24,37 @@ export default function DashboardPage() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser)
+        setLoading(false)
       } else {
-        setUser(null)
+        // Not signed in, redirect to home page
+        router.push("/")
       }
-      setLoading(false)
     })
 
     return () => unsubscribe()
-  }, [])
+  }, [router])
 
   const handleSignOut = async () => {
     try {
       await signOut(auth)
-      router.push("/")
+      // The onAuthStateChanged listener will handle the redirect automatically.
     } catch (error)      {
       console.error("Error signing out: ", error)
     }
   }
 
+  // Show a loader while we check for authentication state.
   if (loading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     )
+  }
+  
+  // This is a fallback to prevent flashing content before the redirect.
+  if (!user) {
+    return null;
   }
 
   return (
@@ -57,21 +64,13 @@ export default function DashboardPage() {
           <CardTitle className="text-2xl font-bold">Welcome to Femigo!</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {user ? (
-            <>
-              <CardDescription>
-                You have successfully verified your identity and are logged in with phone number:
-              </CardDescription>
-              <p className="text-lg font-semibold text-primary">{user.phoneNumber}</p>
-              <Button onClick={handleSignOut} variant="destructive">
-                Sign Out
-              </Button>
-            </>
-          ) : (
-             <p className="text-center text-muted-foreground">
-                You have successfully verified your identity.
-             </p>
-          )}
+          <CardDescription>
+            You have successfully verified your identity and are logged in with phone number:
+          </CardDescription>
+          <p className="text-lg font-semibold text-primary">{user.phoneNumber}</p>
+          <Button onClick={handleSignOut} variant="destructive">
+            Sign Out
+          </Button>
         </CardContent>
       </Card>
     </div>
