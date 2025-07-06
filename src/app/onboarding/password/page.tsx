@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import Link from "next/link"
 import { useState } from "react"
-import { CheckCircle, Circle, Loader2, ShieldCheck, ArrowLeft } from "lucide-react"
+import { CheckCircle, Circle, Loader2, ShieldCheck, ArrowLeft, Eye, EyeOff } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -47,6 +47,8 @@ export default function OnboardingPasswordPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,7 +91,7 @@ export default function OnboardingPasswordPage() {
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-sm">
           <Link
             href="/onboarding/details"
             className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
@@ -97,7 +99,7 @@ export default function OnboardingPasswordPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <div className="w-full rounded-2xl border border-white/10 p-8 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
+          <div className="w-full rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
             <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Secure Your Account
             </h1>
@@ -111,7 +113,22 @@ export default function OnboardingPasswordPage() {
                   <FormItem>
                     <FormLabel>New Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Enter a strong password" {...field} className="bg-white/5 border-white/20" />
+                       <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter a strong password"
+                          {...field}
+                          className="bg-white/5 border-white/20 pr-10"
+                        />
+                         <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-200/70 hover:text-purple-200"
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -121,7 +138,7 @@ export default function OnboardingPasswordPage() {
                   <PasswordRequirement text="Minimum 12 characters" isMet={password.length >= 12} />
                   <PasswordRequirement text="Includes an uppercase letter" isMet={/[A-Z]/.test(password)} />
                   <PasswordRequirement text="Includes a lowercase letter" isMet={/[a-z]/.test(password)} />
-                  <PasswordRequirement text="Includes a number" isMet={/\d]/.test(password)} />
+                  <PasswordRequirement text="Includes a number" isMet={/\d/.test(password)} />
                   <PasswordRequirement text="Includes a special character" isMet={/[^A-Za-z0-9]/.test(password)} />
                 </div>
                 
@@ -131,7 +148,22 @@ export default function OnboardingPasswordPage() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="Re-enter your password" {...field} className="bg-white/5 border-white/20" />
+                      <div className="relative">
+                         <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Re-enter your password"
+                          {...field}
+                          className="bg-white/5 border-white/20 pr-10"
+                         />
+                         <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-200/70 hover:text-purple-200"
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                         >
+                            {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                         </button>
+                       </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
