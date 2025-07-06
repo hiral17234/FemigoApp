@@ -165,34 +165,33 @@ export default function VerifyAadhaarPage() {
   const handleFinalVerification = () => {
     setIsVerifying(true);
     if (!extractedData || !userName) {
-        toast({ variant: "destructive", title: "Error", description: "Verification data is missing." });
+        toast({ variant: "destructive", title: "Error", description: "Verification data is missing or incomplete." });
         setIsVerifying(false);
         return;
     }
 
     const aadhaarRegex = /^\d{4}\s\d{4}\s\d{4}$/;
-    const isNumberValid = aadhaarRegex.test(extractedData.aadhaarNumber);
+    const isNumberValid = extractedData.aadhaarNumber ? aadhaarRegex.test(extractedData.aadhaarNumber) : false;
 
     if (!isNumberValid) {
-        toast({ variant: "destructive", title: "Verification Failed", description: "Invalid Aadhaar number format." });
+        toast({ variant: "destructive", title: "Verification Failed", description: "Aadhaar number could not be read or is invalid." });
         setIsVerifying(false);
         return;
     }
 
-    // A simple name check (case-insensitive, checks if stored name is part of extracted name)
-    if (!extractedData.fullName.toLowerCase().includes(userName.toLowerCase())) {
+    if (!extractedData.fullName || !extractedData.fullName.toLowerCase().includes(userName.toLowerCase())) {
         toast({ variant: "destructive", title: "Name Mismatch", description: "The name on the card does not match the registered name." });
         setIsVerifying(false);
         return;
     }
 
     if (extractedData.gender !== "Female") {
-        toast({ variant: "destructive", title: "Access Denied", description: "This platform is for women only." });
+        toast({ variant: "destructive", title: "Access Denied", description: "This platform is for women only. Gender could not be verified as Female." });
         setIsVerifying(false);
         return;
     }
 
-    if (!extractedData.isPhotoMatch) {
+    if (extractedData.isPhotoMatch !== true) {
       toast({
           variant: "destructive",
           title: "Photo Mismatch",
@@ -334,7 +333,7 @@ export default function VerifyAadhaarPage() {
             <Button onClick={resetCapture} variant="outline" disabled={isExtracting || isVerifying}>
                 <RefreshCcw className="mr-2 h-4 w-4" /> Recapture
             </Button>
-            <Button onClick={handleFinalVerification} disabled={isExtracting || isVerifying || !extractedData?.isPhotoMatch} className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105">
+            <Button onClick={handleFinalVerification} disabled={isExtracting || isVerifying || !extractedData} className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105">
                 {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Verify Now
             </Button>
