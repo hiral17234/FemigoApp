@@ -124,7 +124,7 @@ export default function VerifyPage() {
         photoDataUri: capturedImage,
       })
       
-      if (result.gender === "female") {
+      if (result.isPerson && result.gender === "female") {
         toast({
           title: "Verification Successful ✅",
           description: "You can now proceed.",
@@ -135,7 +135,7 @@ export default function VerifyPage() {
         toast({
           variant: "destructive",
           title: "Access Denied",
-          description: "This platform is reserved for female users only.",
+          description: "This platform is reserved for female users only. Please use a clear photo of your face.",
         })
       }
     } catch (error) {

@@ -20,7 +20,8 @@ const VerifyGenderInputSchema = z.object({
 export type VerifyGenderInput = z.infer<typeof VerifyGenderInputSchema>;
 
 const VerifyGenderOutputSchema = z.object({
-  gender: z.enum(['female', 'male', 'unknown']).describe("The identified gender of the person in the photo. It can be 'female', 'male', or 'unknown' if not determinable."),
+  isPerson: z.boolean().describe("Whether or not the image contains a person's face."),
+  gender: z.enum(['female', 'male', 'unknown']).describe("The identified gender of the person in the photo. It can be 'female', 'male', or 'unknown' if not determinable or if it's not a person."),
 });
 export type VerifyGenderOutput = z.infer<typeof VerifyGenderOutputSchema>;
 
@@ -33,8 +34,12 @@ const prompt = ai.definePrompt({
   input: {schema: VerifyGenderInputSchema},
   output: {schema: VerifyGenderOutputSchema},
   prompt: `You are an expert at identifying gender from a person's facial features for a women-only platform's identity verification system.
-Your primary task is to determine the gender of the person in the live photo.
-The output should only be one of three options: 'female', 'male', or 'unknown'. Do not provide any additional explanation.
+Your primary task is to determine if the image contains a person and, if so, their gender.
+
+1.  First, determine if the image contains a person's face. Set the 'isPerson' field to true or false.
+2.  If 'isPerson' is false, set the 'gender' field to 'unknown'.
+3.  If 'isPerson' is true, determine the gender of the person in the live photo. The output for 'gender' must be one of three options: 'female', 'male', or 'unknown'. Do not provide any additional explanation.
+Be very strict. If you are not absolutely certain the person is female, classify as 'male' or 'unknown'.
 
 Live Photo: {{media url=photoDataUri}}`,
 });
@@ -48,7 +53,7 @@ const genderVerificationFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     if (!output) {
-        return { gender: 'unknown' };
+        return { isPerson: false, gender: 'unknown' };
     }
     return output;
   }
