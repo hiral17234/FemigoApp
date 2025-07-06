@@ -1,7 +1,6 @@
-
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
@@ -19,63 +18,50 @@ export default function VerifyIdentityPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  const [stream, setStream] = useState<MediaStream | null>(null)
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isCameraInitializing, setIsCameraInitializing] = useState(true)
   const [isVerifying, setIsVerifying] = useState(false)
-
-  const stopStream = useCallback(() => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop())
-      setStream(null)
-    }
-  }, [stream])
-
-  const startStream = useCallback(async () => {
-    stopStream() // Ensure any existing stream is stopped
-    setIsCameraInitializing(true)
-    setError(null)
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-      })
-      setStream(mediaStream)
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream
-      }
-    } catch (err) {
-      console.error("Error accessing camera:", err)
-      const errorMessage =
-        "Camera access denied. Please enable permissions and refresh the page."
-      setError(errorMessage)
-      toast({
-        variant: "destructive",
-        title: "Camera Access Denied",
-        description: "Please enable permissions and refresh the page.",
-      })
-    }
-  }, [stopStream, toast])
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    startStream()
-    return () => {
-      stopStream()
-    }
-  }, [startStream, stopStream])
+    let mediaStream: MediaStream;
+    const getCameraPermission = async () => {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        setStream(mediaStream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+        setHasCameraPermission(true);
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        setHasCameraPermission(false);
+        toast({
+          variant: "destructive",
+          title: "Camera Access Denied",
+          description: "Please enable camera permissions in your browser settings to use this app.",
+        });
+      }
+    };
 
-  const handleVideoReady = () => {
-    if (videoRef.current?.readyState ?? 0 > 2) {
-      setIsCameraInitializing(false)
+    if (!capturedImage) {
+        getCameraPermission();
     }
-  }
+
+    return () => {
+        if (stream) {
+            stream.getTracks().forEach((track) => track.stop());
+        }
+    }
+  }, [capturedImage, stream, toast]);
+
 
   const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current || isCameraInitializing) {
+    if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
       toast({
         variant: "destructive",
         title: "Camera not ready",
-        description: "Please wait for the camera to initialize.",
+        description: "Please grant camera permission and wait for the feed to appear.",
       })
       return
     }
@@ -87,18 +73,17 @@ export default function VerifyIdentityPage() {
     const context = canvas.getContext("2d")
 
     if (context) {
+      // Flip the image horizontally to create a mirror effect
       context.translate(video.videoWidth, 0)
       context.scale(-1, 1)
       context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
       const dataUrl = canvas.toDataURL("image/jpeg")
       setCapturedImage(dataUrl)
-      stopStream()
     }
   }
 
   const retakePhoto = () => {
     setCapturedImage(null)
-    startStream()
   }
   
   const handleVerify = async () => {
@@ -127,48 +112,6 @@ export default function VerifyIdentityPage() {
     }, 1000); // Simulate network delay
   }
 
-  const renderCameraView = () => {
-    if (error) {
-      return (
-        <Alert variant="destructive" className="m-4">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Camera Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )
-    }
-
-    if (capturedImage) {
-      return (
-        <Image
-          src={capturedImage}
-          alt="Captured photo of user"
-          fill
-          className="object-cover"
-        />
-      )
-    }
-
-    return (
-      <>
-        <video
-          ref={videoRef}
-          className="h-full w-full -scale-x-100 object-cover"
-          autoPlay
-          muted
-          playsInline
-          onLoadedData={handleVideoReady}
-        />
-        {isCameraInitializing && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
-            <Loader2 className="h-12 w-12 animate-spin" />
-            <p>Starting camera...</p>
-          </div>
-        )}
-      </>
-    )
-  }
-
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
        <Link
@@ -189,27 +132,48 @@ export default function VerifyIdentityPage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
-            {renderCameraView()}
+             {capturedImage ? (
+              <Image
+                src={capturedImage}
+                alt="Captured photo of user"
+                fill
+                className="object-cover"
+              />
+            ) : (
+                <>
+                    <video
+                        ref={videoRef}
+                        className="h-full w-full -scale-x-100 object-cover"
+                        autoPlay
+                        muted
+                        playsInline
+                    />
+                    {hasCameraPermission === false && (
+                         <Alert variant="destructive" className="absolute m-4 max-w-sm">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Camera Access Denied</AlertTitle>
+                            <AlertDescription>Please enable camera permissions in your browser settings and refresh the page.</AlertDescription>
+                        </Alert>
+                    )}
+                     {hasCameraPermission === null && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
+                            <Loader2 className="h-12 w-12 animate-spin" />
+                            <p>Starting camera...</p>
+                        </div>
+                    )}
+                </>
+            )}
           </div>
           <canvas ref={canvasRef} className="hidden" />
 
           {!capturedImage ? (
              <Button
                 onClick={capturePhoto}
-                disabled={isCameraInitializing || !!error}
+                disabled={!hasCameraPermission}
                 className="w-full"
               >
-                {isCameraInitializing && !error ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Initializing...
-                  </>
-                ) : (
-                  <>
-                    <Camera className="mr-2 h-4 w-4" />
-                    Capture Photo
-                  </>
-                )}
+                <Camera className="mr-2 h-4 w-4" />
+                Capture Photo
               </Button>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
