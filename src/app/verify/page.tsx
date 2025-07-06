@@ -17,24 +17,22 @@ export default function VerifyPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null);
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
-  const [isCameraReady, setIsCameraReady] = useState(false)
 
+  // This effect runs only once to get camera permissions
   useEffect(() => {
-    const startCamera = async () => {
+    let stream: MediaStream;
+    const getCameraPermission = async () => {
       try {
         if (!navigator.mediaDevices?.getUserMedia) {
-            throw new Error("Camera API not supported.");
+          throw new Error("Camera not supported by this browser.");
         }
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        streamRef.current = stream;
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.play();
         }
         setHasCameraPermission(true);
       } catch (error) {
@@ -43,38 +41,32 @@ export default function VerifyPage() {
         toast({
           variant: "destructive",
           title: "Camera Access Denied",
-          description: "Please enable camera permissions in your browser settings to continue.",
+          description: "Please enable camera permissions to continue.",
         });
       }
     };
 
-    const stopCamera = () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-        setIsCameraReady(false);
+    getCameraPermission();
+
+    // Cleanup function to stop the stream when component unmounts
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
-
-    if (!capturedImage) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-
-    return () => {
-      stopCamera();
-    };
-  }, [capturedImage, toast]);
+  }, [toast]);
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && streamRef.current && isCameraReady) {
+    // readyState >= 3 means the camera has enough data to capture a frame.
+    if (videoRef.current && canvasRef.current && videoRef.current.readyState >= 3) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const context = canvas.getContext("2d");
       if (context) {
+        // Flip the image horizontally for a mirror effect
         context.translate(video.videoWidth, 0);
         context.scale(-1, 1);
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
@@ -85,14 +77,13 @@ export default function VerifyPage() {
       toast({
         variant: "destructive",
         title: "Camera Not Ready",
-        description: "The camera is still initializing. Please wait a moment.",
+        description: "The camera stream is still initializing. Please wait a moment.",
       });
     }
   };
 
   const retakePhoto = () => {
     setCapturedImage(null);
-    setIsCameraReady(false);
   }
   
   const handleVerify = async () => {
@@ -128,7 +119,7 @@ export default function VerifyPage() {
           title: "Access Denied",
           description,
         })
-        retakePhoto()
+        setCapturedImage(null) // Go back to camera view on failure
       }
     } catch (error) {
       console.error("Verification failed:", error)
@@ -142,33 +133,12 @@ export default function VerifyPage() {
     }
   }
 
-  const getButtonState = () => {
-    if (isVerifying) {
-        return { text: "Verifying...", disabled: true, icon: <Loader2 className="mr-2 h-5 w-5 animate-spin" /> };
-    }
-    if (hasCameraPermission === null) {
-        return { text: "Starting Camera...", disabled: true, icon: <Loader2 className="mr-2 h-5 w-5 animate-spin" /> };
-    }
-    if (hasCameraPermission === false) {
-        return { text: "Camera Disabled", disabled: true, icon: <Camera className="mr-2"/> };
-    }
-    if (!isCameraReady) {
-        return { text: "Initializing Camera...", disabled: true, icon: <Loader2 className="mr-2 h-5 w-5 animate-spin" /> };
-    }
-    return { text: "Capture Photo", disabled: false, icon: <Camera className="mr-2"/> };
-  }
-  const buttonState = getButtonState();
-  
   const renderCameraView = () => {
-    if(capturedImage) {
-      return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
-    }
-
     if(hasCameraPermission === null) {
         return (
             <div className="flex flex-col items-center gap-2 text-white/70">
                 <Loader2 className="w-12 h-12 animate-spin" />
-                <p>Starting camera...</p>
+                <p>Waiting for camera permission...</p>
             </div>
         )
     }
@@ -183,6 +153,10 @@ export default function VerifyPage() {
         )
     }
 
+    if(capturedImage) {
+      return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
+    }
+
     return (
         <video 
             ref={videoRef} 
@@ -190,7 +164,6 @@ export default function VerifyPage() {
             autoPlay 
             muted 
             playsInline
-            onCanPlay={() => setIsCameraReady(true)}
         />
     )
   }
@@ -233,16 +206,16 @@ export default function VerifyPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={buttonState.disabled} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {buttonState.icon}
-                            {buttonState.text}
+                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || isVerifying} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                            <Camera className="mr-2"/>
+                            Capture Photo
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
-                                <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
+                                <Button onClick={retakePhoto} variant="outline" className="w-full" disabled={isVerifying}><RefreshCcw className="mr-2"/>Retake</Button>
                                 <Button
                                     onClick={handleVerify}
-                                    disabled={!capturedImage || isVerifying}
+                                    disabled={isVerifying}
                                     className="w-full bg-[#EC008C] hover:bg-[#d4007a]"
                                 >
                                     {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2" />}
