@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Camera, ShieldCheck, Heart, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
 import Image from "next/image"
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { verifyGender } from "@/ai/flows/gender-verification-flow"
 import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
 
 export default function VerifyPage() {
   const router = useRouter()
@@ -17,25 +16,29 @@ export default function VerifyPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-
+  
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
 
-  const stopStream = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
+  const stopStream = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      setStream(null);
     }
-  }, [])
+  }
 
-  const startCamera = useCallback(async () => {
-    stopStream()
-    setCapturedImage(null)
-    setIsVerifying(false)
-    setHasCameraPermission(null)
-
+  const startStream = async () => {
+    // Reset state for a new attempt
+    setCapturedImage(null);
+    setIsVerifying(false);
+    
+    // Stop any existing stream before starting a new one
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+    }
+    
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       console.error("Camera API not supported.")
       setHasCameraPermission(false)
@@ -44,15 +47,12 @@ export default function VerifyPage() {
           title: "Unsupported Browser",
           description: "Your browser does not support the camera API.",
       })
-      return
+      return;
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
+      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      setStream(newStream);
       setHasCameraPermission(true)
     } catch (error) {
       console.error("Error accessing camera:", error)
@@ -63,24 +63,40 @@ export default function VerifyPage() {
         description: "Please enable camera permissions in your browser settings to continue.",
       })
     }
-  }, [stopStream, toast])
+  }
 
+  // Effect to start the camera on component mount
   useEffect(() => {
-    startCamera()
+    startStream()
+    
+    // Cleanup effect to stop the stream when the component unmounts
     return () => {
-      stopStream()
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
     }
-  }, [startCamera, stopStream])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Run only once on mount
+
+  // Effect to attach the stream to the video element when the stream is ready
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream
+    }
+  }, [stream])
 
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && streamRef.current) {
+    if (videoRef.current && canvasRef.current && stream) {
       const video = videoRef.current
       const canvas = canvasRef.current
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
       const context = canvas.getContext("2d")
       if (context) {
+        // Flip the context to get a mirror image of the user
+        context.translate(video.videoWidth, 0);
+        context.scale(-1, 1);
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
         const dataUrl = canvas.toDataURL("image/jpeg")
         setCapturedImage(dataUrl)
@@ -96,7 +112,7 @@ export default function VerifyPage() {
   }
 
   const retakePhoto = () => {
-    startCamera();
+    startStream();
   }
   
   const handleVerify = async () => {
@@ -133,8 +149,41 @@ export default function VerifyPage() {
       setIsVerifying(false)
     }
   }
+  
+  const renderCameraView = () => {
+    if(hasCameraPermission === null) {
+        return (
+            <div className="flex flex-col items-center gap-2 text-white/70">
+                <Loader2 className="w-12 h-12 animate-spin" />
+                <p>Starting camera...</p>
+            </div>
+        )
+    }
 
-  const isVerifiable = !!capturedImage;
+    if(hasCameraPermission === false) {
+        return (
+            <div className="flex flex-col items-center gap-2 text-destructive">
+                <AlertTriangle className="w-12 h-12" />
+                <p className="text-center">Camera access was denied.</p>
+                <Button variant="outline" size="sm" onClick={startStream}>Try Again</Button>
+            </div>
+        )
+    }
+
+    if(capturedImage) {
+        return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
+    }
+
+    return (
+        <video 
+            ref={videoRef} 
+            className="h-full w-full object-cover transform -scale-x-100" 
+            autoPlay 
+            muted 
+            playsInline 
+        />
+    )
+  }
 
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
@@ -160,51 +209,23 @@ export default function VerifyPage() {
 
                 <div className="space-y-4">
                     <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center text-center">
-                        <video 
-                            ref={videoRef} 
-                            className={cn(
-                                "h-full w-full object-cover transform -scale-x-100", 
-                                { 'hidden': !!capturedImage }
-                            )} 
-                            autoPlay 
-                            muted 
-                            playsInline 
-                        />
-
-                        {capturedImage && (
-                            <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" className="transform -scale-x-100"/>
-                        )}
-
-                        {hasCameraPermission === null && !capturedImage && (
-                            <div className="flex flex-col items-center gap-2 text-white/70">
-                                <Loader2 className="w-12 h-12 animate-spin" />
-                                <p>Starting camera...</p>
-                            </div>
-                        )}
-                        
-                         {hasCameraPermission === false && (
-                            <div className="flex flex-col items-center gap-2 text-destructive">
-                                <AlertTriangle className="w-12 h-12" />
-                                <p>Camera access was denied.</p>
-                                <Button variant="outline" size="sm" onClick={startCamera}>Try Again</Button>
-                            </div>
-                        )}
+                       {renderCameraView()}
                     </div>
                     
                     <canvas ref={canvasRef} className="hidden" />
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {hasCameraPermission !== true ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
-                            {hasCameraPermission === true ? "Capture Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
+                           <Button onClick={capturePhoto} disabled={!stream} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                            {!stream && hasCameraPermission !== false ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
+                            {stream ? "Capture Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
                                 <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
                                 <Button
                                     onClick={handleVerify}
-                                    disabled={!isVerifiable || isVerifying}
+                                    disabled={!capturedImage || isVerifying}
                                     className="w-full bg-[#EC008C] hover:bg-[#d4007a]"
                                 >
                                     {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2" />}
