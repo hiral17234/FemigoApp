@@ -38,14 +38,18 @@ const genderVerificationPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
-  prompt: `You are an expert in identity verification. Analyze the user's photo.
-
-  1.  **Determine Gender**: Identify if the person in the photo is female.
-  2.  **Detect Glasses**: Check if the person is wearing any kind of glasses (spectacles, sunglasses, etc.).
-
-  The image must be clear and contain a human face. If not, consider it as not female and not wearing glasses.
+  prompt: `You are a policy compliance system for a women-only social platform. Your task is to check if a user's photo meets two critical platform rules for entry.
   
-  Provide your final analysis in the specified JSON format. The 'reason' should summarize your findings.
+  **Rules to Enforce:**
+  1.  **Female Presence**: The user in the photo must be identifiable as female.
+  2.  **No Glasses**: The user must not be wearing any type of glasses (spectacles or sunglasses).
+
+  Analyze the provided photo based on these two rules.
+  - If the user is female and not wearing glasses, set 'isFemale' to true and 'hasGlasses' to false.
+  - If the user is wearing glasses, set 'hasGlasses' to true.
+  - If the user does not appear to be female, set 'isFemale' to false.
+  
+  Provide a concise 'reason' for your final decision. Be direct. For example: "User identified as female and is not wearing glasses." or "Verification failed because the user is wearing glasses."
 
   Photo to analyze: {{media url=photoDataUri}}
   `,
