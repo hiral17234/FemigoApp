@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 export default function Home() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <div className="w-full max-w-xs rounded-2xl bg-card px-6 py-10 shadow-xl sm:px-8">
+      <div className="w-full max-w-xs rounded-2xl bg-card px-6 py-12 shadow-xl sm:px-8">
         <div className="flex flex-col items-center space-y-6 text-center">
           <div className="space-y-2">
-            <h1 className="font-headline text-5xl font-bold tracking-tight text-foreground sm:text-6xl">
+            <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               Femigo
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -22,8 +22,8 @@ export default function Home() {
               <Image
                 src="https://i.imgur.com/DFegeIc.jpeg"
                 alt="A stylized illustration of a woman"
-                width={140}
-                height={140}
+                width={160}
+                height={160}
                 className="rounded-full object-cover"
               />
             </div>
