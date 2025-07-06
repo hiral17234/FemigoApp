@@ -66,15 +66,14 @@ export default function OnboardingPasswordPage() {
     console.log(values)
     toast({
       title: "Account Secured!",
-      description: "Your new password has been set.",
+      description: "Your password has been set. Please log in to continue.",
     })
     
     // Simulate API call
     setTimeout(() => {
-      // The user is not technically "logged in" yet.
-      // After creating a password, they should be taken to the main welcome screen to sign up or log in properly.
-      // This decouples the onboarding questions from the actual auth flow.
-      router.push("/")
+      // After creating a password, the user is redirected to the login page
+      // to sign in with their new credentials.
+      router.push("/login")
     }, 1000)
   }
 
