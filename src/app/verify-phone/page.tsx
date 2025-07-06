@@ -113,7 +113,10 @@ export default function VerifyPhonePage() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent className="w-[250px] p-0 dark">
+                            <PopoverContent 
+                              className="w-[250px] p-0 dark"
+                              onPointerDownOutside={(e) => e.preventDefault()}
+                            >
                               <Command>
                                 <CommandInput placeholder="Search country..." />
                                 <CommandList>
