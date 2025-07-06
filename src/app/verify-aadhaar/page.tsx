@@ -3,14 +3,17 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Camera, ShieldCheck, User, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
+import { Camera, ShieldCheck, User, Loader2, RefreshCcw, AlertTriangle, Upload, FileCheck } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { verifyAadhaar } from "@/ai/flows/aadhaar-verification-flow"
+import { verifyAadhaar, AadhaarVerificationOutput } from "@/ai/flows/aadhaar-verification-flow"
 import { Card, CardContent } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 export default function VerifyAadhaarPage() {
   const router = useRouter()
@@ -19,11 +22,14 @@ export default function VerifyAadhaarPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
-  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [name, setName] = useState("")
+  const [extractedData, setExtractedData] = useState<AadhaarVerificationOutput | null>(null);
+  const [fileName, setFileName] = useState<string>("");
 
   const stopStream = useCallback(() => {
     if (streamRef.current) {
@@ -34,17 +40,12 @@ export default function VerifyAadhaarPage() {
 
   const startStream = useCallback(async () => {
     stopStream();
-    setCapturedImage(null);
+    setImageDataUrl(null);
+    setExtractedData(null);
     setIsVerifying(false);
     
     if (!navigator.mediaDevices?.getUserMedia) {
-      console.error("Camera API not supported.");
       setHasCameraPermission(false);
-      toast({
-        variant: "destructive",
-        title: "Unsupported Browser",
-        description: "Your browser does not support the camera API.",
-      });
       return;
     }
 
@@ -58,22 +59,23 @@ export default function VerifyAadhaarPage() {
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
-      console.error("Error accessing camera:", error);
       setHasCameraPermission(false);
-      toast({
-        variant: "destructive",
-        title: "Camera Access Denied",
-        description: "Please enable camera permissions in your browser settings to continue.",
-      });
     }
-  }, [stopStream, toast]);
+  }, [stopStream]);
 
   useEffect(() => {
-    startStream();
     return () => {
       stopStream();
     };
-  }, [startStream, stopStream]);
+  }, [stopStream]);
+
+  const handleTabChange = (value: string) => {
+    if (value === "camera") {
+      startStream();
+    } else {
+      stopStream();
+    }
+  }
 
   const capturePhoto = () => {
     if (videoRef.current?.srcObject && canvasRef.current) {
@@ -85,121 +87,90 @@ export default function VerifyAadhaarPage() {
       if (context) {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
         const dataUrl = canvas.toDataURL("image/jpeg")
-        setCapturedImage(dataUrl)
+        setImageDataUrl(dataUrl)
+        setExtractedData(null);
         stopStream()
       }
-    } else {
-        toast({
-            variant: "destructive",
-            title: "Camera Error",
-            description: "Could not capture photo. Please ensure camera is enabled and try again.",
-        })
     }
   }
 
-  const retakePhoto = () => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImageDataUrl(e.target?.result as string);
+        setExtractedData(null);
+        setFileName(file.name);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const resetState = () => {
+    setImageDataUrl(null);
+    setExtractedData(null);
+    setFileName("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
     startStream();
   }
   
-  const handleVerify = async () => {
-    if (!capturedImage || !name) {
+  const handleOcr = async () => {
+    if (!imageDataUrl) return;
+
+    setIsVerifying(true);
+    setExtractedData(null);
+
+    try {
+        const result = await verifyAadhaar({ photoDataUri: imageDataUrl, name });
+        setExtractedData(result);
+    } catch (error) {
+        console.error("OCR failed:", error)
         toast({
             variant: "destructive",
-            title: "Missing Information",
-            description: "Please enter your name and capture a photo of your Aadhaar card.",
+            title: "OCR Failed",
+            description: "Could not read the document. Please try again with a clearer image.",
         })
-        return
-    }
-    
-    setIsVerifying(true)
-    try {
-      const result = await verifyAadhaar({
-        photoDataUri: capturedImage,
-        name: name,
-      })
-      
-      if (!result.isAadhaarCard) {
-        toast({
-          variant: 'destructive',
-          title: 'Verification Failed',
-          description:
-            'Could not detect a valid Aadhaar card. Please capture a clear image.',
-        });
-        retakePhoto();
-      } else if (!result.isAadhaarValid) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid Aadhaar Card',
-          description: `The Aadhaar number "${result.extractedAadhaarNumber}" appears to be invalid. Please use a valid card.`,
-        });
-        retakePhoto();
-      } else if (result.gender !== 'female') {
-        toast({
-          variant: 'destructive',
-          title: 'Access Denied',
-          description:
-            'This platform is for female users only. The provided Aadhaar card does not indicate female gender.',
-        });
-        retakePhoto();
-      } else if (!result.isNameMatch) {
-        toast({
-          variant: 'destructive',
-          title: 'Name Mismatch',
-          description: `The name on the card ("${result.extractedName}") does not match the name you entered. Please check and try again.`,
-        });
-      } else {
-        toast({
-          title: 'Aadhaar Verified Successfully ✅',
-          description: 'Welcome to Femigo!',
-          className: 'bg-green-500 text-white',
-        });
-        router.push('/dashboard');
-      }
-    } catch (error) {
-      console.error("Aadhaar verification failed:", error)
-      toast({
-        variant: "destructive",
-        title: "Verification Error",
-        description: "An unexpected error occurred during verification. Please try again.",
-      })
     } finally {
-      setIsVerifying(false)
+        setIsVerifying(false);
     }
   }
+
+  const handleFinalVerification = () => {
+    if (!extractedData) return;
+
+    if (!extractedData.isAadhaarCard) {
+      toast({ variant: 'destructive', title: 'Verification Failed', description: 'Could not detect a valid Aadhaar card. Please capture a clear image.' });
+    } else if (!extractedData.isAadhaarValid) {
+      toast({ variant: 'destructive', title: 'Invalid Aadhaar Card', description: `The Aadhaar number appears to be invalid. Please use a valid card.` });
+    } else if (extractedData.gender !== 'female') {
+      toast({ variant: 'destructive', title: 'Access Denied', description: 'This platform is for female users only.' });
+    } else if (!extractedData.isNameMatch) {
+      toast({ variant: 'destructive', title: 'Name Mismatch', description: `The name on the card ("${extractedData.extractedName}") does not match the name you entered.` });
+    } else {
+      toast({ title: 'Aadhaar Verified Successfully ✅', description: 'Welcome to Femigo!', className: 'bg-green-500 text-white' });
+      router.push('/dashboard');
+    }
+  }
+
+  const isReadyForOcr = !!imageDataUrl && !!name;
   
   const renderCameraView = () => {
-    if (capturedImage) {
-      return <Image src={capturedImage} alt="Captured Aadhaar photo" layout="fill" objectFit="contain" />
+    if (imageDataUrl) {
+      return <Image src={imageDataUrl} alt="Captured Aadhaar photo" layout="fill" objectFit="contain" />
     }
 
     if(hasCameraPermission === false) {
-        return (
-            <div className="flex flex-col items-center gap-2 text-destructive">
-                <AlertTriangle className="w-12 h-12" />
-                <p className="text-center">Camera access was denied.</p>
-                <Button variant="outline" size="sm" onClick={startStream}>Try Again</Button>
-            </div>
-        )
+      return <div className="flex flex-col items-center gap-2 text-destructive"><AlertTriangle className="w-12 h-12" /><p className="text-center">Camera access was denied or is not available.</p></div>
     }
 
     if(hasCameraPermission === null) {
-        return (
-            <div className="flex flex-col items-center gap-2 text-white/70">
-                <Loader2 className="w-12 h-12 animate-spin" />
-                <p>Starting camera...</p>
-            </div>
-        )
+      return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate-spin" /><p>Starting camera...</p></div>
     }
 
-    return (
-        <video 
-            ref={videoRef} 
-            className="h-full w-full object-cover" 
-            autoPlay 
-            muted 
-            playsInline 
-        />
-    )
+    return <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
   }
 
   return (
@@ -213,12 +184,12 @@ export default function VerifyAadhaarPage() {
                         <h2 className="text-xl font-bold">Step 2: Aadhaar Verification</h2>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        Enter your name exactly as it appears on your Aadhaar card, then capture a clear photo of the card.
+                       Provide a photo of your Aadhaar card using your camera or by uploading a file.
                     </p>
                 </div>
                 
                 <div className="space-y-2">
-                    <label htmlFor="name" className="text-sm font-medium">Name as per Aadhaar card</label>
+                    <Label htmlFor="name">Name as per Aadhaar card</Label>
                     <div className="relative">
                         <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
@@ -227,39 +198,64 @@ export default function VerifyAadhaarPage() {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="pl-10"
-                            disabled={isVerifying || !!capturedImage}
+                            disabled={isVerifying || !!extractedData}
                         />
                     </div>
                 </div>
 
-                <div className="space-y-4">
+                <Tabs defaultValue="camera" className="w-full" onValueChange={handleTabChange}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="camera">Use Camera</TabsTrigger>
+                    <TabsTrigger value="upload">Upload File</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="camera" className="space-y-4">
                     <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center text-center">
                        {renderCameraView()}
                     </div>
-                    
                     <canvas ref={canvasRef} className="hidden" />
+                    {!imageDataUrl ? (
+                      <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                        <Camera className="mr-2"/> Capture Photo
+                      </Button>
+                    ) : (
+                      <Button onClick={resetState} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="upload">
+                    <Label htmlFor="file-upload" className={cn("flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-accent", fileName && "border-green-500")}>
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            {fileName ? <FileCheck className="w-8 h-8 mb-2 text-green-500" /> : <Upload className="w-8 h-8 mb-2 text-muted-foreground" />}
+                            <p className="mb-1 text-sm text-muted-foreground">
+                                {fileName ? <span className="font-semibold text-green-500">{fileName}</span> : <span>Click to upload or drag and drop</span>}
+                            </p>
+                            {!fileName && <p className="text-xs text-muted-foreground">PNG, JPG (MAX. 5MB)</p>}
+                        </div>
+                        <Input id="file-upload" type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg" />
+                    </Label>
+                    {imageDataUrl && <Button onClick={resetState} variant="outline" className="w-full mt-4"><RefreshCcw className="mr-2"/>Change File</Button>}
+                  </TabsContent>
+                </Tabs>
 
-                    <div className="mt-4">
-                        {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {hasCameraPermission === null ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
-                            {hasCameraPermission === true ? "Capture Aadhaar Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
-                           </Button>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-4">
-                                <Button onClick={retakePhoto} variant="outline" className="w-full" disabled={isVerifying}><RefreshCcw className="mr-2"/>Retake</Button>
-                                <Button
-                                    onClick={handleVerify}
-                                    disabled={!capturedImage || isVerifying || !name}
-                                    className="w-full bg-[#EC008C] hover:bg-[#d4007a]"
-                                >
-                                    {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2" />}
-                                    {isVerifying ? "Verifying..." : "Verify Aadhaar"}
-                                </Button>
-                           </div>
-                        )}
-                    </div>
-                </div>
+                {isReadyForOcr && !extractedData && (
+                    <Button onClick={handleOcr} disabled={isVerifying} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                      {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
+                      Extract Information
+                    </Button>
+                )}
+
+                {extractedData && (
+                  <div className="space-y-4 pt-4 border-t">
+                     <h3 className="font-semibold text-lg">Extracted Information</h3>
+                     <div className="space-y-2 text-sm">
+                       <p><strong>Aadhaar Number:</strong> {extractedData.extractedAadhaarNumber}</p>
+                       <p><strong>Full Name:</strong> {extractedData.extractedName}</p>
+                       <p><strong>Gender:</strong> <span className="capitalize">{extractedData.gender}</span></p>
+                     </div>
+                     <Button onClick={handleFinalVerification} className="w-full bg-green-600 hover:bg-green-700">
+                       <ShieldCheck className="mr-2"/> Verify Now
+                     </Button>
+                  </div>
+                )}
             </CardContent>
             </Card>
         </div>

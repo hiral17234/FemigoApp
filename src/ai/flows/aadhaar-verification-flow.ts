@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview An AI flow to verify a user's Aadhaar card.
+ * @fileOverview An AI flow to verify a user's Aadhaar card from an image.
  *
  * - verifyAadhaar - A function that handles the Aadhaar card verification process.
  * - AadhaarVerificationInput - The input type for the verifyAadhaar function.
@@ -15,7 +15,7 @@ const AadhaarVerificationInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      "A live photo of an Aadhaar card, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A photo of an Aadhaar card, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
     name: z.string().describe("The user's full name as it appears on the Aadhaar card.")
 });
@@ -26,7 +26,7 @@ const AadhaarVerificationOutputSchema = z.object({
   isAadhaarValid: z.boolean().describe("Whether the Aadhaar number passed the simulated government validation. This is true if the tool 'validateAadhaarNumber' returns true."),
   isNameMatch: z.boolean().describe("Whether the name on the card matches the provided name."),
   extractedName: z.string().describe("The full name extracted from the Aadhaar card."),
-  extractedAadhaarNumber: z.string().describe("The 12-digit Aadhaar number extracted from the card."),
+  extractedAadhaarNumber: z.string().describe("The 12-digit Aadhaar number extracted from the card, with spaces removed."),
   gender: z.enum(['female', 'male', 'unknown']).describe("The gender identified from the Aadhaar card. It can be 'female', 'male', or 'unknown'."),
 });
 export type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutputSchema>;
@@ -48,14 +48,14 @@ Follow these steps precisely:
 
 2.  **Data Extraction**: If 'isAadhaarCard' is true, extract the following information from the card:
     *   The full name. Set this value to 'extractedName'.
-    *   The 12-digit Aadhaar number, without any spaces. Set this to 'extractedAadhaarNumber'.
+    *   The 12-digit Aadhaar number, formatted as XXXX XXXX XXXX. Remove the spaces for the next step.
     *   The gender. Set this to 'gender' ('female', 'male', or 'unknown').
 
-3.  **Aadhaar Number Validation**: Use the 'validateAadhaarNumber' tool with the 'extractedAadhaarNumber'. The tool will simulate a check against a government database. Based on the tool's response, set 'isAadhaarValid' to true or false.
+3.  **Aadhaar Number Validation**: Use the 'validateAadhaarNumber' tool with the 'extractedAadhaarNumber' (with spaces removed). The tool will simulate a check against a government database. Based on the tool's response, set 'isAadhaarValid' to true or false.
 
 4.  **Name Matching**: Compare the 'extractedName' with the user-provided name: '{{name}}'. Perform a case-insensitive comparison. Set 'isNameMatch' to true if the names match, and false otherwise.
 
-5.  **Final Output**: Return the complete output object with all fields populated according to the steps above.
+5.  **Final Output**: Return the complete output object with all fields populated according to the steps above. Store the Aadhaar number without spaces in 'extractedAadhaarNumber'.
 
 User-provided name: {{name}}
 Image of Aadhaar Card: {{media url=photoDataUri}}`,
@@ -79,6 +79,12 @@ const aadhaarVerificationFlow = ai.defineFlow(
             gender: "unknown",
         };
     }
+    // Re-format the Aadhaar number for display if it was extracted successfully
+    if (output.extractedAadhaarNumber && output.extractedAadhaarNumber.length === 12) {
+      const formattedNumber = output.extractedAadhaarNumber.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3');
+      output.extractedAadhaarNumber = formattedNumber;
+    }
+
     return output;
   }
 );
