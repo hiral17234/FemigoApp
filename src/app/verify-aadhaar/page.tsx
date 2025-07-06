@@ -316,29 +316,31 @@ export default function VerifyAadhaarPage() {
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <Card className="relative w-full max-w-lg rounded-2xl bg-card p-8 shadow-xl">
-       <Link
-        href="/verify"
-        className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Photo ID
-      </Link>
-        <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 3: Aadhaar Verification
-            </CardTitle>
-            <CardDescription className="mx-auto max-w-sm pt-2">
-            {step === "capture" 
-                ? "As an additional step for users in India, please capture or upload a clear image of your Aadhaar card."
-                : "Please review the extracted information and confirm."
-            }
-            </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-            {step === 'capture' ? renderCaptureUI() : renderVerifyUI()}
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-lg">
+        <Link
+          href="/verify"
+          className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Photo ID
+        </Link>
+        <Card className="w-full rounded-2xl bg-card p-8 shadow-xl">
+          <CardHeader className="text-center">
+              <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+              Step 3: Aadhaar Verification
+              </CardTitle>
+              <CardDescription className="mx-auto max-w-sm pt-2">
+              {step === "capture" 
+                  ? "As an additional step for users in India, please capture or upload a clear image of your Aadhaar card."
+                  : "Please review the extracted information and confirm."
+              }
+              </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+              {step === 'capture' ? renderCaptureUI() : renderVerifyUI()}
+          </CardContent>
+        </Card>
+      </div>
     </main>
   )
 }

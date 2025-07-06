@@ -128,91 +128,93 @@ export default function VerifyIdentityPage() {
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <Card className="relative w-full max-w-lg rounded-2xl p-6 shadow-xl">
-       <Link
-        href="/signup"
-        className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Account Details
-      </Link>
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 2: Face Verification
-          </CardTitle>
-          <CardDescription className="mx-auto max-w-sm pt-2">
-            Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
-             {capturedImage ? (
-              <Image
-                src={capturedImage}
-                alt="Captured photo of user"
-                fill
-                className="object-cover"
-              />
-            ) : (
-                <>
-                    <video
-                        ref={videoRef}
-                        className="h-full w-full -scale-x-100 object-cover"
-                        autoPlay
-                        muted
-                        playsInline
-                    />
-                    {hasCameraPermission === false && (
-                         <Alert variant="destructive" className="absolute m-4 max-w-sm">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertTitle>Camera Access Denied</AlertTitle>
-                            <AlertDescription>Please enable camera permissions in your browser settings and refresh the page.</AlertDescription>
-                        </Alert>
-                    )}
-                     {hasCameraPermission === null && !capturedImage && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
-                            <Loader2 className="h-12 w-12 animate-spin" />
-                            <p>Starting camera...</p>
-                        </div>
-                    )}
-                </>
-            )}
-          </div>
-          <canvas ref={canvasRef} className="hidden" />
-
-          {!capturedImage ? (
-             <Button
-                onClick={capturePhoto}
-                disabled={hasCameraPermission !== true || isVerifying}
-                className="w-full"
-              >
-                <Camera className="mr-2 h-4 w-4" />
-                Capture Photo
-              </Button>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-               <Button
-                onClick={retakePhoto}
-                variant="outline"
-                disabled={isVerifying}
-              >
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Retake
-              </Button>
-              <Button
-                onClick={handleVerify}
-                disabled={isVerifying}
-                className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105"
-              >
-                {isVerifying && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Verify Now
-              </Button>
+      <div className="w-full max-w-lg">
+        <Link
+          href="/signup"
+          className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Account Details
+        </Link>
+        <Card className="w-full rounded-2xl p-6 shadow-xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+              Step 2: Face Verification
+            </CardTitle>
+            <CardDescription className="mx-auto max-w-sm pt-2">
+              Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
+              {capturedImage ? (
+                <Image
+                  src={capturedImage}
+                  alt="Captured photo of user"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                  <>
+                      <video
+                          ref={videoRef}
+                          className="h-full w-full -scale-x-100 object-cover"
+                          autoPlay
+                          muted
+                          playsInline
+                      />
+                      {hasCameraPermission === false && (
+                          <Alert variant="destructive" className="absolute m-4 max-w-sm">
+                              <AlertTriangle className="h-4 w-4" />
+                              <AlertTitle>Camera Access Denied</AlertTitle>
+                              <AlertDescription>Please enable camera permissions in your browser settings and refresh the page.</AlertDescription>
+                          </Alert>
+                      )}
+                      {hasCameraPermission === null && !capturedImage && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
+                              <Loader2 className="h-12 w-12 animate-spin" />
+                              <p>Starting camera...</p>
+                          </div>
+                      )}
+                  </>
+              )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <canvas ref={canvasRef} className="hidden" />
+
+            {!capturedImage ? (
+              <Button
+                  onClick={capturePhoto}
+                  disabled={hasCameraPermission !== true || isVerifying}
+                  className="w-full"
+                >
+                  <Camera className="mr-2 h-4 w-4" />
+                  Capture Photo
+                </Button>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Button
+                  onClick={retakePhoto}
+                  variant="outline"
+                  disabled={isVerifying}
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" />
+                  Retake
+                </Button>
+                <Button
+                  onClick={handleVerify}
+                  disabled={isVerifying}
+                  className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105"
+                >
+                  {isVerifying && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Verify Now
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </main>
   )
 }

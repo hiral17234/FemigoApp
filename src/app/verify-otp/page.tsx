@@ -166,88 +166,90 @@ export default function VerifyOtpPage() {
 
   return (
      <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <Card className="relative w-full max-w-md rounded-2xl bg-card p-8 shadow-xl">
+      <div className="w-full max-w-md">
         <Link
           href="/verify-phone"
-          className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
+          className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </Link>
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 4: OTP Verification
-          </CardTitle>
-          <CardDescription className="mx-auto max-w-sm pt-2">
-            A 6-digit code has been sent to your device. Check the notification and enter the code below.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
-              <FormField
-                control={form.control}
-                name="pin"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex items-center justify-between">
-                      <FormLabel>Verification Code</FormLabel>
-                      {showPaste && (
-                          <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-auto px-2 py-1 text-xs"
-                              onClick={handlePaste}
-                              disabled={isVerifying}
-                          >
-                              <ClipboardPaste className="mr-1 h-3 w-3" />
-                              Paste
-                          </Button>
-                      )}
-                    </div>
-                    <FormControl>
-                      <div 
-                        onMouseEnter={() => setShowPaste(true)}
-                        onMouseLeave={() => setShowPaste(false)}
-                      >
-                        <InputOTP maxLength={6} {...field} disabled={isVerifying}>
-                          <InputOTPGroup className="mx-auto">
-                            <InputOTPSlot index={0} />
-                            <InputOTPSlot index={1} />
-                            <InputOTPSlot index={2} />
-                            <InputOTPSeparator />
-                            <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
-                          </InputOTPGroup>
-                        </InputOTP>
+        <Card className="w-full rounded-2xl bg-card p-8 shadow-xl">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+              Step 4: OTP Verification
+            </CardTitle>
+            <CardDescription className="mx-auto max-w-sm pt-2">
+              A 6-digit code has been sent to your device. Check the notification and enter the code below.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+                <FormField
+                  control={form.control}
+                  name="pin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel>Verification Code</FormLabel>
+                        {showPaste && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-auto px-2 py-1 text-xs"
+                                onClick={handlePaste}
+                                disabled={isVerifying}
+                            >
+                                <ClipboardPaste className="mr-1 h-3 w-3" />
+                                Paste
+                            </Button>
+                        )}
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormControl>
+                        <div 
+                          onMouseEnter={() => setShowPaste(true)}
+                          onMouseLeave={() => setShowPaste(false)}
+                        >
+                          <InputOTP maxLength={6} {...field} disabled={isVerifying}>
+                            <InputOTPGroup className="mx-auto">
+                              <InputOTPSlot index={0} />
+                              <InputOTPSlot index={1} />
+                              <InputOTPSlot index={2} />
+                              <InputOTPSeparator />
+                              <InputOTPSlot index={3} />
+                              <InputOTPSlot index={4} />
+                              <InputOTPSlot index={5} />
+                            </InputOTPGroup>
+                          </InputOTP>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Button
-                type="submit"
-                disabled={isVerifying}
-                className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
-              >
-                {isVerifying && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                Verify & Continue
-              </Button>
-            </form>
-          </Form>
+                <Button
+                  type="submit"
+                  disabled={isVerifying}
+                  className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
+                >
+                  {isVerifying && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                  Verify & Continue
+                </Button>
+              </form>
+            </Form>
 
-          <p className="pt-4 text-center text-sm text-muted-foreground">
-            Didn't receive the code?{" "}
-            <button type="button" className="font-medium text-primary hover:underline" onClick={handleResendOtp} disabled={isVerifying}>
-              Resend OTP
-            </button>
-          </p>
-        </CardContent>
-      </Card>
+            <p className="pt-4 text-center text-sm text-muted-foreground">
+              Didn't receive the code?{" "}
+              <button type="button" className="font-medium text-primary hover:underline" onClick={handleResendOtp} disabled={isVerifying}>
+                Resend OTP
+              </button>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   )
 }
