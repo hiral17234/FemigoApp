@@ -4,13 +4,14 @@
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle, CheckCircle } from "lucide-react"
+import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle, CheckCircle, UserCheck } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { runLiveVerification } from "@/ai/flows/live-verification-flow"
 
 export default function VerifyIdentityPage() {
   const router = useRouter()
@@ -92,23 +93,35 @@ export default function VerifyIdentityPage() {
     setIsProcessing(true);
 
     try {
-      if (typeof window !== 'undefined') {
-          localStorage.setItem('userLivePhoto', capturedImage);
-      }
-      toast({
-        title: 'Live Photo Saved!',
-        description: 'You can proceed to the next step.',
-        className: 'bg-green-500 text-white',
-      });
-      
-      const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-      if (country === 'india') {
-        router.push('/verify-aadhaar');
+      const result = await runLiveVerification({ photoDataUri: capturedImage });
+
+      if (result.verificationPassed) {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('userLivePhoto', capturedImage);
+        }
+        toast({
+          title: 'Verification Passed!',
+          description: 'You can proceed to the next step.',
+          className: 'bg-green-500 text-white',
+        });
+        
+        const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+        if (country === 'india') {
+          router.push('/verify-aadhaar');
+        } else {
+          router.push('/verify-phone');
+        }
       } else {
-        router.push('/verify-phone');
+        // Verification failed, show the specific reason
+        toast({
+          variant: "destructive",
+          title: "Verification Failed",
+          description: result.failureReason || "Please try again with a clear photo.",
+        });
+        // Stay on the page, allow user to retake
       }
     } catch (error: any) {
-      console.error("Failed to save photo:", error);
+      console.error("Verification error:", error);
       toast({
         variant: "destructive",
         title: "An Error Occurred",
@@ -131,12 +144,12 @@ export default function VerifyIdentityPage() {
         </Link>
         <Card className="w-full rounded-2xl p-6 shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-              Step 2: Live Photo Capture
+            <CardTitle className="flex items-center justify-center gap-2 text-3xl font-bold tracking-tight text-foreground">
+              <UserCheck /> Step 2: Live Verification
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-              Please take a clear picture of your face. This will be used to compare with your ID.
-              <span className="font-semibold text-destructive"> Please remove any glasses.</span>
+              Our AI will check your photo for compliance. This platform is for <span className="font-semibold text-primary">women only</span>. 
+              Please <span className="font-semibold text-destructive">remove any glasses</span> and ensure your face is clearly visible.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
