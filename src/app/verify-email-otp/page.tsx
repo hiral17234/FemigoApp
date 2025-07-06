@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, Loader2, Copy, Check } from "lucide-react"
+import { ArrowLeft, Loader2, Copy, Check, ClipboardPaste } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -71,6 +71,7 @@ export default function VerifyEmailOtpPage() {
   const [email, setEmail] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [otp, setOtp] = useState("")
+  const [showPaste, setShowPaste] = useState(false)
 
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -107,6 +108,31 @@ export default function VerifyEmailOtpPage() {
       pin: "",
     },
   })
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && /^\d{0,6}$/.test(text)) {
+        form.setValue("pin", text.slice(0, 6), { shouldValidate: true });
+        toast({
+            title: "Pasted from clipboard!",
+        });
+      } else {
+          toast({
+              variant: "destructive",
+              title: "Invalid Paste Data",
+              description: "Clipboard does not contain a valid OTP.",
+          });
+      }
+    } catch (err) {
+      console.error('Failed to read clipboard contents: ', err);
+      toast({
+          variant: "destructive",
+          title: "Paste Failed",
+          description: "Could not read from clipboard. Please check permissions.",
+      });
+    }
+  };
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsVerifying(true)
@@ -164,19 +190,39 @@ export default function VerifyEmailOtpPage() {
                 name="pin"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="sr-only">One-Time Password</FormLabel>
+                    <div className="flex items-center justify-between">
+                      <FormLabel>Verification Code</FormLabel>
+                      {showPaste && (
+                          <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-auto px-2 py-1 text-xs"
+                              onClick={handlePaste}
+                              disabled={isVerifying}
+                          >
+                              <ClipboardPaste className="mr-1 h-3 w-3" />
+                              Paste
+                          </Button>
+                      )}
+                    </div>
                     <FormControl>
-                      <InputOTP maxLength={6} {...field} disabled={isVerifying}>
-                        <InputOTPGroup className="mx-auto">
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSeparator />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
+                      <div
+                        onMouseEnter={() => setShowPaste(true)}
+                        onMouseLeave={() => setShowPaste(false)}
+                      >
+                        <InputOTP maxLength={6} {...field} disabled={isVerifying}>
+                          <InputOTPGroup className="mx-auto">
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSeparator />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
