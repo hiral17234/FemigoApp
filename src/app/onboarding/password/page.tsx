@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { CheckCircle, Circle, Loader2, ShieldCheck, ArrowLeft } from "lucide-react"
@@ -79,12 +78,13 @@ export default function OnboardingPasswordPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
-      <Image
-        src="https://placehold.co/1920x1080.png"
-        alt="Neon city night"
-        data-ai-hint="neon data stream"
-        fill
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
         className="absolute inset-0 z-0 h-full w-full object-cover opacity-30"
+        src="https://videos.pexels.com/video-files/2806063/2806063-hd_1080_1920_30fps.mp4"
       />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
 

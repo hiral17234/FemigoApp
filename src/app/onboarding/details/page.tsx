@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import Image from "next/image"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ChevronRight, Loader2, ArrowLeft } from "lucide-react"
@@ -87,23 +86,24 @@ export default function OnboardingDetailsPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
-      <Image
-        src="https://placehold.co/1920x1080.png"
-        alt="Neon city night"
-        data-ai-hint="neon city"
-        fill
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
         className="absolute inset-0 z-0 h-full w-full object-cover opacity-30"
+        src="https://videos.pexels.com/video-files/2806063/2806063-hd_1080_1920_30fps.mp4"
       />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
         <div className="w-full max-w-2xl">
             <Link
-              href="/"
+              href="/congratulations"
               className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Home
+              Back
             </Link>
             <div className="w-full rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
               <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
