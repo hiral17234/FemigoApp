@@ -31,7 +31,12 @@ const formSchema = z.object({
   }),
 })
 
-const DEMO_OTP = "123456"
+// Access the confirmation result from the window object.
+declare global {
+  interface Window {
+    confirmationResult?: any;
+  }
+}
 
 export default function VerifyOtpPage() {
   const router = useRouter()
@@ -43,7 +48,8 @@ export default function VerifyOtpPage() {
     if (storedPhone) {
       setPhone(storedPhone)
     } else {
-        router.push('/verify-phone');
+      // If no phone number, something went wrong, go back.
+      router.push('/verify-phone');
     }
   }, [router])
 
@@ -56,23 +62,41 @@ export default function VerifyOtpPage() {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsVerifying(true)
+    const confirmationResult = window.confirmationResult;
 
-    if (data.pin === DEMO_OTP) {
+    if (!confirmationResult) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Verification session expired. Please try sending the OTP again.",
+        });
+        setIsVerifying(false);
+        router.push("/verify-phone");
+        return;
+    }
+
+    try {
+      const result = await confirmationResult.confirm(data.pin);
+      // User signed in successfully.
+      const user = result.user;
+      console.log("User verified:", user);
       toast({
         title: "Phone Verified! ✅",
         description: "Your phone number has been successfully verified.",
         className: "bg-green-500 text-white",
-      })
-      router.push("/dashboard")
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Invalid OTP",
-        description: `The code you entered is incorrect. Please try again. Hint: the demo code is ${DEMO_OTP}`,
-      })
+      });
+      router.push("/dashboard");
+
+    } catch (error: any) {
+        // User couldn't sign in (bad verification code?)
+        toast({
+            variant: "destructive",
+            title: "Invalid OTP",
+            description: "The code you entered is incorrect. Please try again.",
+        });
+    } finally {
+        setIsVerifying(false)
     }
-    
-    setIsVerifying(false)
   }
 
   return (
@@ -96,7 +120,7 @@ export default function VerifyOtpPage() {
               Enter OTP
             </h2>
             <p className="text-sm text-muted-foreground">
-              A demo 6-digit code has been sent to {phone}.
+              A 6-digit code has been sent to {phone}.
             </p>
           </div>
 
