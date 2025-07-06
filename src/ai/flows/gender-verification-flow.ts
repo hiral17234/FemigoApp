@@ -35,16 +35,20 @@ export async function verifyGender(input: GenderVerificationInput): Promise<Gend
 
 const genderVerificationPrompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
-  model: 'googleai/gemini-pro-vision',
+  model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
-  prompt: `Analyze the user's photo. You must determine three things:
-1. isClear: Is the photo clear and not blurry?
-2. isHuman: Does the photo contain a real human face (not an object, animal, or illustration)?
-3. isFemale: If the photo is clear and contains a human, are they female?
+  prompt: `You are an expert in identity verification. Analyze the user's photo based on three strict criteria.
 
-Return your analysis in the specified JSON format. Provide a brief 'reason' for your final decision.
-If 'isClear' is false, or 'isHuman' is false, then 'isFemale' must also be false.
+1.  **Clarity Check (isClear):** Is the photo sharp and well-lit? The entire face must be clearly visible. If it is blurry, poorly lit, or obscured, 'isClear' must be false.
+2.  **Human Check (isHuman):** Does the photo contain a real human face? It cannot be an animal, object, cartoon, or illustration. If it is not a human, 'isHuman' must be false.
+3.  **Gender Check (isFemale):** If, and only if, the photo is clear AND contains a human, determine if the person is female.
+
+**IMPORTANT RULES:**
+*   If 'isClear' is false, then 'isHuman' and 'isFemale' **must** also be false.
+*   If 'isHuman' is false, then 'isFemale' **must** also be false.
+
+Return your final analysis in the specified JSON format. Your 'reason' must be concise and directly related to the outcome.
 
 Photo to analyze: {{media url=photoDataUri}}
   `,
