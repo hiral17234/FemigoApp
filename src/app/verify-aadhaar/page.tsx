@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Camera, Loader2, RefreshCcw, Upload, User, ShieldCheck, ScanLine, KeyRound, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Camera, Loader2, RefreshCcw, Upload, User, ShieldCheck, ScanLine, KeyRound, AlertTriangle, SwitchCamera } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
@@ -15,9 +15,11 @@ import { extractAadhaarData, type AadhaarOcrOutput } from "@/ai/flows/aadhaar-ve
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { cn } from "@/lib/utils"
 
 type VerificationStep = "capture" | "verify"
 type CaptureMode = "camera" | "upload"
+type FacingMode = "user" | "environment"
 
 export default function VerifyAadhaarPage() {
   const router = useRouter()
@@ -36,6 +38,7 @@ export default function VerifyAadhaarPage() {
   const [isExtracting, setIsExtracting] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [userName, setUserName] = useState("")
+  const [facingMode, setFacingMode] = useState<FacingMode>("environment")
 
   // Redirect if not from India
   useEffect(() => {
@@ -64,7 +67,7 @@ export default function VerifyAadhaarPage() {
     let stream: MediaStream | null = null;
     const startCamera = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
         setHasCameraPermission(true)
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -83,7 +86,7 @@ export default function VerifyAadhaarPage() {
         stream.getTracks().forEach((track) => track.stop());
       }
     }
-  }, [step, captureMode, aadhaarImage, toast]);
+  }, [step, captureMode, aadhaarImage, toast, facingMode]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -112,6 +115,11 @@ export default function VerifyAadhaarPage() {
     canvas.height = video.videoHeight
     const context = canvas.getContext("2d")
     if (context) {
+      // If using the front camera, we need to flip the canvas to un-mirror the image
+      if (facingMode === 'user') {
+          context.translate(video.videoWidth, 0)
+          context.scale(-1, 1)
+      }
       context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
       const dataUrl = canvas.toDataURL("image/jpeg")
       processImage(dataUrl)
@@ -177,6 +185,10 @@ export default function VerifyAadhaarPage() {
     router.push("/verify-phone");
   }
 
+  const handleToggleFacingMode = () => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+  }
+
   const renderCaptureUI = () => (
      <Tabs value={captureMode} onValueChange={(value) => setCaptureMode(value as CaptureMode)} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -186,7 +198,29 @@ export default function VerifyAadhaarPage() {
         <TabsContent value="camera" className="mt-4">
             <div className="space-y-4">
                 <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
-                    <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+                    <video 
+                      ref={videoRef} 
+                      className={cn(
+                        "h-full w-full object-cover",
+                        facingMode === 'user' && "-scale-x-100" // Conditionally mirror the video preview
+                      )}
+                      autoPlay 
+                      muted 
+                      playsInline 
+                    />
+                    
+                    {hasCameraPermission && captureMode === 'camera' && (
+                       <Button
+                            size="icon"
+                            variant="ghost"
+                            className="absolute bottom-2 right-2 bg-black/50 text-white hover:bg-black/75 rounded-full z-10"
+                            onClick={handleToggleFacingMode}
+                        >
+                            <SwitchCamera className="h-5 w-5" />
+                            <span className="sr-only">Switch Camera</span>
+                        </Button>
+                    )}
+
                     {hasCameraPermission === false && (
                         <Alert variant="destructive" className="absolute m-4 max-w-sm">
                         <AlertTriangle className="h-4 w-4" />
@@ -311,5 +345,7 @@ export default function VerifyAadhaarPage() {
     </div>
   )
 }
+
+    
 
     
