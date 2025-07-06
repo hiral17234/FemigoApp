@@ -25,7 +25,7 @@ const AadhaarOcrInputSchema = z.object({
 });
 export type AadhaarOcrInput = z.infer<typeof AadhaarOcrInputSchema>;
 
-export const AadhaarOcrOutputSchema = z.object({
+const AadhaarOcrOutputSchema = z.object({
   aadhaarNumber: z.string().optional().describe('The 12-digit Aadhaar number, formatted as XXXX XXXX XXXX. Return an empty string if not found.'),
   fullName: z.string().optional().describe('The full name of the person as written on the card. Return an empty string if not found.'),
   gender: z.enum(['Male', 'Female', 'Other', 'Unspecified']).optional().describe('The gender of the person. Infer "Female" or "Male" based on the name or text. If not clear, return "Unspecified".'),
