@@ -18,72 +18,60 @@ export default function VerifyAadhaarPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [name, setName] = useState("")
 
-  const stopStream = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop())
-      setStream(null);
-    }
-  }
-
-  const startStream = async () => {
-    setCapturedImage(null);
-    setIsVerifying(false);
-    
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-    
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      console.error("Camera API not supported.")
-      setHasCameraPermission(false)
-      toast({
-          variant: "destructive",
-          title: "Unsupported Browser",
-          description: "Your browser does not support the camera API.",
-      })
-      return;
-    }
-
-    try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      setStream(newStream);
-      setHasCameraPermission(true)
-    } catch (error) {
-      console.error("Error accessing camera:", error)
-      setHasCameraPermission(false)
-      toast({
-        variant: "destructive",
-        title: "Camera Access Denied",
-        description: "Please enable camera permissions in your browser settings to continue.",
-      })
-    }
-  }
-
   useEffect(() => {
-    startStream()
+    // This effect handles the camera's lifecycle.
+    let stream: MediaStream | null = null;
     
-    return () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
+    const enableCamera = async () => {
+      // Don't do anything if a photo is already taken.
+      if (capturedImage) return;
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        console.error("Camera API not supported.");
+        setHasCameraPermission(false);
+        toast({
+            variant: "destructive",
+            title: "Unsupported Browser",
+            description: "Your browser does not support the camera API.",
+        });
+        return;
+      }
+      
+      try {
+        setHasCameraPermission(null); // Show loading state
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+        setHasCameraPermission(true);
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        setHasCameraPermission(false);
+        toast({
+          variant: "destructive",
+          title: "Camera Access Denied",
+          description: "Please enable camera permissions in your browser settings to continue.",
+        });
+      }
+    };
 
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream
-    }
-  }, [stream])
+    enableCamera();
+
+    // Cleanup function to stop the stream when the component unmounts or a photo is taken.
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [capturedImage, toast]);
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && stream) {
+    if (videoRef.current && canvasRef.current) {
       const video = videoRef.current
       const canvas = canvasRef.current
       canvas.width = video.videoWidth
@@ -92,8 +80,7 @@ export default function VerifyAadhaarPage() {
       if (context) {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
         const dataUrl = canvas.toDataURL("image/jpeg")
-        setCapturedImage(dataUrl)
-        stopStream()
+        setCapturedImage(dataUrl) // This will trigger the useEffect cleanup, stopping the stream.
       }
     } else {
         toast({
@@ -105,7 +92,7 @@ export default function VerifyAadhaarPage() {
   }
 
   const retakePhoto = () => {
-    startStream();
+    setCapturedImage(null); // This will trigger the useEffect to restart the camera.
   }
   
   const handleVerify = async () => {
@@ -132,12 +119,14 @@ export default function VerifyAadhaarPage() {
           description:
             'Could not detect a valid Aadhaar card. Please capture a clear image.',
         });
+        retakePhoto();
       } else if (!result.isAadhaarValid) {
         toast({
           variant: 'destructive',
           title: 'Invalid Aadhaar Card',
           description: `The Aadhaar number "${result.extractedAadhaarNumber}" appears to be invalid. Please use a valid card.`,
         });
+        retakePhoto();
       } else if (result.gender !== 'female') {
         toast({
           variant: 'destructive',
@@ -145,6 +134,7 @@ export default function VerifyAadhaarPage() {
           description:
             'This platform is for female users only. The provided Aadhaar card does not indicate female gender.',
         });
+        retakePhoto();
       } else if (!result.isNameMatch) {
         toast({
           variant: 'destructive',
@@ -172,13 +162,8 @@ export default function VerifyAadhaarPage() {
   }
   
   const renderCameraView = () => {
-    if(hasCameraPermission === null) {
-        return (
-            <div className="flex flex-col items-center gap-2 text-white/70">
-                <Loader2 className="w-12 h-12 animate-spin" />
-                <p>Starting camera...</p>
-            </div>
-        )
+    if (capturedImage) {
+      return <Image src={capturedImage} alt="Captured Aadhaar photo" layout="fill" objectFit="contain" />
     }
 
     if(hasCameraPermission === false) {
@@ -186,13 +171,18 @@ export default function VerifyAadhaarPage() {
             <div className="flex flex-col items-center gap-2 text-destructive">
                 <AlertTriangle className="w-12 h-12" />
                 <p className="text-center">Camera access was denied.</p>
-                <Button variant="outline" size="sm" onClick={startStream}>Try Again</Button>
+                <Button variant="outline" size="sm" onClick={() => setCapturedImage(null)}>Try Again</Button>
             </div>
         )
     }
 
-    if(capturedImage) {
-        return <Image src={capturedImage} alt="Captured Aadhaar photo" layout="fill" objectFit="contain" />
+    if(hasCameraPermission === null) {
+        return (
+            <div className="flex flex-col items-center gap-2 text-white/70">
+                <Loader2 className="w-12 h-12 animate-spin" />
+                <p>Starting camera...</p>
+            </div>
+        )
     }
 
     return (
@@ -245,9 +235,11 @@ export default function VerifyAadhaarPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={!stream} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {!stream && hasCameraPermission !== false ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
-                            {stream ? "Capture Aadhaar Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
+                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                            {hasCameraPermission === null && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                            {hasCameraPermission === false && <AlertTriangle className="mr-2" />}
+                            {hasCameraPermission === true && <Camera className="mr-2"/>}
+                            {hasCameraPermission === true ? "Capture Aadhaar Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
