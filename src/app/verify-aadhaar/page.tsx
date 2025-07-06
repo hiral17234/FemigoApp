@@ -77,9 +77,12 @@ export default function VerifyAadhaarPage() {
   }, [stopStream, toast]);
 
   useEffect(() => {
-    // Only start stream if camera tab is active
-    // This will be handled by the Tabs onValueChange
-  }, []);
+    // Start stream on mount since camera is the default tab
+    startStream();
+    return () => {
+      stopStream();
+    }
+  }, [startStream, stopStream]);
 
   const handleTabChange = (value: string) => {
     if (value === "camera") {
