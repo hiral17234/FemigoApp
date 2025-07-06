@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import type { ConfirmationResult } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,6 +31,8 @@ const formSchema = z.object({
   }),
 })
 
+const DEMO_OTP = "123456"
+
 export default function VerifyOtpPage() {
   const router = useRouter()
   const [phone, setPhone] = useState("")
@@ -55,36 +56,23 @@ export default function VerifyOtpPage() {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsVerifying(true)
-    const confirmationResult = (window as any).confirmationResult as ConfirmationResult | undefined
 
-    if (!confirmationResult) {
-      toast({
-        variant: "destructive",
-        title: "Verification Error",
-        description: "Could not find verification session. Please go back and try sending the OTP again.",
-      });
-      setIsVerifying(false)
-      return
-    }
-
-    try {
-      await confirmationResult.confirm(data.pin)
+    if (data.pin === DEMO_OTP) {
       toast({
         title: "Phone Verified! ✅",
         description: "Your phone number has been successfully verified.",
         className: "bg-green-500 text-white",
       })
       router.push("/dashboard")
-    } catch (error) {
-      console.error("Error verifying OTP:", error)
+    } else {
       toast({
         variant: "destructive",
         title: "Invalid OTP",
-        description: "The code you entered is incorrect. Please try again.",
+        description: `The code you entered is incorrect. Please try again. Hint: the demo code is ${DEMO_OTP}`,
       })
-    } finally {
-      setIsVerifying(false)
     }
+    
+    setIsVerifying(false)
   }
 
   return (
@@ -108,7 +96,7 @@ export default function VerifyOtpPage() {
               Enter OTP
             </h2>
             <p className="text-sm text-muted-foreground">
-              A 6-digit code has been sent to {phone}.
+              A demo 6-digit code has been sent to {phone}.
             </p>
           </div>
 

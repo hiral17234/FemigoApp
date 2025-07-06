@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Camera, ShieldCheck, Heart, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
@@ -8,7 +8,6 @@ import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { verifyGender } from "@/ai/flows/gender-verification-flow"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -21,15 +20,15 @@ export default function VerifyPage() {
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
-  const [isVerifying, setIsVerifying] = useState(false)
   const [stream, setStream] = useState<MediaStream | null>(null)
+  const [isCameraReady, setIsCameraReady] = useState(false)
 
-  const stopStream = () => {
+  const stopStream = useCallback(() => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
-  }
+  }, [stream]);
 
   // Request camera permission and set up the stream
   useEffect(() => {
@@ -48,6 +47,11 @@ export default function VerifyPage() {
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
+        toast({
+            variant: "destructive",
+            title: "Camera Access Denied",
+            description: "Please enable camera permissions in your browser settings.",
+        })
         if (isMounted) {
           setHasCameraPermission(false);
         }
@@ -60,8 +64,7 @@ export default function VerifyPage() {
       isMounted = false;
       stopStream();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImage]);
+  }, [capturedImage, stopStream, toast]);
 
   // Attach stream to video element when it's available
   useEffect(() => {
@@ -78,12 +81,12 @@ export default function VerifyPage() {
       canvas.height = video.videoHeight;
       const context = canvas.getContext("2d");
       if (context) {
-        // Flip the image horizontally for a mirror effect
         context.translate(video.videoWidth, 0);
         context.scale(-1, 1);
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
         const dataUrl = canvas.toDataURL("image/jpeg");
         setCapturedImage(dataUrl);
+        setIsCameraReady(false); // No longer need the stream
       }
     } else {
       toast({
@@ -96,54 +99,12 @@ export default function VerifyPage() {
 
   const retakePhoto = () => {
     setCapturedImage(null);
+    setIsCameraReady(false); // Re-initialize camera
   }
   
-  const handleVerify = async () => {
+  const handleContinue = () => {
     if (!capturedImage) return
-    
-    setIsVerifying(true)
-    try {
-      const result = await verifyGender({
-        photoDataUri: capturedImage,
-      })
-      
-      if (result.isPerson && result.gender === "female") {
-        toast({
-          title: "Verification Successful ✅",
-          description: "Proceeding to the next step.",
-          className: "bg-green-500 text-white",
-        })
-        
-        const userCountry = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-        if (userCountry === 'india') {
-          router.push("/verify-aadhaar")
-        } else {
-          router.push("/verify-phone")
-        }
-
-      } else {
-        let description = "This platform is reserved for female users only."
-        if (!result.isPerson) {
-          description = "No person was detected in the photo. Please use a clear photo of your face."
-        }
-        toast({
-          variant: "destructive",
-          title: "Access Denied",
-          description,
-        })
-        retakePhoto();
-      }
-    } catch (error) {
-      console.error("Verification failed:", error)
-      toast({
-        variant: "destructive",
-        title: "Verification Failed",
-        description: "AI verification failed. Please try again with a clear, well-lit photo.",
-      })
-      retakePhoto();
-    } finally {
-      setIsVerifying(false)
-    }
+    router.push("/verify-phone")
   }
 
   const renderCameraView = () => {
@@ -159,7 +120,7 @@ export default function VerifyPage() {
         )
     }
     
-    if (hasCameraPermission === null) {
+    if (hasCameraPermission === null && !capturedImage) {
       return (
         <div className="flex flex-col items-center justify-center gap-2 text-white/70 h-full">
             <Loader2 className="w-12 h-12 animate-spin" />
@@ -180,8 +141,9 @@ export default function VerifyPage() {
                 autoPlay 
                 muted 
                 playsInline
+                onCanPlay={() => setIsCameraReady(true)}
             />
-            {!stream && (
+            {!isCameraReady && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/70 bg-black/50">
                     <Loader2 className="w-12 h-12 animate-spin" />
                     <p>Starting camera...</p>
@@ -213,10 +175,10 @@ export default function VerifyPage() {
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <ShieldCheck className="w-6 h-6 text-primary" />
-                        <h2 className="text-xl font-bold">Step 1: Identity Verification</h2>
+                        <h2 className="text-xl font-bold">Step 1: Photo Capture</h2>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
+                        Please take a clear picture of your face.
                     </p>
                 </div>
 
@@ -229,20 +191,18 @@ export default function VerifyPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={!stream || isVerifying || hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            <Camera className="mr-2"/>
-                            Capture Photo
+                           <Button onClick={capturePhoto} disabled={!isCameraReady} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                            {!isCameraReady && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            {isCameraReady ? <><Camera className="mr-2"/>Capture Photo</> : 'Initializing Camera...' }
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
-                                <Button onClick={retakePhoto} variant="outline" className="w-full" disabled={isVerifying}><RefreshCcw className="mr-2"/>Retake</Button>
+                                <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
                                 <Button
-                                    onClick={handleVerify}
-                                    disabled={isVerifying}
+                                    onClick={handleContinue}
                                     className="w-full bg-[#EC008C] hover:bg-[#d4007a]"
                                 >
-                                    {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2" />}
-                                    {isVerifying ? "Verifying..." : "Verify Now"}
+                                    Continue
                                 </Button>
                            </div>
                         )}
