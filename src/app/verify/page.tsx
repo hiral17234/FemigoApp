@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -19,46 +20,65 @@ export default function VerifyPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
 
-  // This effect runs only once to get camera permissions
   useEffect(() => {
-    let stream: MediaStream;
-    const getCameraPermission = async () => {
+    // This effect handles getting and cleaning up the camera stream
+    if (capturedImage) {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+      return;
+    }
+
+    let isMounted = true;
+    const getCameraStream = async () => {
       try {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error("Camera not supported by this browser.");
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        if (isMounted) {
+          setStream(mediaStream);
+          setHasCameraPermission(true);
         }
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        setHasCameraPermission(true);
       } catch (error) {
         console.error("Error accessing camera:", error);
-        setHasCameraPermission(false);
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description: "Please enable camera permissions to continue.",
-        });
+        if (isMounted) {
+          setHasCameraPermission(false);
+          toast({
+            variant: "destructive",
+            title: "Camera Access Denied",
+            description: "Please enable camera permissions in your browser settings to continue.",
+          });
+        }
       }
     };
 
-    getCameraPermission();
+    getCameraStream();
 
-    // Cleanup function to stop the stream when component unmounts
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => track.stop());
+      isMounted = false;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capturedImage]);
+
+  useEffect(() => {
+    // This effect attaches the stream to the video element
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    };
+  }, [stream]);
 
   const capturePhoto = () => {
-    // readyState >= 3 means the camera has enough data to capture a frame.
     if (videoRef.current && canvasRef.current && videoRef.current.readyState >= 3) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -66,7 +86,6 @@ export default function VerifyPage() {
       canvas.height = video.videoHeight;
       const context = canvas.getContext("2d");
       if (context) {
-        // Flip the image horizontally for a mirror effect
         context.translate(video.videoWidth, 0);
         context.scale(-1, 1);
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
@@ -77,7 +96,7 @@ export default function VerifyPage() {
       toast({
         variant: "destructive",
         title: "Camera Not Ready",
-        description: "The camera stream is still initializing. Please wait a moment.",
+        description: "The camera is still initializing. Please wait a moment and try again.",
       });
     }
   };
@@ -119,7 +138,7 @@ export default function VerifyPage() {
           title: "Access Denied",
           description,
         })
-        setCapturedImage(null) // Go back to camera view on failure
+        retakePhoto();
       }
     } catch (error) {
       console.error("Verification failed:", error)
@@ -134,27 +153,27 @@ export default function VerifyPage() {
   }
 
   const renderCameraView = () => {
-    if(hasCameraPermission === null) {
-        return (
-            <div className="flex flex-col items-center gap-2 text-white/70">
-                <Loader2 className="w-12 h-12 animate-spin" />
-                <p>Waiting for camera permission...</p>
-            </div>
-        )
-    }
-
-    if(hasCameraPermission === false) {
-        return (
-            <div className="flex flex-col items-center gap-2 text-destructive">
-                <AlertTriangle className="w-12 h-12" />
-                <p className="text-center">Camera access was denied.</p>
-                <Button variant="outline" size="sm" onClick={() => window.location.reload()}>Try Again</Button>
-            </div>
-        )
-    }
-
-    if(capturedImage) {
+    if (capturedImage) {
       return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
+    }
+    
+    if (hasCameraPermission === false) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-2 p-4 text-destructive text-center">
+                <AlertTriangle className="w-12 h-12" />
+                <p>Camera access was denied.</p>
+                <p className="text-xs">You may need to grant permission in your browser settings and refresh the page.</p>
+            </div>
+        )
+    }
+
+    if (!stream) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-2 text-white/70">
+                <Loader2 className="w-12 h-12 animate-spin" />
+                <p>Starting camera...</p>
+            </div>
+        )
     }
 
     return (
@@ -206,7 +225,7 @@ export default function VerifyPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || isVerifying} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                           <Button onClick={capturePhoto} disabled={!stream || isVerifying} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
                             <Camera className="mr-2"/>
                             Capture Photo
                            </Button>

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -24,6 +25,7 @@ export default function VerifyAadhaarPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [name, setName] = useState("")
@@ -39,36 +41,34 @@ export default function VerifyAadhaarPage() {
   }, []);
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    
+    let isMounted = true;
+
     const enableCamera = async () => {
-        try {
-            if (!navigator.mediaDevices?.getUserMedia) {
-                throw new Error("Camera API not supported.");
-            }
-            stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-            }
-            setHasCameraPermission(true);
-        } catch (error) {
-            console.error("Error accessing camera:", error);
-            setHasCameraPermission(false);
-            toast({
-                variant: "destructive",
-                title: "Camera Access Denied",
-                description: "Please enable camera permissions to use this feature.",
-            });
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        if (isMounted) {
+          setStream(mediaStream);
+          setHasCameraPermission(true);
         }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        if (isMounted) {
+          setHasCameraPermission(false);
+          toast({
+            variant: "destructive",
+            title: "Camera Access Denied",
+            description: "Please enable camera permissions to use this feature.",
+          });
+        }
+      }
     };
 
     const disableCamera = () => {
-        if (videoRef.current && videoRef.current.srcObject) {
-            const currentStream = videoRef.current.srcObject as MediaStream;
-            currentStream.getTracks().forEach(track => track.stop());
-            videoRef.current.srcObject = null;
-        }
-    }
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+    };
 
     if (activeTab === 'camera' && !imageDataUrl) {
       enableCamera();
@@ -77,9 +77,19 @@ export default function VerifyAadhaarPage() {
     }
 
     return () => {
+      isMounted = false;
       disableCamera();
     };
-  }, [activeTab, imageDataUrl, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, imageDataUrl]);
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    } else if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+  }, [stream]);
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current && videoRef.current.readyState >= 3) {
@@ -98,7 +108,7 @@ export default function VerifyAadhaarPage() {
         toast({
             variant: "destructive",
             title: "Camera Not Ready",
-            description: "The camera stream is still initializing. Please wait a moment.",
+            description: "The camera is still initializing. Please wait a moment.",
         });
     }
   }
@@ -134,6 +144,9 @@ export default function VerifyAadhaarPage() {
     try {
         const result = await verifyAadhaar({ photoDataUri: imageDataUrl, name });
         setExtractedData(result);
+        if (!result.isAadhaarCard) {
+            toast({ variant: 'destructive', title: 'Verification Failed', description: 'Could not detect a valid Aadhaar card. Please capture a clear image.' });
+        }
     } catch (error) {
         console.error("OCR failed:", error)
         toast({
@@ -149,14 +162,19 @@ export default function VerifyAadhaarPage() {
   const handleFinalVerification = () => {
     if (!extractedData) return;
 
+    const resetAndToast = (title: string, description: string) => {
+        toast({ variant: 'destructive', title, description });
+        resetState();
+    }
+
     if (!extractedData.isAadhaarCard) {
-      toast({ variant: 'destructive', title: 'Verification Failed', description: 'Could not detect a valid Aadhaar card. Please capture a clear image.' });
+      resetAndToast('Verification Failed', 'Could not detect a valid Aadhaar card. Please try again.');
     } else if (!extractedData.isAadhaarValid) {
-      toast({ variant: 'destructive', title: 'Invalid Aadhaar Card', description: `The Aadhaar number appears to be invalid. Please use a valid card.` });
+      resetAndToast('Invalid Aadhaar Card', 'The Aadhaar number appears to be invalid. Please use a valid card.');
     } else if (extractedData.gender !== 'female') {
-      toast({ variant: 'destructive', title: 'Access Denied', description: 'This platform is for female users only.' });
+      resetAndToast('Access Denied', 'This platform is for female users only.');
     } else if (!extractedData.isNameMatch) {
-      toast({ variant: 'destructive', title: 'Name Mismatch', description: `The name on the card ("${extractedData.extractedName}") does not match the name you entered.` });
+      resetAndToast('Name Mismatch', `The name on the card ("${extractedData.extractedName}") does not match the name you entered. Please try again.`);
     } else {
       toast({ title: 'Aadhaar Verified Successfully ✅', description: 'Proceeding to next step.', className: 'bg-green-500 text-white' });
       router.push('/verify-phone');
@@ -164,16 +182,27 @@ export default function VerifyAadhaarPage() {
   }
   
   const renderCameraView = () => {
-    if (hasCameraPermission === null) {
-      return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate-spin" /><p>Waiting for camera permission...</p></div>
-    }
-
-    if(hasCameraPermission === false) {
-      return <div className="flex flex-col items-center gap-2 p-4 text-destructive"><AlertTriangle className="w-12 h-12" /><p className="text-center">Camera access was denied. Try uploading a file or refresh to grant permission.</p></div>
-    }
-
     if (imageDataUrl) {
       return <Image src={imageDataUrl} alt="Captured Aadhaar photo" layout="fill" objectFit="contain" />
+    }
+
+    if (hasCameraPermission === false) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 p-4 text-destructive text-center">
+            <AlertTriangle className="w-12 h-12" />
+            <p>Camera access was denied.</p>
+            <p className="text-xs">Try uploading a file or grant permission in browser settings and refresh.</p>
+        </div>
+      )
+    }
+
+    if (!stream) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-2 text-white/70">
+                <Loader2 className="w-12 h-12 animate-spin" />
+                <p>Starting camera...</p>
+            </div>
+        )
     }
 
     return <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline/>
@@ -227,7 +256,7 @@ export default function VerifyAadhaarPage() {
                     </div>
                     <canvas ref={canvasRef} className="hidden" />
                     {!imageDataUrl ? (
-                      <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || isVerifying} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                      <Button onClick={capturePhoto} disabled={!stream || isVerifying} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
                         <Camera className="mr-2"/> Capture Photo
                       </Button>
                     ) : (
