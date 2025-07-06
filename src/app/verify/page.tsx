@@ -21,48 +21,54 @@ export default function VerifyIdentityPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [stream, setStream] = useState<MediaStream | null>(null);
 
-  // This effect should only run when we need the camera feed.
   useEffect(() => {
-    if (capturedImage) return;
-
-    let stream: MediaStream | null = null;
-    
-    const startCamera = async () => {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+    // Only get the camera stream if we haven't captured an image yet
+    if (!capturedImage) {
+      let isCancelled = false;
+      
+      const getCameraStream = async () => {
+        try {
+          const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+          if (!isCancelled) {
+            setStream(newStream);
+            if (videoRef.current) {
+              videoRef.current.srcObject = newStream;
+            }
+            setHasCameraPermission(true);
+          }
+        } catch (error) {
+          if (!isCancelled) {
+            console.error("Error accessing camera:", error);
+            setHasCameraPermission(false);
+             toast({
+              variant: "destructive",
+              title: "Camera Access Denied",
+              description: "Please enable camera permissions in your browser settings to use this app.",
+            });
+          }
         }
-        setHasCameraPermission(true);
-      } catch (error) {
-        console.error("Error accessing camera:", error);
-        setHasCameraPermission(false);
-      }
-    };
-
-    startCamera();
-
-    // The cleanup function is critical. It runs when the component unmounts
-    // or when the dependencies of the effect change.
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [capturedImage]);
-
-  // This effect shows a toast message if camera access is denied
-  useEffect(() => {
-    if (hasCameraPermission === false) {
-      toast({
-        variant: "destructive",
-        title: "Camera Access Denied",
-        description: "Please enable camera permissions in your browser settings to use this app.",
-      });
+      };
+      
+      getCameraStream();
+      
+      return () => {
+        isCancelled = true;
+        // Clean up the stream when the component unmounts or when we get an image
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+        }
+      };
     }
-  }, [hasCameraPermission, toast]);
+  }, [capturedImage, toast]);
 
+  const stopCameraStream = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  }
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
@@ -81,27 +87,26 @@ export default function VerifyIdentityPage() {
     const context = canvas.getContext("2d")
 
     if (context) {
-      // Flip the image horizontally to create a mirror effect
       context.translate(video.videoWidth, 0)
       context.scale(-1, 1)
       context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
       const dataUrl = canvas.toDataURL("image/jpeg")
       setCapturedImage(dataUrl)
+      stopCameraStream();
     }
   }
 
   const retakePhoto = () => {
     setCapturedImage(null)
-    setHasCameraPermission(null);
+    setHasCameraPermission(null); // This will trigger the useEffect to get the camera stream again
   }
   
   const handleVerify = async () => {
     if (!capturedImage) return;
     setIsVerifying(true);
 
-    // Simulate AI verification delay
+    // Simulate AI verification due to installation issues.
     setTimeout(() => {
-      // Simulate a successful verification for demo purposes
       toast({
         title: 'Verification Successful ✅',
         description: 'You can proceed to the next step.',
@@ -114,9 +119,7 @@ export default function VerifyIdentityPage() {
       } else {
         router.push('/verify-phone');
       }
-      
-      setIsVerifying(false);
-    }, 1500); // 1.5 second delay
+    }, 1500);
   }
 
   return (
@@ -162,7 +165,7 @@ export default function VerifyIdentityPage() {
                             <AlertDescription>Please enable camera permissions in your browser settings and refresh the page.</AlertDescription>
                         </Alert>
                     )}
-                     {hasCameraPermission === null && (
+                     {hasCameraPermission === null && !capturedImage && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
                             <Loader2 className="h-12 w-12 animate-spin" />
                             <p>Starting camera...</p>
@@ -176,7 +179,7 @@ export default function VerifyIdentityPage() {
           {!capturedImage ? (
              <Button
                 onClick={capturePhoto}
-                disabled={!hasCameraPermission || isVerifying}
+                disabled={hasCameraPermission !== true || isVerifying}
                 className="w-full"
               >
                 <Camera className="mr-2 h-4 w-4" />
