@@ -10,7 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-export const GenderVerificationInputSchema = z.object({
+const GenderVerificationInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
@@ -19,7 +19,7 @@ export const GenderVerificationInputSchema = z.object({
 });
 export type GenderVerificationInput = z.infer<typeof GenderVerificationInputSchema>;
 
-export const GenderVerificationOutputSchema = z.object({
+const GenderVerificationOutputSchema = z.object({
   isHuman: z.boolean().describe('Whether or not the image contains a human face.'),
   isClear: z.boolean().describe('Whether the image is clear and not blurry.'),
   isFemale: z.boolean().describe('Whether the person in the image is female. Set to false if not human or not clear.'),
