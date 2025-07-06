@@ -9,7 +9,7 @@ export default function Home() {
       <div className="w-full max-w-xs rounded-2xl bg-card px-8 py-12 shadow-xl">
         <div className="flex flex-col items-center space-y-8 text-center">
           <div className="space-y-2">
-            <h1 className="font-headline text-5xl font-bold tracking-tight text-foreground">
+            <h1 className="font-headline text-4xl font-bold tracking-tight text-foreground">
               Femigo
             </h1>
             <p className="text-sm text-muted-foreground">
@@ -30,7 +30,7 @@ export default function Home() {
           </div>
 
           <div className="w-full space-y-4 pt-6">
-            <Button asChild className="w-full rounded-xl bg-[#EC008C] py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:bg-[#d4007a] focus:outline-none">
+            <Button asChild className="w-full rounded-xl bg-[#EC008C] py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:bg-[#d4007a] focus:outline-none focus:ring-0">
               <Link href="/signup">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
