@@ -48,8 +48,8 @@ export default function VerifyOtpPage() {
     const initialOtp = generateOtp();
     setOtp(initialOtp);
     toast({
-      title: "OTP Sent!",
-      description: `For demo purposes, your code is: ${initialOtp}`,
+      description: `Your Femigo verification code is: ${initialOtp}`,
+      className: "bg-white border-blue-200 text-blue-600 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700",
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -102,8 +102,8 @@ export default function VerifyOtpPage() {
     const newOtp = generateOtp();
     setOtp(newOtp);
     toast({ 
-      title: 'OTP Resent!', 
-      description: `A new code has been sent. For demo, use: ${newOtp}`
+      description: `Your Femigo verification code is: ${newOtp}`,
+      className: "bg-white border-blue-200 text-blue-600 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700",
     });
   }
 
@@ -119,10 +119,10 @@ export default function VerifyOtpPage() {
         </Link>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 4: OTP Verification
+            Step 5: OTP Verification
           </CardTitle>
           <CardDescription className="mx-auto max-w-sm pt-2">
-            A 6-digit code has been sent to {phone}. Check the pop-up notification.
+            A 6-digit code has been sent to {phone}. Enter the code below.
           </CardDescription>
         </CardHeader>
         <CardContent>
