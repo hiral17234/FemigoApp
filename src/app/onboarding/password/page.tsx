@@ -97,7 +97,7 @@ export default function OnboardingPasswordPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <div className="w-full rounded-2xl border border-white/10 bg-black/5 p-8 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
+          <div className="w-full rounded-2xl border border-white/10 p-8 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
             <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Secure Your Account
             </h1>
