@@ -1,10 +1,15 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, Lock, Mail } from "lucide-react"
+import { ArrowLeft, Lock, Mail, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { auth } from "@/lib/firebase"
+
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,18 +21,22 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email.",
   }),
-  password: z.string().min(1, {
-    message: "Password is required.",
+  password: z.string().min(6, {
+    message: "Password must be at least 6 characters.",
   }),
 })
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,12 +45,40 @@ export default function LoginPage() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    toast({
-      title: "Logged In!",
-      description: "Welcome back.",
-    })
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true)
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      )
+      
+      const user = userCredential.user;
+      console.log("User logged in:", user);
+      
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userEmail", values.email)
+      }
+
+      toast({
+        title: "Logged In!",
+        description: "Welcome back.",
+        className: "bg-green-500 text-white",
+      })
+
+      router.push("/dashboard")
+
+    } catch (error: any) {
+      console.error("Login failed:", error.code, error.message)
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -83,6 +120,7 @@ export default function LoginPage() {
                             placeholder="your.email@example.com"
                             {...field}
                             className="pl-10"
+                            disabled={isSubmitting}
                           />
                         </div>
                       </FormControl>
@@ -105,6 +143,7 @@ export default function LoginPage() {
                             placeholder="Your Password"
                             {...field}
                             className="pl-10"
+                            disabled={isSubmitting}
                           />
                         </div>
                       </FormControl>
@@ -115,8 +154,10 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
+                  disabled={isSubmitting}
                   className="w-full rounded-xl bg-[#EC008C] py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
                 >
+                   {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                   Log In
                 </Button>
               </form>

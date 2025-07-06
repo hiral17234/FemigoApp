@@ -14,14 +14,21 @@ import {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [phone, setPhone] = useState("")
+  const [identifier, setIdentifier] = useState("")
+  const [identifierType, setIdentifierType] = useState("")
 
   useEffect(() => {
     const storedPhone = typeof window !== "undefined" ? localStorage.getItem("userPhone") : null
+    const storedEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") : null
+
     if (storedPhone) {
-      setPhone(storedPhone)
+      setIdentifier(storedPhone)
+      setIdentifierType("phone number")
+    } else if (storedEmail) {
+      setIdentifier(storedEmail)
+      setIdentifierType("email")
     } else {
-      // If no phone number, they haven't "logged in" via OTP
+      // If no identifier, user is not logged in
       router.push("/")
     }
   }, [router])
@@ -32,6 +39,7 @@ export default function DashboardPage() {
       localStorage.removeItem("userPhone")
       localStorage.removeItem("userName")
       localStorage.removeItem("userCountry")
+      localStorage.removeItem("userEmail")
     }
     router.push("/")
   }
@@ -44,9 +52,9 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <CardDescription>
-            You have successfully verified your identity. Your phone number is:
+            You have successfully logged in. Your verified {identifierType} is:
           </CardDescription>
-          <p className="text-lg font-semibold text-primary">{phone}</p>
+          <p className="text-lg font-semibold text-primary">{identifier}</p>
           <Button onClick={handleSignOut} variant="destructive">
             Sign Out
           </Button>
