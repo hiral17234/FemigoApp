@@ -9,6 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import { validateAadhaarNumber } from '../tools/aadhaar-validator';
 
 const AadhaarVerificationInputSchema = z.object({
   photoDataUri: z
@@ -21,9 +22,12 @@ const AadhaarVerificationInputSchema = z.object({
 export type AadhaarVerificationInput = z.infer<typeof AadhaarVerificationInputSchema>;
 
 const AadhaarVerificationOutputSchema = z.object({
-  isAadhaarCard: z.boolean().describe("Whether or not the image contains a valid Aadhaar card."),
+  isAadhaarCard: z.boolean().describe('Whether or not the image contains a valid Aadhaar card.'),
+  isAadhaarValid: z.boolean().describe("Whether the Aadhaar number passed the simulated government validation. This is true if the tool 'validateAadhaarNumber' returns true."),
   isNameMatch: z.boolean().describe("Whether the name on the card matches the provided name."),
   extractedName: z.string().describe("The full name extracted from the Aadhaar card."),
+  extractedAadhaarNumber: z.string().describe("The 12-digit Aadhaar number extracted from the card."),
+  gender: z.enum(['female', 'male', 'unknown']).describe("The gender identified from the Aadhaar card. It can be 'female', 'male', or 'unknown'."),
 });
 export type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutputSchema>;
 
@@ -35,13 +39,23 @@ const prompt = ai.definePrompt({
   name: 'aadhaarVerificationPrompt',
   input: {schema: AadhaarVerificationInputSchema},
   output: {schema: AadhaarVerificationOutputSchema},
-  prompt: `You are an expert OCR system specializing in Indian identity documents. Your task is to verify an Aadhaar card from a provided image.
+  tools: [validateAadhaarNumber],
+  prompt: `You are an expert OCR system specializing in Indian identity documents. Your task is to verify an Aadhaar card from a provided image and validate its details.
 
-1. First, determine if the image is a clear photo of a valid Indian Aadhaar card. Set 'isAadhaarCard' to true or false.
-2. If 'isAadhaarCard' is false, set 'isNameMatch' to false and 'extractedName' to an empty string.
-3. If 'isAadhaarCard' is true, extract the full name printed on the card. Set this value to 'extractedName'.
-4. Compare the extracted name with the user-provided name: '{{name}}'. Perform a case-insensitive comparison.
-5. Set 'isNameMatch' to true if the names match, and false otherwise.
+Follow these steps precisely:
+
+1.  **Card Identification**: First, determine if the image is a clear photo of a valid Indian Aadhaar card. Set 'isAadhaarCard' to true or false. If it is false, stop here and return false for all other boolean fields and empty strings/unknown for other fields.
+
+2.  **Data Extraction**: If 'isAadhaarCard' is true, extract the following information from the card:
+    *   The full name. Set this value to 'extractedName'.
+    *   The 12-digit Aadhaar number, without any spaces. Set this to 'extractedAadhaarNumber'.
+    *   The gender. Set this to 'gender' ('female', 'male', or 'unknown').
+
+3.  **Aadhaar Number Validation**: Use the 'validateAadhaarNumber' tool with the 'extractedAadhaarNumber'. The tool will simulate a check against a government database. Based on the tool's response, set 'isAadhaarValid' to true or false.
+
+4.  **Name Matching**: Compare the 'extractedName' with the user-provided name: '{{name}}'. Perform a case-insensitive comparison. Set 'isNameMatch' to true if the names match, and false otherwise.
+
+5.  **Final Output**: Return the complete output object with all fields populated according to the steps above.
 
 User-provided name: {{name}}
 Image of Aadhaar Card: {{media url=photoDataUri}}`,
@@ -56,7 +70,14 @@ const aadhaarVerificationFlow = ai.defineFlow(
   async input => {
     const {output} = await prompt(input);
     if (!output) {
-        return { isAadhaarCard: false, isNameMatch: false, extractedName: "" };
+        return {
+            isAadhaarCard: false,
+            isAadhaarValid: false,
+            isNameMatch: false,
+            extractedName: "",
+            extractedAadhaarNumber: "",
+            gender: "unknown",
+        };
     }
     return output;
   }

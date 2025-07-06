@@ -125,33 +125,46 @@ export default function VerifyAadhaarPage() {
         name: name,
       })
       
-      if (result.isAadhaarCard && result.isNameMatch) {
+      if (!result.isAadhaarCard) {
         toast({
-          title: "Aadhaar Verified Successfully ✅",
-          description: "Welcome to Femigo!",
-          className: "bg-green-500 text-white",
-        })
-        router.push("/dashboard")
+          variant: 'destructive',
+          title: 'Verification Failed',
+          description:
+            'Could not detect a valid Aadhaar card. Please capture a clear image.',
+        });
+      } else if (!result.isAadhaarValid) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid Aadhaar Card',
+          description: `The Aadhaar number "${result.extractedAadhaarNumber}" appears to be invalid. Please use a valid card.`,
+        });
+      } else if (result.gender !== 'female') {
+        toast({
+          variant: 'destructive',
+          title: 'Access Denied',
+          description:
+            'This platform is for female users only. The provided Aadhaar card does not indicate female gender.',
+        });
+      } else if (!result.isNameMatch) {
+        toast({
+          variant: 'destructive',
+          title: 'Name Mismatch',
+          description: `The name on the card ("${result.extractedName}") does not match the name you entered. Please check and try again.`,
+        });
       } else {
-        let description = "Verification failed. Please try again."
-        if (!result.isAadhaarCard) {
-            description = "Could not detect a valid Aadhaar card. Please capture a clear image."
-        } else if (!result.isNameMatch) {
-            description = `Name mismatch. We extracted "${result.extractedName}" from the card, which does not match the name you entered. Please check and try again.`
-        }
-
         toast({
-          variant: "destructive",
-          title: "Verification Failed",
-          description,
-        })
+          title: 'Aadhaar Verified Successfully ✅',
+          description: 'Welcome to Femigo!',
+          className: 'bg-green-500 text-white',
+        });
+        router.push('/dashboard');
       }
     } catch (error) {
       console.error("Aadhaar verification failed:", error)
       toast({
         variant: "destructive",
         title: "Verification Error",
-        description: "Something went wrong during verification. Please try again.",
+        description: "An unexpected error occurred during verification. Please try again.",
       })
     } finally {
       setIsVerifying(false)
