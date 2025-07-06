@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, Copy, Check } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -32,6 +32,39 @@ const formSchema = z.object({
   }),
 })
 
+const OtpToastContent = ({ otp }: { otp: string }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(otp);
+    setIsCopied(true);
+    setTimeout(() => {
+      setIsCopied(false);
+    }, 2000); // Revert back to copy icon after 2 seconds
+  };
+
+  return (
+    <div className="flex w-full items-center justify-between gap-4">
+      <div>
+        <p className="text-sm font-medium text-blue-500">Femigo Verification</p>
+        <p className="text-xl font-bold tracking-widest text-gray-900">{otp}</p>
+      </div>
+      <button
+        onClick={handleCopy}
+        className="flex shrink-0 items-center justify-center rounded-md p-2 text-sm text-blue-500 transition-colors hover:bg-blue-50"
+      >
+        {isCopied ? (
+          <Check className="h-5 w-5 text-green-500" />
+        ) : (
+          <Copy className="h-5 w-5" />
+        )}
+        <span className="sr-only">Copy OTP</span>
+      </button>
+    </div>
+  );
+};
+
+
 export default function VerifyOtpPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -42,15 +75,19 @@ export default function VerifyOtpPage() {
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
+  
+  const showOtpToast = (newOtp: string) => {
+    toast({
+      description: <OtpToastContent otp={newOtp} />,
+      className: "bg-white border-gray-200 shadow-lg w-full",
+    });
+  }
 
   // Set initial OTP on the client-side and show initial toast
   useEffect(() => {
     const initialOtp = generateOtp();
     setOtp(initialOtp);
-    toast({
-      description: `Your Femigo verification code is: ${initialOtp}`,
-      className: "bg-white border-blue-200 text-blue-600 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700",
-    });
+    showOtpToast(initialOtp);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -101,10 +138,7 @@ export default function VerifyOtpPage() {
   const handleResendOtp = () => {
     const newOtp = generateOtp();
     setOtp(newOtp);
-    toast({ 
-      description: `Your Femigo verification code is: ${newOtp}`,
-      className: "bg-white border-blue-200 text-blue-600 dark:bg-gray-800 dark:text-blue-300 dark:border-blue-700",
-    });
+    showOtpToast(newOtp);
   }
 
   return (
@@ -122,7 +156,7 @@ export default function VerifyOtpPage() {
             Step 5: OTP Verification
           </CardTitle>
           <CardDescription className="mx-auto max-w-sm pt-2">
-            A 6-digit code has been sent to {phone}. Enter the code below.
+            A 6-digit code has been sent to your device. Check the notification and enter the code below.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -165,7 +199,7 @@ export default function VerifyOtpPage() {
 
           <p className="pt-4 text-center text-sm text-muted-foreground">
             Didn't receive the code?{" "}
-            <button type="button" className="font-medium text-primary hover:underline" onClick={handleResendOtp}>
+            <button type="button" className="font-medium text-primary hover:underline" onClick={handleResendOtp} disabled={isVerifying}>
               Resend OTP
             </button>
           </p>
