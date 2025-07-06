@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { runLiveVerification } from "@/ai/flows/live-verification-flow"
 
 export default function VerifyIdentityPage() {
   const router = useRouter()
@@ -88,47 +87,25 @@ export default function VerifyIdentityPage() {
     setHasCameraPermission(null)
   }
   
-  const handleContinue = async () => {
+  const handleContinue = () => {
     if (!capturedImage) return;
     setIsProcessing(true);
 
-    try {
-      const result = await runLiveVerification({ photoDataUri: capturedImage });
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('userLivePhoto', capturedImage);
+    }
 
-      if (result.verificationPassed) {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('userLivePhoto', capturedImage);
-        }
-        toast({
-          title: 'Verification Passed!',
-          description: 'You can proceed to the next step.',
-          className: 'bg-green-500 text-white',
-        });
-        
-        const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-        if (country === 'india') {
-          router.push('/verify-aadhaar');
-        } else {
-          router.push('/verify-phone');
-        }
-      } else {
-        // Verification failed, show the specific reason
-        toast({
-          variant: "destructive",
-          title: "Verification Failed",
-          description: result.failureReason || "Please try again with a clear photo.",
-        });
-        // Stay on the page, allow user to retake
-      }
-    } catch (error: any) {
-      console.error("Verification error:", error);
-      toast({
-        variant: "destructive",
-        title: "An Error Occurred",
-        description: error.message || "Something went wrong. Please try again later.",
-      });
-    } finally {
-        setIsProcessing(false);
+    toast({
+        title: 'Photo Captured!',
+        description: "Next, let's verify your identity document.",
+        className: 'bg-green-500 text-white',
+    });
+    
+    const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+    if (country === 'india') {
+      router.push('/verify-aadhaar');
+    } else {
+      router.push('/verify-phone');
     }
   }
 
@@ -145,11 +122,10 @@ export default function VerifyIdentityPage() {
         <Card className="w-full rounded-2xl p-6 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2 text-3xl font-bold tracking-tight text-foreground">
-              <UserCheck /> Step 2: Live Verification
+              <UserCheck /> Step 2: Live Photo Capture
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-              Our AI will check your photo for compliance. This platform is for <span className="font-semibold text-primary">women only</span>. 
-              Please <span className="font-semibold text-destructive">remove any glasses</span> and ensure your face is clearly visible.
+              Please take a clear, live photo of your face. This will be used for verification in the next step. Our platform is for <span className="font-semibold text-primary">women only</span>.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
