@@ -8,6 +8,7 @@ import { z } from "zod"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -59,26 +60,24 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full bg-background">
-      <Link
-        href="/"
-        className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Home
-      </Link>
-      <div className="flex min-h-screen w-full items-center justify-center p-4">
-        <div className="w-full max-w-sm rounded-2xl bg-card p-8 shadow-xl">
-          <div className="flex flex-col items-center space-y-6 text-center">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                Create Account
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Join Femigo and be part of our community.
-              </p>
-            </div>
-
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+      <Card className="relative w-full max-w-sm rounded-2xl p-6 shadow-xl">
+        <Link
+          href="/"
+          className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Link>
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+            Step 1: Create Account
+          </CardTitle>
+          <CardDescription className="pt-2">
+            Join Femigo and be part of our community.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -338,7 +337,7 @@ export default function SignupPage() {
               </form>
             </Form>
 
-            <p className="pt-2 text-center text-sm text-muted-foreground">
+            <p className="pt-6 text-center text-sm text-muted-foreground">
               Already have an account?{" "}
               <Link
                 href="/login"
@@ -347,9 +346,8 @@ export default function SignupPage() {
                 Log in
               </Link>
             </p>
-          </div>
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </main>
   )
 }

@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -76,27 +77,21 @@ export default function VerifyPhonePage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center bg-background p-4 pt-20">
-      <div className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8">
-        <Link href={backUrl} className="flex items-center gap-2">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+       <Card className="relative w-full max-w-sm rounded-2xl p-6 shadow-xl">
+        <Link href={backUrl} className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6">
             <ArrowLeft className="h-4 w-4" />
             Back
         </Link>
-      </div>
-
-      <div className="w-full max-w-md text-center">
-        <h1 className="text-4xl font-bold text-foreground">Femigo</h1>
-        <div className="mt-2 h-1 w-12 mx-auto bg-primary rounded-full" />
-      </div>
-
-      <div className="mt-12 w-full max-w-sm rounded-2xl bg-card p-8 shadow-xl">
-        <div className="flex flex-col space-y-6 text-left">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              Your Phone!
-            </h2>
-          </div>
-
+        <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+              Step 3: Phone Verification
+            </CardTitle>
+            <CardDescription className="pt-2">
+                Enter your phone number to receive a verification code.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
@@ -169,8 +164,8 @@ export default function VerifyPhonePage() {
               </Button>
             </form>
           </Form>
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </main>
   )
 }

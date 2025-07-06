@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import {
   Form,
   FormControl,
@@ -16,6 +17,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription as FormDescriptionHint,
 } from "@/components/ui/form"
 import {
   InputOTP,
@@ -50,7 +52,7 @@ export default function VerifyOtpPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      pin: DEMO_OTP,
+      pin: "",
     },
   })
 
@@ -82,30 +84,24 @@ export default function VerifyOtpPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center bg-background p-4 pt-20">
-       <div className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8">
-         <Link href="/verify-phone" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back
+     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+      <Card className="relative w-full max-w-md rounded-2xl p-6 shadow-xl">
+        <Link
+          href="/verify-phone"
+          className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
         </Link>
-      </div>
-      
-      <div className="w-full max-w-md text-center">
-        <h1 className="text-4xl font-bold text-foreground">Femigo</h1>
-        <div className="mt-2 h-1 w-12 mx-auto bg-primary rounded-full" />
-      </div>
-
-      <div className="mt-12 w-full max-w-sm rounded-2xl bg-card p-8 shadow-xl">
-        <div className="flex flex-col space-y-6 text-center">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">
-              Enter OTP
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              A 6-digit code has been sent to {phone}.
-            </p>
-          </div>
-
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+            Step 4: OTP Verification
+          </CardTitle>
+          <CardDescription className="mx-auto max-w-sm pt-2">
+            A 6-digit code has been sent to {phone}.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
               <FormField
@@ -127,6 +123,9 @@ export default function VerifyOtpPage() {
                         </InputOTPGroup>
                       </InputOTP>
                     </FormControl>
+                    <FormDescriptionHint className="pt-2 text-center text-xs">
+                      (For demo purposes, use code: 123456)
+                    </FormDescriptionHint>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -143,14 +142,14 @@ export default function VerifyOtpPage() {
             </form>
           </Form>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="pt-4 text-center text-sm text-muted-foreground">
             Didn't receive the code?{" "}
-            <button className="text-primary hover:underline font-medium" onClick={() => router.push('/verify-phone')}>
+            <button className="font-medium text-primary hover:underline" onClick={() => toast({ title: 'OTP Resent!', description: 'A new code has been sent (use 123456).'})}>
               Resend OTP
             </button>
           </p>
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </main>
   )
 }

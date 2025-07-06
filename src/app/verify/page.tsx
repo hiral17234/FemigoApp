@@ -127,21 +127,21 @@ export default function VerifyIdentityPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+      <Card className="relative w-full max-w-lg rounded-2xl p-6 shadow-xl">
        <Link
         href="/signup"
-        className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8"
+        className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Account Details
       </Link>
-      <Card className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 1: Verify Your Identity
+            Step 2: Face Verification
           </CardTitle>
           <CardDescription className="mx-auto max-w-sm pt-2">
-            Please enable your camera and take a clear picture of your face. This helps us ensure a safe and supportive space for all.
+            Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -213,6 +213,6 @@ export default function VerifyIdentityPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </main>
   )
 }
