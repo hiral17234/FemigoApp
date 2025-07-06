@@ -119,10 +119,6 @@ export default function VerifyEmailOtpPage() {
                 description: "Your account is now fully set up.",
                 className: "bg-green-500 text-white",
             });
-            // Final step, clear phone and proceed to dashboard
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("userPhone")
-            }
             router.push("/congratulations");
         } else {
             toast({
