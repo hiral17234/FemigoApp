@@ -31,7 +31,7 @@ const AadhaarVerificationModelOutputSchema = z.object({
 });
 
 // Final output schema for the flow, including the server-side name match check
-export const AadhaarVerificationOutputSchema = AadhaarVerificationModelOutputSchema.extend({
+const AadhaarVerificationOutputSchema = AadhaarVerificationModelOutputSchema.extend({
   isNameMatch: z.boolean().describe("Whether the name on the card matches the provided name."),
 });
 export type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutputSchema>;
