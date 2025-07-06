@@ -50,7 +50,7 @@ export default function VerifyOtpPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      pin: "",
+      pin: DEMO_OTP,
     },
   })
 
