@@ -35,42 +35,25 @@ export async function verifyGender(input: GenderVerificationInput): Promise<Gend
 
 const genderVerificationPrompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
-  model: 'googleai/gemini-pro-vision',
+  model: 'googleai/gemini-1.5-pro-preview-0514',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
-  prompt: `You are an advanced AI security agent for Femigo, a platform exclusively for female users. Your task is to analyze the provided user image and determine if the user meets the platform's criteria.
+  prompt: `Analyze the user's photo. You must determine three things:
+1. isClear: Is the photo clear and not blurry?
+2. isHuman: Does the photo contain a real human face (not an object, animal, or illustration)?
+3. isFemale: If the photo is clear and contains a human, are they female?
 
-  Perform the following checks in order:
-  1.  **Clarity Check:** Determine if the image is clear and not blurry. The user's face must be reasonably sharp and visible.
-  2.  **Human Check:** Determine if the image contains a human face. It must not be an object, animal, or illustration.
-  3.  **Gender Check:** If the image is clear and contains a human, determine if the person is female.
+Return your analysis in the specified JSON format. Provide a brief 'reason' for your final decision.
+If 'isClear' is false, or 'isHuman' is false, then 'isFemale' must also be false.
 
-  Based on your analysis, provide a response in the required JSON format.
-  - If the image is blurry, set 'isClear' to false and provide a reason. 'isHuman' and 'isFemale' should also be false.
-  - If the image is clear but does not contain a human, set 'isHuman' to false and provide a reason. 'isFemale' should also be false.
-  - If the image is clear and contains a human, but the person is not female, set 'isFemale' to false and provide a reason.
-  - If all checks pass (clear image, human, female), set all boolean flags to true and provide a success reason.
-
-  Photo to analyze: {{media url=photoDataUri}}
+Photo to analyze: {{media url=photoDataUri}}
   `,
    config: {
     safetySettings: [
-      {
-        category: 'HARM_CATEGORY_HATE_SPEECH',
-        threshold: 'BLOCK_NONE',
-      },
-      {
-        category: 'HARM_CATEGORY_HARASSMENT',
-        threshold: 'BLOCK_NONE',
-      },
-      {
-        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-        threshold: 'BLOCK_NONE',
-      },
-      {
-        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-        threshold: 'BLOCK_NONE',
-      },
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
     ],
   },
 });

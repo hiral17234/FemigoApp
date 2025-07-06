@@ -24,7 +24,7 @@ export default function VerifyIdentityPage() {
   const [isVerifying, setIsVerifying] = useState(false)
 
   useEffect(() => {
-    if (capturedImage) {
+    if (capturedImage || hasCameraPermission === false) {
       return;
     }
 
@@ -54,7 +54,7 @@ export default function VerifyIdentityPage() {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [capturedImage, toast]);
+  }, [capturedImage, toast, hasCameraPermission]);
 
 
   const capturePhoto = () => {
@@ -84,6 +84,7 @@ export default function VerifyIdentityPage() {
 
   const retakePhoto = () => {
     setCapturedImage(null)
+    setHasCameraPermission(null)
   }
   
   const handleVerify = async () => {
@@ -113,12 +114,12 @@ export default function VerifyIdentityPage() {
           description: result.reason || 'Please try again with a clear photo of your face.',
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Verification failed:", error);
       toast({
         variant: "destructive",
         title: "An Error Occurred",
-        description: "Something went wrong during verification. Please try again later.",
+        description: error.message || "Something went wrong during verification. Please try again later.",
       });
     } finally {
       setIsVerifying(false);
