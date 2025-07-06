@@ -1,9 +1,9 @@
-
 "use client"
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Camera, ShieldCheck, User, Loader2, RefreshCcw, AlertTriangle, Upload, FileCheck } from "lucide-react"
+import Link from "next/link"
+import { ArrowLeft, Camera, ShieldCheck, User, Loader2, RefreshCcw, AlertTriangle, Upload, FileCheck } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
@@ -177,7 +177,14 @@ export default function VerifyAadhaarPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-background p-4">
+        <Link
+            href="/verify"
+            className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8"
+        >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+        </Link>
         <div className="w-full max-w-md">
             <Card className="w-full">
             <CardContent className="p-6 space-y-6">
