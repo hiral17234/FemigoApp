@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Camera, Loader2, RefreshCcw, Upload, User, ShieldCheck, ScanLine, KeyRound, AlertTriangle, SwitchCamera } from "lucide-react"
+import { ArrowLeft, Camera, Loader2, RefreshCcw, Upload, User, ShieldCheck, ScanLine, KeyRound, AlertTriangle, SwitchCamera, UserCheck } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
@@ -130,8 +130,20 @@ export default function VerifyAadhaarPage() {
     setAadhaarImage(dataUrl);
     setStep("verify");
     setIsExtracting(true);
+
+    const livePhotoDataUri = localStorage.getItem('userLivePhoto');
+    if (!livePhotoDataUri) {
+        toast({
+            variant: "destructive",
+            title: "Live Photo Missing",
+            description: "Could not find the live verification photo. Please go back and complete face verification again.",
+        });
+        resetCapture();
+        return;
+    }
+
     try {
-      const result = await extractAadhaarData({ photoDataUri: dataUrl });
+      const result = await extractAadhaarData({ photoDataUri: dataUrl, livePhotoDataUri });
       setExtractedData(result);
     } catch (error: any) {
       toast({ variant: "destructive", title: "OCR Failed", description: error.message || "Could not read data from the image." });
@@ -178,6 +190,16 @@ export default function VerifyAadhaarPage() {
         toast({ variant: "destructive", title: "Access Denied", description: "This platform is for women only." });
         setIsVerifying(false);
         return;
+    }
+
+    if (!extractedData.isPhotoMatch) {
+      toast({
+          variant: "destructive",
+          title: "Photo Mismatch",
+          description: extractedData.photoMatchReason || "The photo on the Aadhaar card does not appear to match your live photo.",
+      });
+      setIsVerifying(false);
+      return;
     }
 
     // All checks passed
@@ -281,6 +303,7 @@ export default function VerifyAadhaarPage() {
                         <Skeleton className="h-8 w-full" />
                         <Skeleton className="h-8 w-3/4" />
                         <Skeleton className="h-8 w-1/2" />
+                        <Skeleton className="h-8 w-full" />
                     </div>
                 ) : (
                     <>
@@ -296,6 +319,12 @@ export default function VerifyAadhaarPage() {
                             <ShieldCheck className="w-5 h-5 text-muted-foreground" />
                             <p className="flex-1 text-sm">{extractedData?.gender || 'Not found'}</p>
                         </div>
+                        <div className="flex items-center gap-3">
+                            <UserCheck className="w-5 h-5 text-muted-foreground" />
+                            <p className={cn("flex-1 text-sm", extractedData?.isPhotoMatch ? "text-green-600 dark:text-green-500" : "text-destructive")}>
+                                {extractedData?.photoMatchReason || 'Awaiting check...'}
+                            </p>
+                        </div>
                     </>
                 )}
             </CardContent>
@@ -305,7 +334,7 @@ export default function VerifyAadhaarPage() {
             <Button onClick={resetCapture} variant="outline" disabled={isExtracting || isVerifying}>
                 <RefreshCcw className="mr-2 h-4 w-4" /> Recapture
             </Button>
-            <Button onClick={handleFinalVerification} disabled={isExtracting || isVerifying || !extractedData} className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105">
+            <Button onClick={handleFinalVerification} disabled={isExtracting || isVerifying || !extractedData?.isPhotoMatch} className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105">
                 {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Verify Now
             </Button>

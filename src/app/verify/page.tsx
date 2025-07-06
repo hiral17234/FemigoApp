@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -100,6 +101,10 @@ export default function VerifyIdentityPage() {
           description: result.reason || 'You can proceed to the next step.',
           className: 'bg-green-500 text-white',
         });
+        
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('userLivePhoto', capturedImage);
+        }
 
         const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
         if (country === 'india') {
@@ -142,7 +147,7 @@ export default function VerifyIdentityPage() {
               Step 2: Face Verification
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-              Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
+              Please take a clear picture of your face, without glasses. This helps us ensure a safe and supportive space for all.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
