@@ -35,6 +35,7 @@ export async function verifyGender(input: GenderVerificationInput): Promise<Gend
 
 const genderVerificationPrompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
+  model: 'googleai/gemini-pro-vision',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
   prompt: `You are an advanced AI security agent for Femigo, a platform exclusively for female users. Your task is to analyze the provided user image and determine if the user meets the platform's criteria.
@@ -52,6 +53,26 @@ const genderVerificationPrompt = ai.definePrompt({
 
   Photo to analyze: {{media url=photoDataUri}}
   `,
+   config: {
+    safetySettings: [
+      {
+        category: 'HARM_CATEGORY_HATE_SPEECH',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_HARASSMENT',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+        threshold: 'BLOCK_NONE',
+      },
+      {
+        category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+        threshold: 'BLOCK_NONE',
+      },
+    ],
+  },
 });
 
 
