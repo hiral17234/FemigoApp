@@ -45,20 +45,25 @@ const prompt = ai.definePrompt({
   input: {schema: AadhaarVerificationInputSchema},
   output: {schema: AadhaarVerificationModelOutputSchema},
   tools: [validateAadhaarNumber],
-  prompt: `You are an OCR and data extraction AI specializing in Indian Aadhaar cards for a user verification system. Your task is to extract information and validate it.
+  prompt: `You are a highly accurate OCR and data extraction AI for a user verification system called Femigo. Your task is to extract specific information from an Indian Aadhaar card image and validate the Aadhaar number.
 
-**Instructions:**
+**Input:**
+- An image of an Aadhaar card: {{media url=photoDataUri}}
+- The user's self-declared name: {{{name}}}
 
-1.  **Analyze Image**: Examine the provided image to determine if it is a genuine Indian Aadhaar card. Set \`isAadhaarCard\` to \`true\` or \`false\`. If \`false\`, stop and return default values.
-    *   Image: {{media url=photoDataUri}}
-2.  **Extract Data**: If it is an Aadhaar card, extract the following fields:
-    *   \`extractedName\`: The full name in English.
-    *   \`extractedAadhaarNumber\`: The 12-digit number.
-    *   \`gender\`: The gender, which must be 'female', 'male', or 'unknown'.
-3.  **Format Aadhaar Number**: Remove any spaces from the extracted 12-digit Aadhaar number before using it in the next step.
-4.  **Validate Aadhaar Number**: Use the \`validateAadhaarNumber\` tool with the formatted Aadhaar number.
-5.  **Set Validation Flag**: Based on the output from the \`validateAadhaarNumber\` tool, set the \`isAadhaarValid\` boolean field to \`true\` or \`false\`.
-6.  **Return JSON**: Your final output must be a JSON object that strictly adheres to the defined output schema.`,
+**CRITICAL INSTRUCTIONS:**
+
+1.  **Card Identification**: First, verify if the image is a genuine Indian Aadhaar card.
+    *   If it is, set \`isAadhaarCard\` to \`true\`.
+    *   If it is NOT an Aadhaar card, set \`isAadhaarCard\` to \`false\` and provide default values for all other fields.
+2.  **Data Extraction**: If it is a valid Aadhaar card, you MUST extract the following information precisely:
+    *   \`extractedName\`: The full name as it appears on the card in English.
+    *   \`extractedAadhaarNumber\`: The 12-digit Aadhaar number. **You MUST remove all spaces or dashes from the number.**
+    *   \`gender\`: The gender printed on the card. This value MUST be one of \`'female'\`, \`'male'\`, or \`'unknown'\`.
+3.  **Aadhaar Number Validation**: Use the \`validateAadhaarNumber\` tool.
+    *   Pass the extracted 12-digit number (with spaces removed) to the tool.
+    *   Set the \`isAadhaarValid\` field based on the tool's response.
+4.  **Output Format**: Your entire response MUST be a single, valid JSON object that strictly follows the defined output schema. Do not include any extra text, comments, or apologies.`,
   config: {
     safetySettings: [
       {

@@ -33,15 +33,25 @@ const prompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
   input: {schema: VerifyGenderInputSchema},
   output: {schema: VerifyGenderOutputSchema},
-  prompt: `You are an expert AI for facial analysis. Your task is to analyze the provided photo and determine the gender of the person in it.
+  prompt: `You are a specialized AI model for a user verification system for an application called Femigo, which is exclusively for female users. Your only job is to determine if the person in the photo is female.
 
-**Instructions:**
+**CRITICAL INSTRUCTIONS:**
+1.  Analyze the provided image: {{media url=photoDataUri}}.
+2.  **Is this a person?** If the image clearly contains a human face, set \`isPerson\` to \`true\`. Otherwise, set it to \`false\`.
+3.  **Is the person female?** Based on the visual evidence, determine if the person is female.
+    *   If the person appears to be female, set the \`gender\` field to \`'female'\`.
+    *   If the person appears to be male, set the \`gender\` field to \`'male'\`.
+    *   If you cannot determine the gender, or if no person is detected, set the \`gender\` field to \`'unknown'\`.
+4.  **Output Format**: Your entire response MUST be a single JSON object matching the output schema. Do not add any other text or explanation.
 
-1.  **Analyze the Image**: Examine the provided photo: {{media url=photoDataUri}}.
-2.  **Check for Person**: First, determine if the image contains a person's face. Set the \`isPerson\` field to \`true\` or \`false\`.
-3.  **Identify Gender**: If a person is present, identify their apparent gender based on visual features.
-4.  **Output**: Your output for the \`gender\` field MUST be one of the following strings: 'female', 'male', or 'unknown'. If you cannot determine the gender with reasonable confidence, or if no person is detected, use 'unknown'.
-5.  **Return JSON**: Your final output must be a JSON object that strictly adheres to the defined output schema.`,
+**Example Input Image:** A photo of a woman.
+**Expected Output:** \`{"isPerson": true, "gender": "female"}\`
+
+**Example Input Image:** A photo of a man.
+**Expected Output:** \`{"isPerson": true, "gender": "male"}\`
+
+**Example Input Image:** A photo of a landscape.
+**Expected Output:** \`{"isPerson": false, "gender": "unknown"}\``,
   config: {
     safetySettings: [
       {
