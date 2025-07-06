@@ -2,7 +2,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, ChevronRight, Loader2 } from "lucide-react"
+import { ArrowLeft, ChevronRight, Loader2, ChevronsUpDown, Check } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -21,14 +21,10 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/hooks/use-toast"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { countries } from "@/lib/countries"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   countryCode: z.string().min(1, { message: "Please select a country code." }),
@@ -41,6 +37,7 @@ export default function VerifyPhonePage() {
   const router = useRouter()
   const [backUrl, setBackUrl] = useState("/verify");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
@@ -54,14 +51,14 @@ export default function VerifyPhonePage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      countryCode: "+91",
+      countryCode: "91",
       phone: "",
     },
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const phoneNumber = `${values.countryCode}${values.phone}`;
+    const phoneNumber = `+${values.countryCode}${values.phone}`;
 
     // Simulate sending OTP
     setTimeout(() => {
@@ -106,29 +103,42 @@ export default function VerifyPhonePage() {
                       control={form.control}
                       name="countryCode"
                       render={({ field }) => (
-                        <FormItem className="w-[130px]">
-                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Code" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <ScrollArea className="h-72">
-                                <SelectItem value="+91">🇮🇳 India (+91)</SelectItem>
-                                <SelectItem value="+1">🇺🇸 USA (+1)</SelectItem>
-                                <SelectItem value="+44">🇬🇧 UK (+44)</SelectItem>
-                                <SelectItem value="+1">🇨🇦 Canada (+1)</SelectItem>
-                                <SelectItem value="+61">🇦🇺 Australia (+61)</SelectItem>
-                                <SelectItem value="+49">🇩🇪 Germany (+49)</SelectItem>
-                                <SelectItem value="+33">🇫🇷 France (+33)</SelectItem>
-                                <SelectItem value="+81">🇯🇵 Japan (+81)</SelectItem>
-                                <SelectItem value="+55">🇧🇷 Brazil (+55)</SelectItem>
-                                <SelectItem value="+27">🇿🇦 South Africa (+27)</SelectItem>
-                                <SelectItem value="+86">🇨🇳 China (+86)</SelectItem>
-                              </ScrollArea>
-                            </SelectContent>
-                          </Select>
+                        <FormItem className="flex flex-col w-[150px]">
+                           <Popover open={open} onOpenChange={setOpen}>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                  {field.value ? `+${countries.find(c => c.phone === field.value)?.phone}` : "Code"}
+                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[250px] p-0 dark">
+                              <Command>
+                                <CommandInput placeholder="Search country..." />
+                                <CommandList>
+                                  <CommandEmpty>No country found.</CommandEmpty>
+                                  <CommandGroup>
+                                    {countries.map((country) => (
+                                      <CommandItem
+                                        value={`${country.label} (+${country.phone})`}
+                                        key={country.value}
+                                        onSelect={() => {
+                                          form.setValue("countryCode", country.phone)
+                                          setOpen(false)
+                                        }}
+                                      >
+                                        <Check className={cn("mr-2 h-4 w-4", country.phone === field.value ? "opacity-100" : "opacity-0")} />
+                                        <span className="mr-2">{country.emoji}</span>
+                                        <span className="flex-1 truncate">{country.label}</span>
+                                        <span className="text-xs text-muted-foreground/80">{`+${country.phone}`}</span>
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </PopoverContent>
+                          </Popover>
                           <FormMessage />
                         </FormItem>
                       )}

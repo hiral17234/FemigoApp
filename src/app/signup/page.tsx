@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, User, Globe, Loader2 } from "lucide-react"
+import { ArrowLeft, User, Globe, Loader2, ChevronsUpDown, Check } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -20,15 +20,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { countries } from "@/lib/countries"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -39,6 +38,7 @@ export default function SignupPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -106,27 +106,64 @@ export default function SignupPage() {
                 control={form.control}
                 name="country"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col">
                     <FormLabel className="text-purple-200/90">Country</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
-                      <FormControl>
-                        <SelectTrigger className="bg-white/5 border-white/20">
-                          <div className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-purple-300/70" />
-                            <SelectValue placeholder="Select your country" />
-                          </div>
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="dark">
-                        <ScrollArea className="h-72">
-                          {countries.map((country) => (
-                            <SelectItem key={country.value} value={country.value}>
-                              {country.label}
-                            </SelectItem>
-                          ))}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
+                    <Popover open={open} onOpenChange={setOpen}>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={open}
+                            disabled={isSubmitting}
+                            className={cn(
+                              "w-full justify-between bg-white/5 border-white/20 hover:bg-white/10 hover:text-white",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <div className="flex items-center gap-2">
+                                <Globe className="h-4 w-4 text-purple-300/70" />
+                                {field.value
+                                ? countries.find(
+                                    (country) => country.value === field.value
+                                  )?.label
+                                : "Select your country"}
+                            </div>
+                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 dark">
+                        <Command>
+                          <CommandInput placeholder="Search country..." />
+                          <CommandList>
+                            <CommandEmpty>No country found.</CommandEmpty>
+                            <CommandGroup>
+                              {countries.map((country) => (
+                                <CommandItem
+                                  value={country.label}
+                                  key={country.value}
+                                  onSelect={() => {
+                                    form.setValue("country", country.value)
+                                    setOpen(false)
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      country.value === field.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {country.label}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}

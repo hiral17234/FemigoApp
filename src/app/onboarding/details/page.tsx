@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ChevronRight, Loader2, ArrowLeft } from "lucide-react"
+import { ChevronRight, Loader2, ArrowLeft, ChevronsUpDown, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,16 +19,13 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { indianStates, indianStatesList } from "@/lib/indian-states-cities"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { countries } from "@/lib/countries"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+
 
 const formSchema = z.object({
   age: z.coerce.number().min(18, "You must be at least 18 years old.").max(100),
@@ -78,6 +75,9 @@ export default function OnboardingDetailsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [statePopoverOpen, setStatePopoverOpen] = useState(false)
+  const [cityPopoverOpen, setCityPopoverOpen] = useState(false)
+  const [countryCodePopoverOpen, setCountryCodePopoverOpen] = useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -196,36 +196,82 @@ export default function OnboardingDetailsPage() {
 
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     <FormField control={form.control} name="state" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>State</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-transparent border-white/20 backdrop-blur-sm"><SelectValue placeholder="Select your state" /></SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="dark">
-                            <ScrollArea className="h-72">
-                              {indianStatesList.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
-                            </ScrollArea>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
+                       <FormItem className="flex flex-col">
+                         <FormLabel>State</FormLabel>
+                         <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                           <PopoverTrigger asChild>
+                             <FormControl>
+                               <Button variant="outline" role="combobox" className={cn("w-full justify-between bg-transparent border-white/20 backdrop-blur-sm hover:bg-white/10 hover:text-white", !field.value && "text-muted-foreground")}>
+                                 {field.value ? indianStatesList.find(s => s === field.value) : "Select your state"}
+                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                               </Button>
+                             </FormControl>
+                           </PopoverTrigger>
+                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0 dark">
+                             <Command>
+                               <CommandInput placeholder="Search state..." />
+                               <CommandEmpty>No state found.</CommandEmpty>
+                               <CommandList>
+                                 <CommandGroup>
+                                   {indianStatesList.map((state) => (
+                                     <CommandItem
+                                       value={state}
+                                       key={state}
+                                       onSelect={() => {
+                                         form.setValue("state", state)
+                                         setStatePopoverOpen(false)
+                                       }}
+                                     >
+                                       <Check className={cn("mr-2 h-4 w-4", state === field.value ? "opacity-100" : "opacity-0")} />
+                                       {state}
+                                     </CommandItem>
+                                   ))}
+                                 </CommandGroup>
+                               </CommandList>
+                             </Command>
+                           </PopoverContent>
+                         </Popover>
+                         <FormMessage />
+                       </FormItem>
                     )} />
                     <FormField control={form.control} name="city" render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value} disabled={cities.length === 0}>
-                           <FormControl>
-                             <SelectTrigger className="bg-transparent border-white/20 backdrop-blur-sm"><SelectValue placeholder="Select your city" /></SelectTrigger>
-                           </FormControl>
-                           <SelectContent className="dark">
-                             <ScrollArea className="h-72">
-                               {cities.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
-                             </ScrollArea>
-                           </SelectContent>
-                         </Select>
-                        <FormMessage />
-                      </FormItem>
+                       <FormItem className="flex flex-col">
+                         <FormLabel>City</FormLabel>
+                         <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+                           <PopoverTrigger asChild>
+                             <FormControl>
+                               <Button variant="outline" role="combobox" disabled={cities.length === 0} className={cn("w-full justify-between bg-transparent border-white/20 backdrop-blur-sm hover:bg-white/10 hover:text-white", !field.value && "text-muted-foreground")}>
+                                 {field.value || "Select your city"}
+                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                               </Button>
+                             </FormControl>
+                           </PopoverTrigger>
+                           <PopoverContent className="w-[--radix-popover-trigger-width] p-0 dark">
+                             <Command>
+                               <CommandInput placeholder="Search city..." />
+                               <CommandEmpty>No city found.</CommandEmpty>
+                               <CommandList>
+                                 <CommandGroup>
+                                   {cities.map((city) => (
+                                     <CommandItem
+                                       value={city}
+                                       key={city}
+                                       onSelect={() => {
+                                         form.setValue("city", city)
+                                         setCityPopoverOpen(false)
+                                       }}
+                                     >
+                                       <Check className={cn("mr-2 h-4 w-4", city === field.value ? "opacity-100" : "opacity-0")} />
+                                       {city}
+                                     </CommandItem>
+                                   ))}
+                                 </CommandGroup>
+                               </CommandList>
+                             </Command>
+                           </PopoverContent>
+                         </Popover>
+                         <FormMessage />
+                       </FormItem>
                     )} />
                   </div>
                   
@@ -245,35 +291,48 @@ export default function OnboardingDetailsPage() {
                     <FormLabel>Alternate Phone Number (Optional)</FormLabel>
                     <div className="flex items-start gap-2">
                         <FormField
-                            control={form.control}
-                            name="altCountryCode"
-                            render={({ field }) => (
-                            <FormItem className="w-[130px]">
-                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
-                                <FormControl>
-                                    <SelectTrigger className="bg-transparent border-white/20 backdrop-blur-sm">
-                                    <SelectValue placeholder="Code" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent className="dark">
-                                    <ScrollArea className="h-72">
-                                        <SelectItem value="+91">🇮🇳 India (+91)</SelectItem>
-                                        <SelectItem value="+1">🇺🇸 USA (+1)</SelectItem>
-                                        <SelectItem value="+44">🇬🇧 UK (+44)</SelectItem>
-                                        <SelectItem value="+1">🇨🇦 Canada (+1)</SelectItem>
-                                        <SelectItem value="+61">🇦🇺 Australia (+61)</SelectItem>
-                                        <SelectItem value="+49">🇩🇪 Germany (+49)</SelectItem>
-                                        <SelectItem value="+33">🇫🇷 France (+33)</SelectItem>
-                                        <SelectItem value="+81">🇯🇵 Japan (+81)</SelectItem>
-                                        <SelectItem value="+55">🇧🇷 Brazil (+55)</SelectItem>
-                                        <SelectItem value="+27">🇿🇦 South Africa (+27)</SelectItem>
-                                        <SelectItem value="+86">🇨🇳 China (+86)</SelectItem>
-                                    </ScrollArea>
-                                </SelectContent>
-                                </Select>
-                                <FormMessage />
+                          control={form.control}
+                          name="altCountryCode"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-col w-[150px]">
+                              <Popover open={countryCodePopoverOpen} onOpenChange={setCountryCodePopoverOpen}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button variant="outline" role="combobox" className={cn("w-full justify-between bg-transparent border-white/20 backdrop-blur-sm hover:bg-white/10 hover:text-white", !field.value && "text-muted-foreground")}>
+                                      {field.value ? `+${countries.find(c => c.phone === field.value)?.phone}` : "Code"}
+                                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[250px] p-0 dark">
+                                  <Command>
+                                    <CommandInput placeholder="Search country..." />
+                                    <CommandList>
+                                      <CommandEmpty>No country found.</CommandEmpty>
+                                      <CommandGroup>
+                                        {countries.map((country) => (
+                                          <CommandItem
+                                            value={`${country.label} (+${country.phone})`}
+                                            key={country.value}
+                                            onSelect={() => {
+                                              form.setValue("altCountryCode", country.phone)
+                                              setCountryCodePopoverOpen(false)
+                                            }}
+                                          >
+                                            <Check className={cn("mr-2 h-4 w-4", country.phone === field.value ? "opacity-100" : "opacity-0")} />
+                                            <span className="mr-2">{country.emoji}</span>
+                                            <span className="flex-1 truncate">{country.label}</span>
+                                            <span className="text-xs text-muted-foreground/80">{`+${country.phone}`}</span>
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
                             </FormItem>
-                            )}
+                          )}
                         />
                         <FormField
                             control={form.control}
