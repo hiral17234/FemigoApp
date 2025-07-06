@@ -22,6 +22,7 @@ export default function VerifyPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [isCameraReady, setIsCameraReady] = useState(false)
 
   useEffect(() => {
     const startCamera = async () => {
@@ -50,6 +51,7 @@ export default function VerifyPage() {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
+        setIsCameraReady(false);
       }
     };
 
@@ -65,18 +67,8 @@ export default function VerifyPage() {
   }, [capturedImage, toast]);
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && streamRef.current) {
+    if (videoRef.current && canvasRef.current && streamRef.current && isCameraReady) {
       const video = videoRef.current;
-
-      if (video.videoWidth === 0 || video.videoHeight === 0) {
-        toast({
-            variant: "destructive",
-            title: "Camera Not Ready",
-            description: "The camera is still initializing. Please wait a moment.",
-        });
-        return;
-      }
-
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -91,14 +83,15 @@ export default function VerifyPage() {
     } else {
       toast({
         variant: "destructive",
-        title: "Camera Error",
-        description: "Could not access camera stream. Please ensure camera is enabled and try again.",
+        title: "Camera Not Ready",
+        description: "The camera is still initializing. Please wait a moment.",
       });
     }
   };
 
   const retakePhoto = () => {
     setCapturedImage(null);
+    setIsCameraReady(false);
   }
   
   const handleVerify = async () => {
@@ -147,6 +140,23 @@ export default function VerifyPage() {
       setIsVerifying(false)
     }
   }
+
+  const getButtonState = () => {
+    if (isVerifying) {
+        return { text: "Verifying...", disabled: true, icon: <Loader2 className="mr-2 h-5 w-5 animate-spin" /> };
+    }
+    if (hasCameraPermission === null) {
+        return { text: "Starting Camera...", disabled: true, icon: <Loader2 className="mr-2 h-5 w-5 animate-spin" /> };
+    }
+    if (hasCameraPermission === false) {
+        return { text: "Camera Disabled", disabled: true, icon: <Camera className="mr-2"/> };
+    }
+    if (!isCameraReady) {
+        return { text: "Initializing Camera...", disabled: true, icon: <Loader2 className="mr-2 h-5 w-5 animate-spin" /> };
+    }
+    return { text: "Capture Photo", disabled: false, icon: <Camera className="mr-2"/> };
+  }
+  const buttonState = getButtonState();
   
   const renderCameraView = () => {
     if(capturedImage) {
@@ -167,7 +177,7 @@ export default function VerifyPage() {
             <div className="flex flex-col items-center gap-2 text-destructive">
                 <AlertTriangle className="w-12 h-12" />
                 <p className="text-center">Camera access was denied.</p>
-                <Button variant="outline" size="sm" onClick={retakePhoto}>Try Again</Button>
+                <Button variant="outline" size="sm" onClick={() => window.location.reload()}>Try Again</Button>
             </div>
         )
     }
@@ -178,7 +188,8 @@ export default function VerifyPage() {
             className="h-full w-full object-cover transform -scale-x-100" 
             autoPlay 
             muted 
-            playsInline 
+            playsInline
+            onLoadedData={() => setIsCameraReady(true)}
         />
     )
   }
@@ -221,9 +232,9 @@ export default function VerifyPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || isVerifying} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {hasCameraPermission === null ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
-                            {hasCameraPermission === true ? "Capture Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
+                           <Button onClick={capturePhoto} disabled={buttonState.disabled} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                            {buttonState.icon}
+                            {buttonState.text}
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
