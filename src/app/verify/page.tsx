@@ -4,14 +4,13 @@
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle, CheckCircle } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { verifyGender } from "@/ai/flows/gender-verification-flow"
 
 export default function VerifyIdentityPage() {
   const router = useRouter()
@@ -22,7 +21,7 @@ export default function VerifyIdentityPage() {
 
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
-  const [isVerifying, setIsVerifying] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     if (capturedImage || hasCameraPermission === false) {
@@ -88,46 +87,34 @@ export default function VerifyIdentityPage() {
     setHasCameraPermission(null)
   }
   
-  const handleVerify = async () => {
+  const handleContinue = async () => {
     if (!capturedImage) return;
-    setIsVerifying(true);
+    setIsProcessing(true);
 
     try {
-      const result = await verifyGender({ photoDataUri: capturedImage });
-
-      if (result.isFemale) {
-        toast({
-          title: 'Verification Successful ✅',
-          description: 'You can proceed to the next step.',
-          className: 'bg-green-500 text-white',
-        });
-        
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('userLivePhoto', capturedImage);
-        }
-
-        const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-        if (country === 'india') {
-          router.push('/verify-aadhaar');
-        } else {
-          router.push('/verify-phone');
-        }
+      if (typeof window !== 'undefined') {
+          localStorage.setItem('userLivePhoto', capturedImage);
+      }
+      toast({
+        title: 'Photo Saved!',
+        description: 'You can proceed to the next step.',
+        className: 'bg-green-500 text-white',
+      });
+      
+      const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+      if (country === 'india') {
+        router.push('/verify-aadhaar');
       } else {
-        toast({
-          variant: 'destructive',
-          title: 'Verification Failed',
-          description: result.reason || 'This platform is for women only. Please try again with a clear photo.',
-        });
+        router.push('/verify-phone');
       }
     } catch (error: any) {
-      console.error("Verification failed:", error);
+      console.error("Failed to save photo:", error);
       toast({
         variant: "destructive",
         title: "An Error Occurred",
-        description: error.message || "Something went wrong during verification. Please try again later.",
+        description: "Something went wrong. Please try again later.",
       });
-    } finally {
-      setIsVerifying(false);
+       setIsProcessing(false);
     }
   }
 
@@ -144,10 +131,10 @@ export default function VerifyIdentityPage() {
         <Card className="w-full rounded-2xl p-6 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-              Step 2: Face Verification
+              Step 2: Live Photo Capture
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-              Please take a clear picture of your face. This helps us ensure a safe space.
+              Please take a clear picture of your face. This will be used to compare with your ID.
               <span className="font-semibold text-destructive"> Please remove any glasses.</span>
             </CardDescription>
           </CardHeader>
@@ -190,7 +177,7 @@ export default function VerifyIdentityPage() {
             {!capturedImage ? (
               <Button
                   onClick={capturePhoto}
-                  disabled={hasCameraPermission !== true || isVerifying}
+                  disabled={hasCameraPermission !== true || isProcessing}
                   className="w-full"
                 >
                   <Camera className="mr-2 h-4 w-4" />
@@ -201,20 +188,21 @@ export default function VerifyIdentityPage() {
                 <Button
                   onClick={retakePhoto}
                   variant="outline"
-                  disabled={isVerifying}
+                  disabled={isProcessing}
                 >
                   <RefreshCcw className="mr-2 h-4 w-4" />
                   Retake
                 </Button>
                 <Button
-                  onClick={handleVerify}
-                  disabled={isVerifying}
+                  onClick={handleContinue}
+                  disabled={isProcessing}
                   className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105"
                 >
-                  {isVerifying && (
+                  {isProcessing && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Verify Now
+                  Save & Continue
+                  <CheckCircle className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             )}
