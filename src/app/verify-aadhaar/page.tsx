@@ -2,15 +2,16 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Camera, ShieldCheck, Heart, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
+import { Camera, ShieldCheck, User, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { verifyGender } from "@/ai/flows/gender-verification-flow"
+import { verifyAadhaar } from "@/ai/flows/aadhaar-verification-flow"
 import { Card, CardContent } from "@/components/ui/card"
 
-export default function VerifyPage() {
+export default function VerifyAadhaarPage() {
   const router = useRouter()
   const { toast } = useToast()
   
@@ -21,6 +22,7 @@ export default function VerifyPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [name, setName] = useState("")
 
   const stopStream = () => {
     if (stream) {
@@ -49,7 +51,7 @@ export default function VerifyPage() {
     }
 
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       setStream(newStream);
       setHasCameraPermission(true)
     } catch (error) {
@@ -80,7 +82,6 @@ export default function VerifyPage() {
     }
   }, [stream])
 
-
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current && stream) {
       const video = videoRef.current
@@ -89,8 +90,6 @@ export default function VerifyPage() {
       canvas.height = video.videoHeight
       const context = canvas.getContext("2d")
       if (context) {
-        context.translate(video.videoWidth, 0);
-        context.scale(-1, 1);
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
         const dataUrl = canvas.toDataURL("image/jpeg")
         setCapturedImage(dataUrl)
@@ -110,40 +109,49 @@ export default function VerifyPage() {
   }
   
   const handleVerify = async () => {
-    if (!capturedImage) return
+    if (!capturedImage || !name) {
+        toast({
+            variant: "destructive",
+            title: "Missing Information",
+            description: "Please enter your name and capture a photo of your Aadhaar card.",
+        })
+        return
+    }
     
     setIsVerifying(true)
     try {
-      const result = await verifyGender({
+      const result = await verifyAadhaar({
         photoDataUri: capturedImage,
+        name: name,
       })
       
-      if (result.isPerson && result.gender === "female") {
+      if (result.isAadhaarCard && result.isNameMatch) {
         toast({
-          title: "Verification Successful ✅",
-          description: "Proceeding to Aadhaar verification.",
+          title: "Aadhaar Verified Successfully ✅",
+          description: "Welcome to Femigo!",
           className: "bg-green-500 text-white",
         })
-        router.push("/verify-aadhaar")
+        router.push("/dashboard")
       } else {
-        let description = "This platform is reserved for female users only."
-        if (!result.isPerson) {
-          description = "No person was detected in the photo. Please use a clear photo of your face."
+        let description = "Verification failed. Please try again."
+        if (!result.isAadhaarCard) {
+            description = "Could not detect a valid Aadhaar card. Please capture a clear image."
+        } else if (!result.isNameMatch) {
+            description = `Name mismatch. We extracted "${result.extractedName}" from the card, which does not match the name you entered. Please check and try again.`
         }
+
         toast({
           variant: "destructive",
-          title: "Access Denied",
+          title: "Verification Failed",
           description,
         })
-        setCapturedImage(null);
-        startStream();
       }
     } catch (error) {
-      console.error("Verification failed:", error)
+      console.error("Aadhaar verification failed:", error)
       toast({
         variant: "destructive",
-        title: "Verification Failed",
-        description: "Something went wrong. Please try again.",
+        title: "Verification Error",
+        description: "Something went wrong during verification. Please try again.",
       })
     } finally {
       setIsVerifying(false)
@@ -171,13 +179,13 @@ export default function VerifyPage() {
     }
 
     if(capturedImage) {
-        return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
+        return <Image src={capturedImage} alt="Captured Aadhaar photo" layout="fill" objectFit="contain" />
     }
 
     return (
         <video 
             ref={videoRef} 
-            className="h-full w-full object-cover transform -scale-x-100" 
+            className="h-full w-full object-cover" 
             autoPlay 
             muted 
             playsInline 
@@ -188,23 +196,31 @@ export default function VerifyPage() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
         <div className="w-full max-w-md">
-            <header className="text-center mb-8">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground flex items-center justify-center gap-2">
-                Femigo <Heart className="text-primary" fill="currentColor" />
-                </h1>
-                <p className="text-muted-foreground">Your Personal Safety Companion</p>
-            </header>
-
             <Card className="w-full">
             <CardContent className="p-6 space-y-6">
                 <div>
                     <div className="flex items-center gap-2 mb-2">
                         <ShieldCheck className="w-6 h-6 text-primary" />
-                        <h2 className="text-xl font-bold">Step 1: Identity Verification</h2>
+                        <h2 className="text-xl font-bold">Step 2: Aadhaar Verification</h2>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                        Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
+                        Enter your name exactly as it appears on your Aadhaar card, then capture a clear photo of the card.
                     </p>
+                </div>
+                
+                <div className="space-y-2">
+                    <label htmlFor="name" className="text-sm font-medium">Name as per Aadhaar card</label>
+                    <div className="relative">
+                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            id="name"
+                            placeholder="Your Full Name"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="pl-10"
+                            disabled={isVerifying || !!capturedImage}
+                        />
+                    </div>
                 </div>
 
                 <div className="space-y-4">
@@ -218,18 +234,18 @@ export default function VerifyPage() {
                         {!capturedImage ? (
                            <Button onClick={capturePhoto} disabled={!stream} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
                             {!stream && hasCameraPermission !== false ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
-                            {stream ? "Capture Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
+                            {stream ? "Capture Aadhaar Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
-                                <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
+                                <Button onClick={retakePhoto} variant="outline" className="w-full" disabled={isVerifying}><RefreshCcw className="mr-2"/>Retake</Button>
                                 <Button
                                     onClick={handleVerify}
-                                    disabled={!capturedImage || isVerifying}
+                                    disabled={!capturedImage || isVerifying || !name}
                                     className="w-full bg-[#EC008C] hover:bg-[#d4007a]"
                                 >
                                     {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2" />}
-                                    {isVerifying ? "Verifying..." : "Verify Now"}
+                                    {isVerifying ? "Verifying..." : "Verify Aadhaar"}
                                 </Button>
                            </div>
                         )}
