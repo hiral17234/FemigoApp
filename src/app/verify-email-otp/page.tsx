@@ -6,7 +6,7 @@ import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -71,7 +71,11 @@ export default function VerifyEmailOtpPage() {
   const [email, setEmail] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [otp, setOtp] = useState("")
-  const [showPaste, setShowPaste] = useState(false)
+  
+  const [isHovering, setIsHovering] = useState(false)
+  const [pastePosition, setPastePosition] = useState({ x: 0, y: 0 });
+  const otpContainerRef = useRef<HTMLDivElement>(null);
+
 
   const generateOtp = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -134,6 +138,13 @@ export default function VerifyEmailOtpPage() {
     }
   };
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (otpContainerRef.current) {
+        const rect = otpContainerRef.current.getBoundingClientRect();
+        setPastePosition({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+    }
+  }
+
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsVerifying(true)
     
@@ -191,27 +202,29 @@ export default function VerifyEmailOtpPage() {
                   name="pin"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex items-center justify-between">
-                        <FormLabel>Verification Code</FormLabel>
-                        {showPaste && (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-auto px-2 py-1 text-xs"
-                                onClick={handlePaste}
-                                disabled={isVerifying}
-                            >
-                                <ClipboardPaste className="mr-1 h-3 w-3" />
-                                Paste
-                            </Button>
-                        )}
-                      </div>
+                      <FormLabel>Verification Code</FormLabel>
                       <FormControl>
                         <div
-                          onMouseEnter={() => setShowPaste(true)}
-                          onMouseLeave={() => setShowPaste(false)}
+                          ref={otpContainerRef}
+                          className="relative cursor-pointer"
+                          onMouseEnter={() => setIsHovering(true)}
+                          onMouseLeave={() => setIsHovering(false)}
+                          onMouseMove={handleMouseMove}
+                          onClick={handlePaste}
                         >
+                          {isHovering && (
+                            <div
+                                className="absolute z-10 flex items-center gap-1 rounded-md bg-secondary px-2 py-1 text-xs text-secondary-foreground shadow-lg pointer-events-none"
+                                style={{ 
+                                    left: pastePosition.x, 
+                                    top: pastePosition.y,
+                                    transform: 'translate(-50%, -150%)',
+                                }}
+                            >
+                                <ClipboardPaste className="h-3 w-3" />
+                                <span>Click to Paste</span>
+                            </div>
+                          )}
                           <InputOTP maxLength={6} {...field} disabled={isVerifying}>
                             <InputOTPGroup className="mx-auto">
                               <InputOTPSlot index={0} />
