@@ -1,9 +1,9 @@
 
 'use server';
 /**
- * @fileOverview A gender and glasses verification AI agent.
+ * @fileOverview A gender verification AI agent.
  *
- * - verifyGenderAndGlasses - A function that handles the verification process.
+ * - verifyGender - A function that handles the verification process.
  * - GenderVerificationInput - The input type for the function.
  * - GenderVerificationOutput - The return type for the function.
  */
@@ -22,8 +22,7 @@ export type GenderVerificationInput = z.infer<typeof GenderVerificationInputSche
 
 const GenderVerificationOutputSchema = z.object({
   isFemale: z.boolean().describe('Whether the person in the image is female.'),
-  hasGlasses: z.boolean().describe('Whether the person in the image is wearing glasses (spectacles or sunglasses).'),
-  reason: z.string().describe('A brief explanation for the decision, e.g., "User identified as female and is not wearing glasses.", "User is wearing glasses."'),
+  reason: z.string().describe('A brief explanation for the decision, e.g., "User identified as female." or "User does not appear to be female."'),
 });
 export type GenderVerificationOutput = z.infer<typeof GenderVerificationOutputSchema>;
 
@@ -38,18 +37,13 @@ const genderVerificationPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
-  prompt: `You are a policy compliance system for a women-only social platform. Your task is to check if a user's photo meets two critical platform rules for entry.
+  prompt: `You are an AI system for a women-only social platform. Your task is to check if a user's photo is of a female.
   
-  **Rules to Enforce:**
-  1.  **Female Presence**: The user in the photo must be identifiable as female.
-  2.  **No Glasses**: The user must not be wearing any type of glasses (spectacles or sunglasses).
-
-  Analyze the provided photo based on these two rules.
-  - If the user is female and not wearing glasses, set 'isFemale' to true and 'hasGlasses' to false.
-  - If the user is wearing glasses, set 'hasGlasses' to true.
+  Analyze the provided photo based on this rule.
+  - If the user is identifiable as female, set 'isFemale' to true.
   - If the user does not appear to be female, set 'isFemale' to false.
   
-  Provide a concise 'reason' for your final decision. Be direct. For example: "User identified as female and is not wearing glasses." or "Verification failed because the user is wearing glasses."
+  Provide a concise 'reason' for your final decision.
 
   Photo to analyze: {{media url=photoDataUri}}
   `,

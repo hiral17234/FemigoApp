@@ -95,15 +95,6 @@ export default function VerifyIdentityPage() {
     try {
       const result = await verifyGender({ photoDataUri: capturedImage });
 
-      if (result.hasGlasses) {
-        toast({
-          variant: 'destructive',
-          title: 'Verification Failed',
-          description: 'Please remove your glasses and try again.',
-        });
-        return;
-      }
-
       if (result.isFemale) {
         toast({
           title: 'Verification Successful ✅',
