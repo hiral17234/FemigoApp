@@ -113,21 +113,27 @@ export default function VerifyPhonePage() {
                                 </Button>
                               </FormControl>
                             </PopoverTrigger>
-                            <PopoverContent 
+                            <PopoverContent
                               className="w-[250px] p-0 dark"
                               onPointerDownOutside={(e) => e.preventDefault()}
                             >
                               <Command>
                                 <CommandInput placeholder="Search country..." />
+                                <div className="border-t border-border p-2 text-center text-xs text-muted-foreground">
+                                  Press Enter to select.
+                                </div>
                                 <CommandList>
                                   <CommandEmpty>No country found.</CommandEmpty>
                                   <CommandGroup>
                                     {countries.map((country) => (
                                       <CommandItem
-                                        value={country.label}
-                                        key={country.value}
-                                        onSelect={() => {
-                                          form.setValue("countryCode", country.phone)
+                                        value={`${country.label} (+${country.phone})`}
+                                        key={country.code}
+                                        onSelect={(currentValue) => {
+                                          const selectedCountry = countries.find(c => `${c.label} (+${c.phone})`.toLowerCase() === currentValue.toLowerCase());
+                                          if (selectedCountry) {
+                                            form.setValue("countryCode", selectedCountry.phone)
+                                          }
                                           setOpen(false)
                                         }}
                                       >
@@ -168,7 +174,7 @@ export default function VerifyPhonePage() {
                 <p className="text-xs text-muted-foreground">
                   An OTP will be sent via SMS to verify your mobile number.
                 </p>
-                
+
                 <Button
                   type="submit"
                   disabled={isSubmitting}

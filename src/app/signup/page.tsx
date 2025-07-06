@@ -134,12 +134,15 @@ export default function SignupPage() {
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent 
+                      <PopoverContent
                         className="w-[--radix-popover-trigger-width] p-0 dark"
                         onPointerDownOutside={(e) => e.preventDefault()}
                       >
                         <Command>
                           <CommandInput placeholder="Search country..." />
+                           <div className="border-t border-border p-2 text-center text-xs text-muted-foreground">
+                            Press Enter to select.
+                          </div>
                           <CommandList>
                             <CommandEmpty>No country found.</CommandEmpty>
                             <CommandGroup>
@@ -147,8 +150,11 @@ export default function SignupPage() {
                                 <CommandItem
                                   value={country.label}
                                   key={country.value}
-                                  onSelect={() => {
-                                    form.setValue("country", country.value)
+                                  onSelect={(currentValue) => {
+                                    const selectedCountry = countries.find(c => c.label.toLowerCase() === currentValue.toLowerCase());
+                                    if (selectedCountry) {
+                                      form.setValue("country", selectedCountry.value);
+                                    }
                                     setOpen(false)
                                   }}
                                 >

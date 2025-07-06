@@ -78,7 +78,7 @@ export default function OnboardingDetailsPage() {
   const [statePopoverOpen, setStatePopoverOpen] = useState(false)
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false)
   const [countryCodePopoverOpen, setCountryCodePopoverOpen] = useState(false)
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -114,7 +114,7 @@ export default function OnboardingDetailsPage() {
       title: "Details Saved!",
       description: "Let's secure your account.",
     })
-    
+
     setTimeout(() => {
       router.push("/onboarding/password")
     }, 1000)
@@ -171,7 +171,7 @@ export default function OnboardingDetailsPage() {
                       </FormItem>
                     )} />
                   </div>
-                  
+
                   <div className="space-y-4">
                     <FormLabel>Address</FormLabel>
                     <FormField control={form.control} name="address1" render={({ field }) => (
@@ -207,21 +207,24 @@ export default function OnboardingDetailsPage() {
                                </Button>
                              </FormControl>
                            </PopoverTrigger>
-                           <PopoverContent 
+                           <PopoverContent
                              className="w-[--radix-popover-trigger-width] p-0 dark"
                              onPointerDownOutside={(e) => e.preventDefault()}
                            >
                              <Command>
                                <CommandInput placeholder="Search state..." />
-                               <CommandEmpty>No state found.</CommandEmpty>
+                               <div className="border-t border-border p-2 text-center text-xs text-muted-foreground">
+                                Press Enter to select.
+                               </div>
                                <CommandList>
+                                 <CommandEmpty>No state found.</CommandEmpty>
                                  <CommandGroup>
                                    {indianStatesList.map((state) => (
                                      <CommandItem
                                        value={state}
                                        key={state}
-                                       onSelect={() => {
-                                         form.setValue("state", state === field.value ? "" : state)
+                                       onSelect={(currentValue) => {
+                                         form.setValue("state", currentValue === field.value ? "" : currentValue)
                                          setStatePopoverOpen(false)
                                        }}
                                      >
@@ -249,21 +252,24 @@ export default function OnboardingDetailsPage() {
                                </Button>
                              </FormControl>
                            </PopoverTrigger>
-                           <PopoverContent 
+                           <PopoverContent
                              className="w-[--radix-popover-trigger-width] p-0 dark"
                              onPointerDownOutside={(e) => e.preventDefault()}
                            >
                              <Command>
                                <CommandInput placeholder="Search city..." />
-                               <CommandEmpty>No city found.</CommandEmpty>
+                                <div className="border-t border-border p-2 text-center text-xs text-muted-foreground">
+                                 Press Enter to select.
+                               </div>
                                <CommandList>
+                                 <CommandEmpty>No city found.</CommandEmpty>
                                  <CommandGroup>
                                    {cities.map((city) => (
                                      <CommandItem
                                        value={city}
                                        key={city}
-                                       onSelect={() => {
-                                         form.setValue("city", city === field.value ? "" : city)
+                                       onSelect={(currentValue) => {
+                                         form.setValue("city", currentValue === field.value ? "" : currentValue)
                                          setCityPopoverOpen(false)
                                        }}
                                      >
@@ -280,7 +286,7 @@ export default function OnboardingDetailsPage() {
                        </FormItem>
                     )} />
                   </div>
-                  
+
                   {selectedCity === "Other" && (
                      <FormField control={form.control} name="otherCity" render={({ field }) => (
                         <FormItem>
@@ -310,21 +316,27 @@ export default function OnboardingDetailsPage() {
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
-                                <PopoverContent 
+                                <PopoverContent
                                   className="w-[250px] p-0 dark"
                                   onPointerDownOutside={(e) => e.preventDefault()}
                                 >
                                   <Command>
                                     <CommandInput placeholder="Search country..." />
+                                    <div className="border-t border-border p-2 text-center text-xs text-muted-foreground">
+                                      Press Enter to select.
+                                    </div>
                                     <CommandList>
                                       <CommandEmpty>No country found.</CommandEmpty>
                                       <CommandGroup>
                                         {countries.map((country) => (
                                           <CommandItem
-                                            value={country.label}
-                                            key={country.value}
-                                            onSelect={() => {
-                                              form.setValue("altCountryCode", country.phone)
+                                            value={`${country.label} (+${country.phone})`}
+                                            key={country.code}
+                                            onSelect={(currentValue) => {
+                                               const selectedCountry = countries.find(c => `${c.label} (+${c.phone})`.toLowerCase() === currentValue.toLowerCase());
+                                               if (selectedCountry) {
+                                                form.setValue("altCountryCode", selectedCountry.phone)
+                                               }
                                               setCountryCodePopoverOpen(false)
                                             }}
                                           >
@@ -363,7 +375,7 @@ export default function OnboardingDetailsPage() {
                         />
                     </div>
                  </FormItem>
-                  
+
                   <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-lg font-semibold text-white py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/50 hover:scale-105">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : "Next Step"}
                     <ChevronRight />
