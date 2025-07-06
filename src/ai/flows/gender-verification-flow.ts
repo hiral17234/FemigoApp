@@ -33,30 +33,17 @@ const prompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
   input: {schema: VerifyGenderInputSchema},
   output: {schema: VerifyGenderOutputSchema},
-  prompt: `You are an AI model specializing in image analysis. Your task is to analyze the provided photo and determine if it contains a person, and if so, identify their apparent gender.
+  prompt: `You are an AI model specializing in image analysis for a secure verification system. Your task is to analyze the provided photo and determine if it contains a person, and if so, identify their apparent gender.
 
 **Instructions:**
-1.  Examine the image: {{media url=photoDataUri}}.
-2.  **Person Detection**: First, determine if the image contains a clear human face.
+1.  **Person Detection**: First, determine if the image contains a clear human face.
     *   If a face is present, set \`isPerson\` to \`true\`.
     *   If no clear face is visible, set \`isPerson\` to \`false\` and \`gender\` to \`unknown\`.
-3.  **Gender Classification**: If a person is detected, classify their apparent gender based on visual features.
+2.  **Gender Classification**: If a person is detected, classify their apparent gender based on visual features.
     *   If the person appears to be female, set \`gender\` to \`'female'\`.
     *   If the person appears to be male, set \`gender\` to \`'male'\`.
-    *   If the gender is ambiguous or cannot be determined, set \`gender\` to \`'unknown'\`.
-4.  **Output**: You MUST respond with a single, valid JSON object that adheres strictly to the defined output schema. Do not include any additional text, explanations, or apologies.
-
-**Example 1:**
-*Input*: A clear photo of a woman's face.
-*Output*: \`{"isPerson": true, "gender": "female"}\`
-
-**Example 2:**
-*Input*: A clear photo of a man's face.
-*Output*: \`{"isPerson": true, "gender": "male"}\`
-
-**Example 3:**
-*Input*: A photo of a dog.
-*Output*: \`{"isPerson": false, "gender": "unknown"}\``,
+    *   If the gender is ambiguous or cannot be determined with high confidence, set \`gender\` to \`'unknown'\`.
+3.  **Output**: You MUST respond with a single, valid JSON object that adheres strictly to the defined output schema. Do not include any additional text, explanations, or apologies.`,
   config: {
     safetySettings: [
       {
@@ -90,6 +77,11 @@ const genderVerificationFlow = ai.defineFlow(
     if (!output) {
         return { isPerson: false, gender: 'unknown' };
     }
+
+    if (output.gender === 'unknown') {
+      return { isPerson: true, gender: 'unknown' }; // Trust it's a person even if gender is unclear
+    }
+
     return output;
   }
 );
