@@ -6,7 +6,8 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import Image from "next/image"
 import { useState, useEffect } from "react"
-import { ChevronRight, Loader2, User, Home, MapPin, Phone } from "lucide-react"
+import Link from "next/link"
+import { ChevronRight, Loader2, ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -74,13 +75,11 @@ export default function OnboardingDetailsPage() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     console.log(values)
-    // Here you would typically save the data
     toast({
       title: "Details Saved!",
       description: "Let's secure your account.",
     })
     
-    // Simulate API call
     setTimeout(() => {
       router.push("/onboarding/password")
     }, 1000)
@@ -91,117 +90,126 @@ export default function OnboardingDetailsPage() {
       <Image
         src="https://placehold.co/1920x1080.png"
         alt="Neon city night"
-        data-ai-hint="neon city night"
+        data-ai-hint="neon city"
         fill
         className="absolute inset-0 z-0 h-full w-full object-cover opacity-30"
       />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
-      <main className="relative z-20 flex min-h-screen items-center justify-center p-4">
-        <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
-          <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-            Tell Us About Yourself
-          </h1>
-          <p className="mb-8 text-center text-purple-200/70">
-            This information helps us personalize your experience.
-          </p>
+      <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
+        <div className="w-full max-w-2xl">
+            <Link
+              href="/"
+              className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+            <div className="w-full rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
+              <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Tell Us About Yourself
+              </h1>
+              <p className="mb-8 text-center text-purple-200/70">
+                This information helps us personalize your experience.
+              </p>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <FormField control={form.control} name="age" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Age</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="e.g., 25" {...field} className="bg-white/5 border-white/20" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="nickname" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nickname (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="How should we call you?" {...field} className="bg-white/5 border-white/20" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              
-              <div className="space-y-4">
-                <FormLabel>Address</FormLabel>
-                <FormField control={form.control} name="address1" render={({ field }) => (
-                  <FormItem>
-                    <FormControl><Input placeholder="Address Line 1" {...field} className="bg-white/5 border-white/20" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                 <FormField control={form.control} name="address2" render={({ field }) => (
-                  <FormItem>
-                    <FormControl><Input placeholder="Address Line 2 (Optional)" {...field} className="bg-white/5 border-white/20" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                 <FormField control={form.control} name="address3" render={({ field }) => (
-                  <FormItem>
-                    <FormControl><Input placeholder="Address Line 3 (Optional)" {...field} className="bg-white/5 border-white/20" /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormField control={form.control} name="age" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Age</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="e.g., 25" {...field} className="bg-white/5 border-white/20" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="nickname" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nickname (Optional)</FormLabel>
+                        <FormControl>
+                          <Input placeholder="How should we call you?" {...field} className="bg-white/5 border-white/20" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <FormLabel>Address</FormLabel>
+                    <FormField control={form.control} name="address1" render={({ field }) => (
+                      <FormItem>
+                        <FormControl><Input placeholder="Address Line 1" {...field} className="bg-white/5 border-white/20" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                     <FormField control={form.control} name="address2" render={({ field }) => (
+                      <FormItem>
+                        <FormControl><Input placeholder="Address Line 2 (Optional)" {...field} className="bg-white/5 border-white/20" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                     <FormField control={form.control} name="address3" render={({ field }) => (
+                      <FormItem>
+                        <FormControl><Input placeholder="Address Line 3 (Optional)" {...field} className="bg-white/5 border-white/20" /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <FormField control={form.control} name="state" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>State</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormField control={form.control} name="state" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>State</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-white/5 border-white/20"><SelectValue placeholder="Select your state" /></SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="dark">
+                            <ScrollArea className="h-72">
+                              {indianStatesList.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
+                            </ScrollArea>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="city" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>City</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value} disabled={cities.length === 0}>
+                           <FormControl>
+                             <SelectTrigger className="bg-white/5 border-white/20"><SelectValue placeholder="Select your city" /></SelectTrigger>
+                           </FormControl>
+                           <SelectContent className="dark">
+                             <ScrollArea className="h-72">
+                               {cities.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
+                             </ScrollArea>
+                           </SelectContent>
+                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+                  
+                  <FormField control={form.control} name="altPhone" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Alternate Phone Number (Optional)</FormLabel>
                       <FormControl>
-                        <SelectTrigger className="bg-white/5 border-white/20"><SelectValue placeholder="Select your state" /></SelectTrigger>
+                        <Input type="tel" placeholder="10-digit mobile number" {...field} className="bg-white/5 border-white/20" />
                       </FormControl>
-                      <SelectContent className="dark">
-                        <ScrollArea className="h-72">
-                          {indianStatesList.map(state => <SelectItem key={state} value={state}>{state}</SelectItem>)}
-                        </ScrollArea>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="city" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>City</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value} disabled={cities.length === 0}>
-                       <FormControl>
-                         <SelectTrigger className="bg-white/5 border-white/20"><SelectValue placeholder="Select your city" /></SelectTrigger>
-                       </FormControl>
-                       <SelectContent className="dark">
-                         <ScrollArea className="h-72">
-                           {cities.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
-                         </ScrollArea>
-                       </SelectContent>
-                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-              </div>
-              
-              <FormField control={form.control} name="altPhone" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Alternate Phone Number (Optional)</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="10-digit mobile number" {...field} className="bg-white/5 border-white/20" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )} />
-              
-              <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-lg font-semibold text-white py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/50 hover:scale-105">
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "Next Step"}
-                <ChevronRight />
-              </Button>
-            </form>
-          </Form>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-lg font-semibold text-white py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/50 hover:scale-105">
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Next Step"}
+                    <ChevronRight />
+                  </Button>
+                </form>
+              </Form>
+            </div>
         </div>
       </main>
     </div>
