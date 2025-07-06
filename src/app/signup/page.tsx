@@ -54,7 +54,7 @@ export default function SignupPage() {
     <div className="relative min-h-screen w-full bg-gradient-to-br from-[#f0f2ff] to-[#fff0f5] dark:from-gray-900 dark:to-black">
       <Link
         href="/"
-        className="absolute left-4 top-4 flex items-center gap-2 text-sm font-semibold text-foreground transition-colors hover:text-primary md:left-8 md:top-8"
+        className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Home
@@ -130,7 +130,7 @@ export default function SignupPage() {
 
                 <Button
                   type="submit"
-                  className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-semibold text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-offset-2"
+                  className="w-full rounded-xl bg-[#EC008C] py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
                 >
                   Create Account
                 </Button>
@@ -141,7 +141,7 @@ export default function SignupPage() {
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-semibold text-[#EC008C] hover:underline dark:text-pink-400"
+                className="text-[#EC008C] hover:underline dark:text-pink-400"
               >
                 Log in
               </Link>
