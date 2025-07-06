@@ -24,8 +24,8 @@ export default function VerifyPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
 
+  // This effect handles getting and cleaning up the camera stream
   useEffect(() => {
-    // This effect handles getting and cleaning up the camera stream
     if (capturedImage) {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -46,11 +46,6 @@ export default function VerifyPage() {
         console.error("Error accessing camera:", error);
         if (isMounted) {
           setHasCameraPermission(false);
-          toast({
-            variant: "destructive",
-            title: "Camera Access Denied",
-            description: "Please enable camera permissions in your browser settings to continue.",
-          });
         }
       }
     };
@@ -67,12 +62,12 @@ export default function VerifyPage() {
   }, [capturedImage]);
 
   useEffect(() => {
-    // This effect attaches the stream to the video element
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
     return () => {
-      if (videoRef.current) {
+      if (videoRef.current && stream) {
+        // Clean up stream reference
         videoRef.current.srcObject = null;
       }
     };
@@ -145,8 +140,9 @@ export default function VerifyPage() {
       toast({
         variant: "destructive",
         title: "Verification Failed",
-        description: "Something went wrong. Please try again.",
+        description: "AI verification failed. Please try again with a clear, well-lit photo.",
       })
+      retakePhoto();
     } finally {
       setIsVerifying(false)
     }

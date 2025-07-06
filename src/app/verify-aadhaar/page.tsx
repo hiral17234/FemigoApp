@@ -54,11 +54,6 @@ export default function VerifyAadhaarPage() {
         console.error("Error accessing camera:", error);
         if (isMounted) {
           setHasCameraPermission(false);
-          toast({
-            variant: "destructive",
-            title: "Camera Access Denied",
-            description: "Please enable camera permissions to use this feature.",
-          });
         }
       }
     };
@@ -151,8 +146,8 @@ export default function VerifyAadhaarPage() {
         console.error("OCR failed:", error)
         toast({
             variant: "destructive",
-            title: "OCR Failed",
-            description: "Could not read the document. Please try again with a clearer image.",
+            title: "Verification Failed",
+            description: "Could not process the document. Please try again with a clearer image.",
         })
     } finally {
         setIsVerifying(false);
