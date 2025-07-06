@@ -37,10 +37,19 @@ const formSchema = z.object({
   address3: z.string().optional(),
   state: z.string({ required_error: "Please select a state." }),
   city: z.string({ required_error: "Please select a city." }),
+  otherCity: z.string().optional(),
   altPhone: z.string().optional().refine((val) => !val || /^\d{10}$/.test(val), {
     message: "Please enter a valid 10-digit phone number.",
   }),
-})
+}).refine((data) => {
+    if (data.city === "Other") {
+        return !!data.otherCity && data.otherCity.trim().length > 0;
+    }
+    return true;
+}, {
+    message: "Please specify your city when 'Other' is selected.",
+    path: ["otherCity"],
+});
 
 export default function OnboardingDetailsPage() {
   const router = useRouter()
@@ -55,15 +64,18 @@ export default function OnboardingDetailsPage() {
       address2: "",
       address3: "",
       altPhone: "",
+      otherCity: "",
     },
   })
 
   const selectedState = form.watch("state")
+  const selectedCity = form.watch("city")
   const [cities, setCities] = useState<string[]>([])
 
   useEffect(() => {
     if (selectedState) {
-      setCities(indianStates[selectedState] || [])
+      const stateCities = indianStates[selectedState] || [];
+      setCities([...stateCities, "Other"]);
       form.setValue("city", "")
     } else {
       setCities([])
@@ -97,7 +109,7 @@ export default function OnboardingDetailsPage() {
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-md">
             <Link
               href="/congratulations"
               className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
@@ -105,7 +117,7 @@ export default function OnboardingDetailsPage() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Link>
-            <div className="w-full rounded-2xl border border-white/10 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
+            <div className="w-full rounded-2xl border border-white/10 bg-black/10 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
               <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
                 Tell Us About Yourself
               </h1>
@@ -120,7 +132,7 @@ export default function OnboardingDetailsPage() {
                       <FormItem>
                         <FormLabel>Age</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="e.g., 25" {...field} className="bg-white/5 border-white/20" />
+                          <Input type="number" placeholder="e.g., 25" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -129,7 +141,7 @@ export default function OnboardingDetailsPage() {
                       <FormItem>
                         <FormLabel>Nickname (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="How should we call you?" {...field} className="bg-white/5 border-white/20" />
+                          <Input placeholder="How should we call you?" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -140,19 +152,19 @@ export default function OnboardingDetailsPage() {
                     <FormLabel>Address</FormLabel>
                     <FormField control={form.control} name="address1" render={({ field }) => (
                       <FormItem>
-                        <FormControl><Input placeholder="Address Line 1" {...field} className="bg-white/5 border-white/20" /></FormControl>
+                        <FormControl><Input placeholder="Address Line 1" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                      <FormField control={form.control} name="address2" render={({ field }) => (
                       <FormItem>
-                        <FormControl><Input placeholder="Address Line 2 (Optional)" {...field} className="bg-white/5 border-white/20" /></FormControl>
+                        <FormControl><Input placeholder="Address Line 2 (Optional)" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                      <FormField control={form.control} name="address3" render={({ field }) => (
                       <FormItem>
-                        <FormControl><Input placeholder="Address Line 3 (Optional)" {...field} className="bg-white/5 border-white/20" /></FormControl>
+                        <FormControl><Input placeholder="Address Line 3 (Optional)" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -164,7 +176,7 @@ export default function OnboardingDetailsPage() {
                         <FormLabel>State</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <SelectTrigger className="bg-white/5 border-white/20"><SelectValue placeholder="Select your state" /></SelectTrigger>
+                            <SelectTrigger className="bg-transparent border-white/20 backdrop-blur-sm"><SelectValue placeholder="Select your state" /></SelectTrigger>
                           </FormControl>
                           <SelectContent className="dark">
                             <ScrollArea className="h-72">
@@ -180,7 +192,7 @@ export default function OnboardingDetailsPage() {
                         <FormLabel>City</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value} disabled={cities.length === 0}>
                            <FormControl>
-                             <SelectTrigger className="bg-white/5 border-white/20"><SelectValue placeholder="Select your city" /></SelectTrigger>
+                             <SelectTrigger className="bg-transparent border-white/20 backdrop-blur-sm"><SelectValue placeholder="Select your city" /></SelectTrigger>
                            </FormControl>
                            <SelectContent className="dark">
                              <ScrollArea className="h-72">
@@ -193,11 +205,23 @@ export default function OnboardingDetailsPage() {
                     )} />
                   </div>
                   
+                  {selectedCity === "Other" && (
+                     <FormField control={form.control} name="otherCity" render={({ field }) => (
+                        <FormItem>
+                           <FormLabel>Please specify your city/village</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Enter your city or village" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                     )} />
+                  )}
+
                   <FormField control={form.control} name="altPhone" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Alternate Phone Number (Optional)</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="10-digit mobile number" {...field} className="bg-white/5 border-white/20" />
+                        <Input type="tel" placeholder="10-digit mobile number" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
