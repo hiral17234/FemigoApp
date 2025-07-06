@@ -101,12 +101,14 @@ export default function VerifyIdentityPage() {
         className: 'bg-green-500 text-white',
     });
     
-    const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-    if (country === 'india') {
-      router.push('/verify-aadhaar');
-    } else {
-      router.push('/verify-phone');
-    }
+    setTimeout(() => {
+        const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+        if (country === 'india') {
+        router.push('/verify-aadhaar');
+        } else {
+        router.push('/verify-phone');
+        }
+    }, 500);
   }
 
   return (
@@ -125,7 +127,7 @@ export default function VerifyIdentityPage() {
               <UserCheck /> Step 2: Live Photo Capture
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-              Please take a clear, live photo of your face. This will be used for verification in the next step. Our platform is for <span className="font-semibold text-primary">women only</span>.
+               Please take a clear, live photo of your face. This will be compared with your ID in the next step.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
