@@ -44,7 +44,7 @@ export default function CongratulationsPage() {
     }
     setVerifiedSteps(steps)
 
-    return () => setShowConfetti(false) // Cleanup confetti on unmount
+    // No cleanup function for confetti to make it continuous
   }, [])
 
   // Custom heart shape for confetti
