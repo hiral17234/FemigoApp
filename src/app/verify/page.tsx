@@ -1,60 +1,77 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, type ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
-import { Camera, RefreshCcw, Loader2 } from "lucide-react"
+import { Camera, ShieldCheck, Heart, Loader2, Upload, RefreshCcw } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { verifyGender } from "@/ai/flows/gender-verification-flow"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+
+const toDataUri = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 export default function VerifyPage() {
   const router = useRouter()
   const { toast } = useToast()
+  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
+  const [photoState, setPhotoState] = useState<'initial' | 'streaming' | 'captured'>('initial')
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [fullName, setFullName] = useState("")
+  const [aadhaarFile, setAadhaarFile] = useState<File | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [stream, setStream] = useState<MediaStream | null>(null)
 
   useEffect(() => {
-    let stream: MediaStream | null = null
-    const getCameraPermission = async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.error("Camera API not supported.")
-        setHasCameraPermission(false)
-        toast({
-            variant: "destructive",
-            title: "Unsupported Browser",
-            description: "Your browser does not support the camera API.",
-        })
-        return
-      }
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true })
-        setHasCameraPermission(true)
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-        }
-      } catch (error) {
-        console.error("Error accessing camera:", error)
-        setHasCameraPermission(false)
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description: "Please enable camera permissions in your browser settings to continue.",
-        })
-      }
-    }
-    getCameraPermission()
-
     return () => {
-        stream?.getTracks().forEach(track => track.stop());
+      stream?.getTracks().forEach(track => track.stop());
     }
-  }, [toast])
+  }, [stream])
+
+  const handleStartCamera = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.error("Camera API not supported.")
+      setHasCameraPermission(false)
+      toast({
+          variant: "destructive",
+          title: "Unsupported Browser",
+          description: "Your browser does not support the camera API.",
+      })
+      return
+    }
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true })
+      setStream(mediaStream);
+      setHasCameraPermission(true)
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream
+      }
+      setPhotoState('streaming')
+    } catch (error) {
+      console.error("Error accessing camera:", error)
+      setHasCameraPermission(false)
+      toast({
+        variant: "destructive",
+        title: "Camera Access Denied",
+        description: "Please enable camera permissions in your browser settings to continue.",
+      })
+    }
+  }
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -67,24 +84,40 @@ export default function VerifyPage() {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
         const dataUrl = canvas.toDataURL("image/jpeg")
         setCapturedImage(dataUrl)
+        setPhotoState('captured')
+        stream?.getTracks().forEach(track => track.stop());
       }
     }
   }
 
   const retakePhoto = () => {
     setCapturedImage(null)
+    setPhotoState('initial')
+  }
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAadhaarFile(e.target.files[0])
+    }
   }
 
   const handleVerify = async () => {
-    if (!capturedImage) return
+    if (!capturedImage || !fullName || !aadhaarFile) return
+    
     setIsVerifying(true)
     try {
-      const result = await verifyGender({ photoDataUri: capturedImage })
+      const aadhaarPhotoDataUri = await toDataUri(aadhaarFile);
+      const result = await verifyGender({
+        photoDataUri: capturedImage,
+        fullName,
+        aadhaarPhotoDataUri,
+      })
+      
       if (result.gender === "female") {
         toast({
           title: "Verification Successful ✅",
           description: "You can now proceed.",
-          variant: "default",
+          className: "bg-green-500 text-white",
         })
         router.push("/dashboard")
       } else {
@@ -93,7 +126,6 @@ export default function VerifyPage() {
           title: "Access Denied",
           description: "This platform is reserved for female users only.",
         })
-        retakePhoto();
       }
     } catch (error) {
       console.error("Verification failed:", error)
@@ -106,80 +138,102 @@ export default function VerifyPage() {
       setIsVerifying(false)
     }
   }
+  
+  const isVerifiable = capturedImage && fullName && aadhaarFile;
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-[#f0f2ff] to-[#fff0f5] p-4 dark:from-gray-900 dark:to-black">
-      <div className="w-full max-w-sm rounded-2xl bg-card p-8 shadow-xl text-center">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Verify Your Identity
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            Please take a clear picture of your face to continue.
-          </p>
-        </div>
+    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md">
+        <header className="text-center mb-8">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground flex items-center justify-center gap-2">
+              Femigo <Heart className="text-primary" fill="currentColor" />
+            </h1>
+            <p className="text-muted-foreground">Your Personal Safety Companion</p>
+        </header>
 
-        <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-lg bg-black">
-          {capturedImage ? (
-            <Image src={capturedImage} alt="Captured photo" fill={true} objectFit="cover" />
-          ) : (
-             <>
-                <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
-                {hasCameraPermission === null && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <Card className="w-full bg-card/50">
+          <CardContent className="p-6 space-y-6">
+            <div>
+              <Progress value={33} className="mb-4 h-2" />
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheck className="w-6 h-6 text-primary" />
+                <h2 className="text-xl font-bold">Step 1: Identity Verification</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                For community safety, we use AI to verify your identity. Please complete all sub-steps.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {/* Part 1 */}
+              <div>
+                <h3 className="font-semibold mb-2">Part 1: Live Photo Verification</h3>
+                <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center text-center">
+                  {photoState === 'initial' && (
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                      <Camera className="w-12 h-12" />
+                      <p>Click below to start your camera for a live photo.</p>
                     </div>
+                  )}
+                  {photoState === 'streaming' && <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />}
+                  {photoState === 'captured' && capturedImage && <Image src={capturedImage} alt="Captured photo" fill={true} objectFit="cover" />}
+                </div>
+                {hasCameraPermission === false && (
+                    <Alert variant="destructive" className="text-left mt-2">
+                      <AlertTitle>Camera Access Required</AlertTitle>
+                      <AlertDescription>
+                        Please allow camera access in your browser settings to use this feature.
+                      </AlertDescription>
+                    </Alert>
                 )}
-             </>
-          )}
-        </div>
-        
-        {hasCameraPermission === false && (
-            <Alert variant="destructive" className="text-left">
-              <AlertTitle>Camera Access Required</AlertTitle>
-              <AlertDescription>
-                Please allow camera access in your browser settings to use this feature.
-              </AlertDescription>
-            </Alert>
-        )}
+                <canvas ref={canvasRef} className="hidden" />
 
+                <div className="mt-4">
+                    {photoState === 'initial' && <Button onClick={handleStartCamera} className="w-full bg-blue-500 hover:bg-blue-600"><Camera className="mr-2"/>Start Camera</Button>}
+                    {photoState === 'streaming' && <Button onClick={capturePhoto} className="w-full"><Camera className="mr-2"/>Capture Photo</Button>}
+                    {photoState === 'captured' && <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake Photo</Button>}
+                </div>
+              </div>
 
-        <canvas ref={canvasRef} className="hidden" />
+              {/* Part 2 */}
+              <div>
+                <h3 className="font-semibold mb-2">Part 2: Full Name (as on Aadhaar card)</h3>
+                <Input 
+                  placeholder="e.g., Priya Singh" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={isVerifying}
+                />
+              </div>
 
-        <div className="flex flex-col gap-4">
-          {capturedImage ? (
-            <>
-              <Button
-                onClick={handleVerify}
-                disabled={isVerifying}
-                className="w-full rounded-xl bg-gradient-to-r from-[#EC008C] to-[#FF55A5] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl focus:outline-none"
-              >
-                {isVerifying ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : null}
-                {isVerifying ? "Verifying..." : "Verify Now"}
-              </Button>
-              <Button
-                onClick={retakePhoto}
-                variant="outline"
-                className="w-full rounded-xl"
-                disabled={isVerifying}
-              >
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Retake
-              </Button>
-            </>
-          ) : (
+              {/* Part 3 */}
+              <div>
+                <h3 className="font-semibold mb-2">Part 3: Aadhaar Card Photo</h3>
+                <Input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  disabled={isVerifying}
+                />
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full" disabled={isVerifying}>
+                  <Upload className="mr-2" />
+                  {aadhaarFile ? aadhaarFile.name : 'Choose File'}
+                </Button>
+              </div>
+            </div>
+
             <Button
-              onClick={capturePhoto}
-              disabled={!hasCameraPermission}
-              className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
+              onClick={handleVerify}
+              disabled={!isVerifiable || isVerifying}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-lg py-6"
             >
-              <Camera className="mr-2 h-5 w-5" />
-              Take Picture
+              {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <ShieldCheck className="mr-2" />}
+              {isVerifying ? "Verifying..." : "Verify My Identity"}
             </Button>
-          )}
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

@@ -14,7 +14,13 @@ const VerifyGenderInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      "A photo of a person's face, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A live photo of a person's face, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+    ),
+  fullName: z.string().describe("The user's full name as provided."),
+  aadhaarPhotoDataUri: z
+    .string()
+    .describe(
+      "A photo of the user's Aadhaar card, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
 export type VerifyGenderInput = z.infer<typeof VerifyGenderInputSchema>;
@@ -32,10 +38,13 @@ const prompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
   input: {schema: VerifyGenderInputSchema},
   output: {schema: VerifyGenderOutputSchema},
-  prompt: `You are an expert at identifying gender from a person's facial features. Analyze the provided photo and determine the gender of the person.
+  prompt: `You are an expert at identifying gender from a person's facial features for a women-only platform's identity verification system.
+Your primary task is to determine the gender of the person in the live photo. Use the full name and the Aadhaar card photo as additional context if needed, but the primary determination should be from the live photo.
 The output should only be one of three options: 'female', 'male', or 'unknown'. Do not provide any additional explanation.
 
-Photo: {{media url=photoDataUri}}`,
+Live Photo: {{media url=photoDataUri}}
+Full Name: {{{fullName}}}
+Aadhaar Card Photo: {{media url=aadhaarPhotoDataUri}}`,
 });
 
 const genderVerificationFlow = ai.defineFlow(
