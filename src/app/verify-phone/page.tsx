@@ -41,10 +41,9 @@ export default function VerifyPhonePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // This logic is kept in case Aadhaar verification is re-enabled later.
     const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
     if (country === 'india') {
-        setBackUrl('/verify'); // Aadhaar is disabled, so we go back to photo capture.
+        setBackUrl('/verify-aadhaar');
     } else {
         setBackUrl('/verify');
     }
