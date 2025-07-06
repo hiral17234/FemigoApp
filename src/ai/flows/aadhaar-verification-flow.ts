@@ -28,7 +28,7 @@ export type AadhaarOcrInput = z.infer<typeof AadhaarOcrInputSchema>;
 const AadhaarOcrOutputSchema = z.object({
   aadhaarNumber: z.string().optional().describe('The 12-digit Aadhaar number, formatted as XXXX XXXX XXXX. Return an empty string if not found.'),
   fullName: z.string().optional().describe('The full name of the person as written on the card. Return an empty string if not found.'),
-  gender: z.enum(['Male', 'Female', 'Other', 'Unspecified']).optional().describe('The gender of the person. Infer "Female" or "Male" based on the name or text. If not clear, return "Unspecified".'),
+  gender: z.enum(['Male', 'Female', 'Other', 'Unspecified']).optional().describe('The gender of the person. Infer "Female" or "Male" based on the text on the card. If not clear, return "Unspecified".'),
   isPhotoMatch: z.boolean().optional().describe('Whether the face in the live photo matches the face on the Aadhaar card.'),
   photoMatchReason: z.string().optional().describe('A brief explanation for the photo match decision, accounting for age differences. e.g., "Faces match, accounting for age progression.", "Faces do not match due to different individuals."'),
 });
@@ -48,14 +48,14 @@ const aadhaarOcrPrompt = ai.definePrompt({
 
   **Extraction and Verification Rules:**
 
-  1.  **Aadhaar Number**: Extract the 12-digit Aadhaar number. It is typically formatted as XXXX XXXX XXXX.
-      - If the number is not found or unreadable, do not include the field in the output.
+  1.  **Aadhaar Number**: Extract the 12-digit Aadhaar number from the card. It is typically formatted as XXXX XXXX XXXX.
+      - If the number is not found or unreadable, return an empty string for the field.
 
-  2.  **Full Name**: Extract the full name of the cardholder.
-      - If the name is not found or unreadable, do not include the field in the output.
+  2.  **Full Name**: Extract the full name of the cardholder from the card.
+      - If the name is not found or unreadable, return an empty string for the field.
 
-  3.  **Gender**: Determine the gender from the card ('Male' or 'Female').
-      - If the gender cannot be determined, return "Unspecified".
+  3.  **Gender**: Determine the gender from the card's text ('Male' or 'Female').
+      - If the gender cannot be determined from the text, return "Unspecified".
 
   4.  **Photo Match (isPhotoMatch & photoMatchReason)**: Compare the face in the live photo with the face on the Aadhaar card.
       - **CRITICAL**: Account for age differences. The person in the live photo may be significantly older. Focus on matching stable facial features (e.g., nose shape, eye spacing) rather than superficial changes (wrinkles, hair color).

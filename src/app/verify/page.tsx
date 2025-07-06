@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { verifyUserIsFemale } from "@/ai/flows/gender-verification-flow"
 
 export default function VerifyIdentityPage() {
   const router = useRouter()
@@ -93,24 +92,11 @@ export default function VerifyIdentityPage() {
     setIsProcessing(true);
 
     try {
-      const result = await verifyUserIsFemale({ photoDataUri: capturedImage });
-
-      if (!result.isFemale) {
-        toast({
-          variant: "destructive",
-          title: "Verification Failed",
-          description: "This platform is for women only. Your photo could not be verified as female.",
-        });
-        setIsProcessing(false);
-        return;
-      }
-
-      // If verification is successful
       if (typeof window !== 'undefined') {
           localStorage.setItem('userLivePhoto', capturedImage);
       }
       toast({
-        title: 'Face Verified!',
+        title: 'Live Photo Saved!',
         description: 'You can proceed to the next step.',
         className: 'bg-green-500 text-white',
       });
@@ -122,13 +108,14 @@ export default function VerifyIdentityPage() {
         router.push('/verify-phone');
       }
     } catch (error: any) {
-      console.error("Failed to verify photo:", error);
+      console.error("Failed to save photo:", error);
       toast({
         variant: "destructive",
         title: "An Error Occurred",
         description: error.message || "Something went wrong. Please try again later.",
       });
-       setIsProcessing(false);
+    } finally {
+        setIsProcessing(false);
     }
   }
 

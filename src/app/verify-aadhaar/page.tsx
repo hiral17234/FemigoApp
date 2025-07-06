@@ -350,7 +350,7 @@ export default function VerifyAadhaarPage() {
           className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to Photo ID
+          Back to Live Photo
         </Link>
         <Card className="w-full rounded-2xl bg-card p-8 shadow-xl">
           <CardHeader className="text-center">
