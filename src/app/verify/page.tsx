@@ -22,8 +22,8 @@ export default function VerifyIdentityPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
 
+  // This effect should only run when we need the camera feed.
   useEffect(() => {
-    // This effect should only run when we need the camera feed.
     if (capturedImage) return;
 
     let stream: MediaStream | null = null;
@@ -38,11 +38,6 @@ export default function VerifyIdentityPage() {
       } catch (error) {
         console.error("Error accessing camera:", error);
         setHasCameraPermission(false);
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description: "Please enable camera permissions in your browser settings to use this app.",
-        });
       }
     };
 
@@ -55,7 +50,19 @@ export default function VerifyIdentityPage() {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [capturedImage, toast]);
+  }, [capturedImage]);
+
+  // This effect shows a toast message if camera access is denied
+  useEffect(() => {
+    if (hasCameraPermission === false) {
+      toast({
+        variant: "destructive",
+        title: "Camera Access Denied",
+        description: "Please enable camera permissions in your browser settings to use this app.",
+      });
+    }
+  }, [hasCameraPermission, toast]);
+
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
@@ -85,31 +92,31 @@ export default function VerifyIdentityPage() {
 
   const retakePhoto = () => {
     setCapturedImage(null)
+    setHasCameraPermission(null);
   }
   
   const handleVerify = async () => {
     if (!capturedImage) return;
     setIsVerifying(true);
 
-    // This simulates a successful verification.
+    // Simulate AI verification delay
     setTimeout(() => {
+      // Simulate a successful verification for demo purposes
       toast({
         title: 'Verification Successful ✅',
         description: 'You can proceed to the next step.',
         className: 'bg-green-500 text-white',
       });
-
-      const country =
-        typeof window !== 'undefined'
-          ? localStorage.getItem('userCountry')
-          : null;
+      
+      const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
       if (country === 'india') {
         router.push('/verify-aadhaar');
       } else {
         router.push('/verify-phone');
       }
+      
       setIsVerifying(false);
-    }, 1000); // Simulate network delay
+    }, 1500); // 1.5 second delay
   }
 
   return (
@@ -169,7 +176,7 @@ export default function VerifyIdentityPage() {
           {!capturedImage ? (
              <Button
                 onClick={capturePhoto}
-                disabled={!hasCameraPermission}
+                disabled={!hasCameraPermission || isVerifying}
                 className="w-full"
               >
                 <Camera className="mr-2 h-4 w-4" />
