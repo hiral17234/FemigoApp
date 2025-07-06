@@ -20,11 +20,8 @@ const GenderVerificationInputSchema = z.object({
 export type GenderVerificationInput = z.infer<typeof GenderVerificationInputSchema>;
 
 const GenderVerificationOutputSchema = z.object({
-  isHuman: z.boolean().describe('Whether or not the image contains a human face.'),
-  isClear: z.boolean().describe('Whether the image is clear and not blurry.'),
-  hasGlasses: z.boolean().describe('Whether the person in the image is wearing glasses.'),
-  isFemale: z.boolean().describe('Whether the person in the image is female. Set to false if not human, not clear, or wearing glasses.'),
-  reason: z.string().describe('A brief explanation for the decision, e.g., "Image is blurry", "No human face detected", "User identified as male.", "User is wearing glasses.", "Verification successful."'),
+  isFemale: z.boolean().describe('Whether the person in the image is female.'),
+  reason: z.string().describe('A brief explanation for the decision, e.g., "User identified as female.", "User identified as male."'),
 });
 export type GenderVerificationOutput = z.infer<typeof GenderVerificationOutputSchema>;
 
@@ -39,21 +36,13 @@ const genderVerificationPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
-  prompt: `You are an expert in identity verification. Analyze the user's photo based on four strict criteria.
+  prompt: `You are an expert in identity verification. Analyze the user's photo and determine if the person is female.
 
-1.  **Clarity Check (isClear):** Is the photo sharp and well-lit? The entire face must be clearly visible. If it is blurry, poorly lit, or obscured, 'isClear' must be false.
-2.  **Human Check (isHuman):** Does the photo contain a real human face? It cannot be an animal, object, cartoon, or illustration. If it is not a human, 'isHuman' must be false.
-3.  **Glasses Check (hasGlasses):** Is the person in the photo wearing any kind of glasses (spectacles, sunglasses, etc.)? If yes, 'hasGlasses' must be true.
-4.  **Gender Check (isFemale):** If, and only if, the photo is clear, contains a human, AND the person is NOT wearing glasses, determine if the person is female.
+  The image must be clear and contain a human face. If not, consider it as not female.
+  
+  Provide your final analysis in the specified JSON format.
 
-**IMPORTANT RULES:**
-*   If 'isClear' is false, then 'isHuman' and 'isFemale' **must** also be false.
-*   If 'isHuman' is false, then 'isFemale' **must** also be false.
-*   If 'hasGlasses' is true, then 'isFemale' **must** be false.
-
-Return your final analysis in the specified JSON format. Your 'reason' must be concise and directly related to the outcome. For failures, state the primary reason (e.g., "User is wearing glasses.").
-
-Photo to analyze: {{media url=photoDataUri}}
+  Photo to analyze: {{media url=photoDataUri}}
   `,
    config: {
     safetySettings: [
@@ -78,9 +67,6 @@ const genderVerificationFlow = ai.defineFlow(
       if (!output) {
         // Fallback in case the model fails to generate valid JSON
         return {
-          isHuman: false,
-          isClear: false,
-          hasGlasses: false,
           isFemale: false,
           reason: 'AI model was unable to process the image. Please try again.',
         };
@@ -89,9 +75,6 @@ const genderVerificationFlow = ai.defineFlow(
     } catch (e: any) {
         console.error("Critical error in genderVerificationFlow:", e);
         return {
-            isHuman: false,
-            isClear: false,
-            hasGlasses: false,
             isFemale: false,
             reason: `An unexpected error occurred: ${e.message || 'Please try again later.'}`
         }

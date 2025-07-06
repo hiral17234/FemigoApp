@@ -94,12 +94,10 @@ export default function VerifyIdentityPage() {
     try {
       const result = await verifyGender({ photoDataUri: capturedImage });
 
-      // The AI flow now sets isFemale to false if glasses are worn,
-      // or if not human/unclear. So we can just check isFemale for a pass.
       if (result.isFemale) {
         toast({
           title: 'Verification Successful ✅',
-          description: result.reason || 'You can proceed to the next step.',
+          description: 'You can proceed to the next step.',
           className: 'bg-green-500 text-white',
         });
         
@@ -114,11 +112,10 @@ export default function VerifyIdentityPage() {
           router.push('/verify-phone');
         }
       } else {
-        // The `reason` field from the AI should now give the specific failure cause.
         toast({
           variant: 'destructive',
           title: 'Verification Failed',
-          description: result.reason || 'Please try again with a clear, unobstructed photo of your face without glasses.',
+          description: result.reason || 'Verification failed. This platform is for women only. Please try again with a clear photo.',
         });
       }
     } catch (error: any) {
@@ -149,7 +146,7 @@ export default function VerifyIdentityPage() {
               Step 2: Face Verification
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-              Please take a clear picture of your face, without glasses. This helps us ensure a safe and supportive space for all.
+              Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
