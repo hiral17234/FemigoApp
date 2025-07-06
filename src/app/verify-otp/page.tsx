@@ -22,12 +22,13 @@ import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
+  InputOTPSeparator,
 } from "@/components/ui/input-otp"
 import { toast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
-  pin: z.string().min(4, {
-    message: "Your one-time password must be 4 characters.",
+  pin: z.string().min(6, {
+    message: "Your one-time password must be 6 characters.",
   }),
 })
 
@@ -107,7 +108,7 @@ export default function VerifyOtpPage() {
               Enter OTP
             </h2>
             <p className="text-sm text-muted-foreground">
-              A 4-digit code has been sent to {phone}.
+              A 6-digit code has been sent to {phone}.
             </p>
           </div>
 
@@ -120,12 +121,15 @@ export default function VerifyOtpPage() {
                   <FormItem>
                     <FormLabel className="sr-only">One-Time Password</FormLabel>
                     <FormControl>
-                      <InputOTP maxLength={4} {...field} disabled={isVerifying}>
+                      <InputOTP maxLength={6} {...field} disabled={isVerifying}>
                         <InputOTPGroup className="mx-auto">
                           <InputOTPSlot index={0} />
                           <InputOTPSlot index={1} />
                           <InputOTPSlot index={2} />
+                          <InputOTPSeparator />
                           <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
                         </InputOTPGroup>
                       </InputOTP>
                     </FormControl>
