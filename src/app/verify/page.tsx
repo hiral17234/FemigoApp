@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { verifyGender } from "@/ai/flows/gender-verification-flow"
 
 export default function VerifyIdentityPage() {
   const router = useRouter()
@@ -24,51 +25,47 @@ export default function VerifyIdentityPage() {
   const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    // Only get the camera stream if we haven't captured an image yet
-    if (!capturedImage) {
-      let isCancelled = false;
-      
-      const getCameraStream = async () => {
-        try {
-          const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-          if (!isCancelled) {
-            setStream(newStream);
-            if (videoRef.current) {
-              videoRef.current.srcObject = newStream;
-            }
-            setHasCameraPermission(true);
-          }
-        } catch (error) {
-          if (!isCancelled) {
-            console.error("Error accessing camera:", error);
-            setHasCameraPermission(false);
-             toast({
-              variant: "destructive",
-              title: "Camera Access Denied",
-              description: "Please enable camera permissions in your browser settings to use this app.",
-            });
-          }
-        }
-      };
-      
-      getCameraStream();
-      
-      return () => {
-        isCancelled = true;
-        // Clean up the stream when the component unmounts or when we get an image
-        if (stream) {
-          stream.getTracks().forEach((track) => track.stop());
-        }
-      };
-    }
-  }, [capturedImage, toast]);
+    let isCancelled = false;
 
-  const stopCameraStream = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+    async function getCameraPermission() {
+      if (capturedImage || hasCameraPermission) {
+        if(stream) {
+            stream.getTracks().forEach((track) => track.stop());
+            setStream(null);
+        }
+        return;
+      }
+      try {
+        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        if (!isCancelled) {
+          setStream(newStream);
+          setHasCameraPermission(true);
+          if (videoRef.current) {
+            videoRef.current.srcObject = newStream;
+          }
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        if (!isCancelled) {
+          setHasCameraPermission(false);
+          toast({
+            variant: 'destructive',
+            title: 'Camera Access Denied',
+            description: 'Please enable camera permissions in your browser settings to use this app.',
+          });
+        }
+      }
     }
-  }
+
+    getCameraPermission();
+
+    return () => {
+      isCancelled = true;
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [capturedImage, hasCameraPermission, stream, toast]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
@@ -92,34 +89,51 @@ export default function VerifyIdentityPage() {
       context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
       const dataUrl = canvas.toDataURL("image/jpeg")
       setCapturedImage(dataUrl)
-      stopCameraStream();
     }
   }
 
   const retakePhoto = () => {
     setCapturedImage(null)
-    setHasCameraPermission(null); // This will trigger the useEffect to get the camera stream again
+    setHasCameraPermission(null); 
   }
   
   const handleVerify = async () => {
     if (!capturedImage) return;
     setIsVerifying(true);
 
-    // Simulate AI verification due to installation issues.
-    setTimeout(() => {
-      toast({
-        title: 'Verification Successful ✅',
-        description: 'You can proceed to the next step.',
-        className: 'bg-green-500 text-white',
-      });
-      
-      const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-      if (country === 'india') {
-        router.push('/verify-aadhaar');
+    try {
+      const result = await verifyGender({ photoDataUri: capturedImage });
+
+      if (result.isFemale) {
+        toast({
+          title: 'Verification Successful ✅',
+          description: result.reason || 'You can proceed to the next step.',
+          className: 'bg-green-500 text-white',
+        });
+
+        const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+        if (country === 'india') {
+          router.push('/verify-aadhaar');
+        } else {
+          router.push('/verify-phone');
+        }
       } else {
-        router.push('/verify-phone');
+        toast({
+          variant: 'destructive',
+          title: 'Verification Failed',
+          description: result.reason || 'Please try again with a clear photo of your face.',
+        });
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Verification failed:", error);
+      toast({
+        variant: "destructive",
+        title: "An Error Occurred",
+        description: "Something went wrong during verification. Please try again later.",
+      });
+    } finally {
+      setIsVerifying(false);
+    }
   }
 
   return (
