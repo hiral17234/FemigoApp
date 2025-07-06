@@ -66,20 +66,20 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
       <div className="absolute top-8 left-8">
-        <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
+        <Link href="/" className="flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300">
           <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
       </div>
 
-      <Card className="w-full max-w-md rounded-2xl p-4 shadow-xl">
+      <Card className="w-full max-w-md rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+          <CardTitle className="text-3xl font-bold tracking-tight text-white">
             Create Account
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-purple-200/70">
             Join Femigo and be part of our community.
           </CardDescription>
         </CardHeader>
@@ -91,11 +91,11 @@ export default function SignupPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel className="text-purple-200/90">Name</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="Your Name" {...field} className="pl-10" disabled={isSubmitting} />
+                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-300/70" />
+                        <Input placeholder="Your Name" {...field} className="pl-10 bg-white/5 border-white/20" disabled={isSubmitting} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -107,17 +107,17 @@ export default function SignupPage() {
                 name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Country</FormLabel>
+                    <FormLabel className="text-purple-200/90">Country</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white/5 border-white/20">
                           <div className="flex items-center gap-2">
-                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <Globe className="h-4 w-4 text-purple-300/70" />
                             <SelectValue placeholder="Select your country" />
                           </div>
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
+                      <SelectContent className="dark">
                         <ScrollArea className="h-72">
                           {countries.map((country) => (
                             <SelectItem key={country.value} value={country.value}>
@@ -131,7 +131,7 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting} className="w-full rounded-lg bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none">
+              <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-pink-500/50 focus:outline-none">
                 {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                 Create Account
               </Button>
@@ -139,9 +139,9 @@ export default function SignupPage() {
           </Form>
         </CardContent>
         <CardFooter className="flex items-center justify-center pt-6">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-purple-200/70">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
+            <Link href="/login" className="font-semibold text-pink-400 hover:underline">
               Log in
             </Link>
           </p>
