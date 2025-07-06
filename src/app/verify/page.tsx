@@ -112,10 +112,17 @@ export default function VerifyPage() {
       if (result.isPerson && result.gender === "female") {
         toast({
           title: "Verification Successful ✅",
-          description: "Proceeding to Aadhaar verification.",
+          description: "Proceeding to the next step.",
           className: "bg-green-500 text-white",
         })
-        router.push("/verify-aadhaar")
+        
+        const userCountry = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+        if (userCountry === 'india') {
+          router.push("/verify-aadhaar")
+        } else {
+          router.push("/dashboard")
+        }
+
       } else {
         let description = "This platform is reserved for female users only."
         if (!result.isPerson) {

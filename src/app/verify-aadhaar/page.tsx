@@ -31,6 +31,13 @@ export default function VerifyAadhaarPage() {
   const [extractedData, setExtractedData] = useState<AadhaarVerificationOutput | null>(null);
   const [fileName, setFileName] = useState<string>("");
 
+  useEffect(() => {
+    const savedName = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
+    if (savedName) {
+      setName(savedName);
+    }
+  }, []);
+
   const stopStream = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());

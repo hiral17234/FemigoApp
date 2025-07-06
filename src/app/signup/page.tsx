@@ -47,6 +47,10 @@ export default function SignupPage() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("userName", values.name)
+      localStorage.setItem("userCountry", values.country)
+    }
     toast({
       title: "Account details saved!",
       description: "Next, let's verify your identity.",
