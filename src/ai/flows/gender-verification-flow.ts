@@ -35,7 +35,6 @@ export async function verifyGender(input: GenderVerificationInput): Promise<Gend
 
 const genderVerificationPrompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
-  model: 'googleai/gemini-pro-vision',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
   prompt: `Analyze the user's photo. You must determine three things:
@@ -66,16 +65,26 @@ const genderVerificationFlow = ai.defineFlow(
     outputSchema: GenderVerificationOutputSchema,
   },
   async (input) => {
-    const {output} = await genderVerificationPrompt(input);
-    if (!output) {
-      // Fallback in case the model fails to generate valid JSON
-      return {
-        isHuman: false,
-        isClear: false,
-        isFemale: false,
-        reason: 'AI model was unable to process the image. Please try again.',
-      };
+    try {
+      const {output} = await genderVerificationPrompt(input);
+      if (!output) {
+        // Fallback in case the model fails to generate valid JSON
+        return {
+          isHuman: false,
+          isClear: false,
+          isFemale: false,
+          reason: 'AI model was unable to process the image. Please try again.',
+        };
+      }
+      return output;
+    } catch (e: any) {
+        console.error("Critical error in genderVerificationFlow:", e);
+        return {
+            isHuman: false,
+            isClear: false,
+            isFemale: false,
+            reason: `An unexpected error occurred: ${e.message || 'Please try again later.'}`
+        }
     }
-    return output;
   }
 );
