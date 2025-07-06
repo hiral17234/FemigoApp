@@ -34,6 +34,7 @@ export default function VerifyPage() {
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          videoRef.current.play();
         }
         setHasCameraPermission(true);
       } catch (error) {
@@ -189,7 +190,7 @@ export default function VerifyPage() {
             autoPlay 
             muted 
             playsInline
-            onLoadedData={() => setIsCameraReady(true)}
+            onCanPlay={() => setIsCameraReady(true)}
         />
     )
   }

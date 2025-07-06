@@ -50,6 +50,7 @@ export default function VerifyAadhaarPage() {
         streamRef.current = stream;
         if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.play();
         }
         setHasCameraPermission(true);
       } catch (error) {
@@ -192,7 +193,7 @@ export default function VerifyAadhaarPage() {
       return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate-spin" /><p>Starting camera...</p></div>
     }
 
-    return <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline onLoadedData={() => setIsCameraReady(true)}/>
+    return <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline onCanPlay={() => setIsCameraReady(true)}/>
   }
 
   return (
