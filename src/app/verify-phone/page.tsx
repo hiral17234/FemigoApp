@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -26,18 +27,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const formSchema = z.object({
-  phone: z.string().min(10, {
-    message: "Please enter a valid 10-digit phone number.",
-  }).max(10, {
-    message: "Please enter a valid 10-digit phone number.",
+  countryCode: z.string().min(1, { message: "Please select a country code." }),
+  phone: z.string().min(5, {
+    message: "Please enter a valid phone number.",
   }),
 })
 
 export default function VerifyPhonePage() {
   const router = useRouter()
-  const [backUrl, setBackUrl] = useState("/signup");
+  const [backUrl, setBackUrl] = useState("/verify");
 
   useEffect(() => {
     const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
@@ -51,6 +52,7 @@ export default function VerifyPhonePage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      countryCode: "+91",
       phone: "",
     },
   })
@@ -58,7 +60,7 @@ export default function VerifyPhonePage() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
     if (typeof window !== "undefined") {
-      localStorage.setItem("userPhone", `+91${values.phone}`)
+      localStorage.setItem("userPhone", `${values.countryCode}${values.phone}`)
     }
     toast({
       title: "OTP Sent!",
@@ -94,41 +96,58 @@ export default function VerifyPhonePage() {
               onSubmit={form.handleSubmit(onSubmit)}
               className="w-full space-y-4"
             >
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone Number</FormLabel>
-                    <FormControl>
-                      <div className="flex items-center gap-2">
-                        <div className="w-[80px]">
-                            <Select defaultValue="in">
-                                <SelectTrigger className="w-full" aria-label="Country code">
-                                    <SelectValue>
-                                        <div className="flex items-center gap-2">
-                                            <span>🇮🇳</span>
-                                        </div>
-                                    </SelectValue>
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="in">🇮🇳 +91</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="relative flex-1">
-                          <Input
-                            placeholder="Enter number"
-                            type="tel"
-                            {...field}
-                          />
-                        </div>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <div className="flex items-start gap-2">
+                  <FormField
+                    control={form.control}
+                    name="countryCode"
+                    render={({ field }) => (
+                      <FormItem className="w-[130px]">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Code" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <ScrollArea className="h-72">
+                               <SelectItem value="+91">🇮🇳 India (+91)</SelectItem>
+                               <SelectItem value="+1">🇺🇸 USA (+1)</SelectItem>
+                               <SelectItem value="+44">🇬🇧 UK (+44)</SelectItem>
+                               <SelectItem value="+1">🇨🇦 Canada (+1)</SelectItem>
+                               <SelectItem value="+61">🇦🇺 Australia (+61)</SelectItem>
+                               <SelectItem value="+49">🇩🇪 Germany (+49)</SelectItem>
+                               <SelectItem value="+33">🇫🇷 France (+33)</SelectItem>
+                               <SelectItem value="+81">🇯🇵 Japan (+81)</SelectItem>
+                               <SelectItem value="+55">🇧🇷 Brazil (+55)</SelectItem>
+                               <SelectItem value="+27">🇿🇦 South Africa (+27)</SelectItem>
+                               <SelectItem value="+86">🇨🇳 China (+86)</SelectItem>
+                            </ScrollArea>
+                          </SelectContent>
+                        </Select>
+                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem className="flex-1">
+                        <FormControl>
+                            <Input
+                                placeholder="Enter number"
+                                type="tel"
+                                {...field}
+                            />
+                        </FormControl>
+                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </FormItem>
                <p className="text-xs text-muted-foreground">
                 A 4 digit OTP will be sent via SMS to verify your mobile number!
               </p>
