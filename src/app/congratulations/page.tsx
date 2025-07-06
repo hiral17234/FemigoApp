@@ -32,7 +32,7 @@ export default function CongratulationsPage() {
   // Trigger confetti and determine verified steps on mount
   useEffect(() => {
     setShowConfetti(true)
-    const timer = setTimeout(() => setShowConfetti(false), 8000) // Run confetti for 8 seconds
+    // The confetti will now run until the user navigates away.
 
     const steps = []
     if (typeof window !== "undefined") {
@@ -44,7 +44,7 @@ export default function CongratulationsPage() {
     }
     setVerifiedSteps(steps)
 
-    return () => clearTimeout(timer)
+    return () => setShowConfetti(false) // Cleanup confetti on unmount
   }, [])
 
   // Custom heart shape for confetti
@@ -69,26 +69,18 @@ export default function CongratulationsPage() {
           <Confetti
             width={width}
             height={height}
-            recycle={false}
-            numberOfPieces={500}
-            tweenDuration={7000}
+            recycle={true}
+            numberOfPieces={200}
             gravity={0.1}
-            initialVelocityY={{min: -20, max: -10}}
-            initialVelocityX={{min: -15, max: 15}}
-            onConfettiComplete={confetti => {
-                setShowConfetti(false);
-                confetti?.reset();
-            }}
           />
           <Confetti
             width={width}
             height={height}
-            recycle={false}
+            recycle={true}
             numberOfPieces={50}
             gravity={0.03}
             drawShape={drawHeart}
             initialVelocityY={-10}
-            tweenDuration={8000}
           />
         </>
       )}
