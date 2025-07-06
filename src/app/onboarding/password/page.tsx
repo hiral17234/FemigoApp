@@ -89,7 +89,7 @@ export default function OnboardingPasswordPage() {
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-md">
           <Link
             href="/onboarding/details"
             className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
@@ -97,7 +97,7 @@ export default function OnboardingPasswordPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
-          <div className="w-full rounded-2xl border border-white/10 bg-black/10 p-8 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
+          <div className="w-full rounded-2xl border border-white/10 bg-black/5 p-8 shadow-2xl shadow-cyan-500/10 backdrop-blur-xl">
             <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
               Secure Your Account
             </h1>
@@ -121,7 +121,7 @@ export default function OnboardingPasswordPage() {
                   <PasswordRequirement text="Minimum 12 characters" isMet={password.length >= 12} />
                   <PasswordRequirement text="Includes an uppercase letter" isMet={/[A-Z]/.test(password)} />
                   <PasswordRequirement text="Includes a lowercase letter" isMet={/[a-z]/.test(password)} />
-                  <PasswordRequirement text="Includes a number" isMet={/\d/.test(password)} />
+                  <PasswordRequirement text="Includes a number" isMet={/\d]/.test(password)} />
                   <PasswordRequirement text="Includes a special character" isMet={/[^A-Za-z0-9]/.test(password)} />
                 </div>
                 
