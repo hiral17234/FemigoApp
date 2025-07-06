@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect, ChangeEvent } from "react"
@@ -23,6 +24,7 @@ export default function VerifyAadhaarPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [uploadedAadhaar, setUploadedAadhaar] = useState<File | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('userCountry') !== 'india') {
@@ -30,6 +32,7 @@ export default function VerifyAadhaarPage() {
     }
   }, [router]);
 
+  // Effect to manage the camera stream
   useEffect(() => {
     if (capturedImage) return;
 
@@ -45,11 +48,6 @@ export default function VerifyAadhaarPage() {
       } catch (error) {
         console.error("Error accessing camera:", error);
         setHasCameraPermission(false);
-        toast({
-          variant: "destructive",
-          title: "Camera Access Denied",
-          description: "Please enable camera permissions in your browser settings to use this app.",
-        });
       }
     };
 
@@ -60,7 +58,18 @@ export default function VerifyAadhaarPage() {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [capturedImage, toast]);
+  }, [capturedImage]);
+
+  // Effect to show a toast message if camera access is denied
+  useEffect(() => {
+    if (hasCameraPermission === false) {
+      toast({
+        variant: "destructive",
+        title: "Camera Access Denied",
+        description: "Please enable camera permissions in your browser settings to use this app.",
+      });
+    }
+  }, [hasCameraPermission, toast]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
@@ -88,6 +97,7 @@ export default function VerifyAadhaarPage() {
   
   const retakePhoto = () => {
     setCapturedImage(null);
+    setHasCameraPermission(null);
   }
 
   const handleAadhaarUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -105,6 +115,7 @@ export default function VerifyAadhaarPage() {
   
   const handleContinue = async () => {
     if (!capturedImage || !uploadedAadhaar) return;
+    setIsVerifying(true);
     toast({
         title: "Details captured!",
         description: "Proceeding to phone verification.",
@@ -167,12 +178,12 @@ export default function VerifyAadhaarPage() {
                 </div>
                 <canvas ref={canvasRef} className="hidden" />
                  {!capturedImage ? (
-                    <Button onClick={capturePhoto} disabled={!hasCameraPermission} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                    <Button onClick={capturePhoto} disabled={!hasCameraPermission || isVerifying} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
                       <Camera className="mr-2" />
                       Capture Photo
                     </Button>
                 ) : (
-                    <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake Photo</Button>
+                    <Button onClick={retakePhoto} variant="outline" className="w-full" disabled={isVerifying}><RefreshCcw className="mr-2"/>Retake Photo</Button>
                 )}
             </div>
 
@@ -188,8 +199,9 @@ export default function VerifyAadhaarPage() {
                   className="hidden"
                   onChange={handleAadhaarUpload}
                   accept="image/jpeg,image/png,application/pdf"
+                  disabled={isVerifying}
                 />
-                <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full">
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="w-full" disabled={isVerifying}>
                     <Upload className="mr-2"/> Upload Document
                 </Button>
                 {uploadedAadhaar && (
@@ -202,9 +214,10 @@ export default function VerifyAadhaarPage() {
 
             <Button
               onClick={handleContinue}
-              disabled={!capturedImage || !uploadedAadhaar}
+              disabled={!capturedImage || !uploadedAadhaar || isVerifying}
               className="w-full bg-[#EC008C] hover:bg-[#d4007a] mt-4"
             >
+              {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Verify & Continue
             </Button>
           </CardContent>
@@ -213,3 +226,5 @@ export default function VerifyAadhaarPage() {
     </div>
   )
 }
+
+    
