@@ -33,15 +33,14 @@ const prompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
   input: {schema: VerifyGenderInputSchema},
   output: {schema: VerifyGenderOutputSchema},
-  prompt: `You are an expert at identifying gender from a person's facial features for a women-only platform's identity verification system.
-Your primary task is to determine if the image contains a person and, if so, their gender.
+  prompt: `You are an AI assistant for a women-only platform. Your task is to verify if the user is female based on their photo.
 
-1.  First, determine if the image contains a person's face. Set the 'isPerson' field to true or false.
-2.  If 'isPerson' is false, set the 'gender' field to 'unknown'.
-3.  If 'isPerson' is true, determine the gender of the person in the live photo. The output for 'gender' must be one of three options: 'female', 'male', or 'unknown'. Do not provide any additional explanation.
-Be very strict. If you are not absolutely certain the person is female, classify as 'male' or 'unknown'.
-
-Live Photo: {{media url=photoDataUri}}`,
+1.  Analyze the provided image: {{media url=photoDataUri}}
+2.  First, confirm if the image contains a clear photo of a person. Set 'isPerson' to true or false.
+3.  If 'isPerson' is true, identify the gender.
+4.  Your output for the 'gender' field MUST be one of the following strings: 'female', 'male', or 'unknown'.
+5.  This is for a security check. Be strict. If you are not highly confident the person is female, you must classify the gender as 'unknown' or 'male'.
+6.  Return the final result as a JSON object matching the required output schema.`,
   config: {
     safetySettings: [
       {

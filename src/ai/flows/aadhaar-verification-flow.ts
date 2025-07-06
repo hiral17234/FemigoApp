@@ -45,24 +45,20 @@ const prompt = ai.definePrompt({
   input: {schema: AadhaarVerificationInputSchema},
   output: {schema: AadhaarVerificationModelOutputSchema},
   tools: [validateAadhaarNumber],
-  prompt: `You are an expert OCR system specializing in Indian identity documents. Your task is to analyze an Aadhaar card from a provided image and extract its details.
+  prompt: `You are an OCR and data extraction AI specializing in Indian Aadhaar cards for a user verification system. Your task is to extract information and validate it.
 
-Follow these steps precisely:
+**Instructions:**
 
-1.  **Card Identification**: First, determine if the image is a clear photo of a valid Indian Aadhaar card. Set 'isAadhaarCard' to true or false. If it is false, stop here and return empty strings/unknown for other fields.
-
-2.  **Data Extraction**: If 'isAadhaarCard' is true, extract the following information from the card:
-    *   The full name as written in English. Set this value to 'extractedName'.
-    *   The 12-digit Aadhaar number (e.g., XXXX XXXX XXXX).
-    *   The gender. Set this to 'gender' ('female', 'male', or 'unknown').
-
-3.  **Aadhaar Number Formatting & Validation**:
-    *   Take the extracted 12-digit number and store it **without spaces** in 'extractedAadhaarNumber'.
-    *   Use the 'validateAadhaarNumber' tool with the 'extractedAadhaarNumber'. The tool will simulate a check against a government database. Based on the tool's response, set 'isAadhaarValid' to true or false.
-
-4.  **Final Output**: Return the complete output object with all fields populated according to the steps above.
-
-Image of Aadhaar Card: {{media url=photoDataUri}}`,
+1.  **Analyze Image**: Examine the provided image to determine if it is a genuine Indian Aadhaar card. Set \`isAadhaarCard\` to \`true\` or \`false\`. If \`false\`, stop and return default values.
+    *   Image: {{media url=photoDataUri}}
+2.  **Extract Data**: If it is an Aadhaar card, extract the following fields:
+    *   \`extractedName\`: The full name in English.
+    *   \`extractedAadhaarNumber\`: The 12-digit number.
+    *   \`gender\`: The gender, which must be 'female', 'male', or 'unknown'.
+3.  **Format Aadhaar Number**: Remove any spaces from the extracted 12-digit Aadhaar number before using it in the next step.
+4.  **Validate Aadhaar Number**: Use the \`validateAadhaarNumber\` tool with the formatted Aadhaar number.
+5.  **Set Validation Flag**: Based on the output from the \`validateAadhaarNumber\` tool, set the \`isAadhaarValid\` boolean field to \`true\` or \`false\`.
+6.  **Return JSON**: Your final output must be a JSON object that strictly adheres to the defined output schema.`,
   config: {
     safetySettings: [
       {
