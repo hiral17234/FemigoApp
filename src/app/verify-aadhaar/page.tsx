@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Camera, ShieldCheck, User, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
 import Image from "next/image"
@@ -17,30 +18,26 @@ export default function VerifyAadhaarPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
   const [name, setName] = useState("")
 
-  const stopStream = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+  const stopStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
-  };
+  }, []);
 
-  const startStream = async () => {
+  const startStream = useCallback(async () => {
+    stopStream();
     setCapturedImage(null);
     setIsVerifying(false);
     
-    // Ensure any existing stream is stopped before starting a new one.
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-    
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       console.error("Camera API not supported.");
       setHasCameraPermission(false);
       toast({
@@ -52,10 +49,14 @@ export default function VerifyAadhaarPage() {
     }
 
     try {
-      setHasCameraPermission(null); // Set to loading
-      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-      setStream(newStream);
+      setHasCameraPermission(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      streamRef.current = stream;
       setHasCameraPermission(true);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
     } catch (error) {
       console.error("Error accessing camera:", error);
       setHasCameraPermission(false);
@@ -65,35 +66,17 @@ export default function VerifyAadhaarPage() {
         description: "Please enable camera permissions in your browser settings to continue.",
       });
     }
-  };
+  }, [stopStream, toast]);
 
-  // Effect to start the camera on component mount
   useEffect(() => {
     startStream();
-    
-    // Cleanup function to stop the stream when the component unmounts
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const currentStream = videoRef.current.srcObject as MediaStream;
-        currentStream.getTracks().forEach(track => track.stop());
-      }
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopStream();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Effect to attach the stream to the video element when it's available
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream]);
-
+  }, [startStream, stopStream]);
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && stream) {
+    if (videoRef.current?.srcObject && canvasRef.current) {
       const video = videoRef.current
       const canvas = canvasRef.current
       canvas.width = video.videoWidth
@@ -258,9 +241,9 @@ export default function VerifyAadhaarPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={!stream} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {!stream && hasCameraPermission !== false ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
-                            {stream ? "Capture Aadhaar Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
+                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                            {hasCameraPermission === null ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
+                            {hasCameraPermission === true ? "Capture Aadhaar Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">

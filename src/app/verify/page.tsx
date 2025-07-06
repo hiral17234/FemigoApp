@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Camera, ShieldCheck, Heart, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
 import Image from "next/image"
@@ -16,28 +17,25 @@ export default function VerifyPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
 
-  const stopStream = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop())
-      setStream(null);
+  const stopStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
     }
-  }
+  }, [])
 
-  const startStream = async () => {
-    setCapturedImage(null);
-    setIsVerifying(false);
+  const startStream = useCallback(async () => {
+    stopStream()
+    setCapturedImage(null)
+    setIsVerifying(false)
     
-    if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-    }
-    
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!navigator.mediaDevices?.getUserMedia) {
       console.error("Camera API not supported.")
       setHasCameraPermission(false)
       toast({
@@ -49,9 +47,13 @@ export default function VerifyPage() {
     }
 
     try {
-      const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-      setStream(newStream);
+      setHasCameraPermission(null)
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      streamRef.current = stream
       setHasCameraPermission(true)
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
     } catch (error) {
       console.error("Error accessing camera:", error)
       setHasCameraPermission(false)
@@ -61,28 +63,17 @@ export default function VerifyPage() {
         description: "Please enable camera permissions in your browser settings to continue.",
       })
     }
-  }
+  }, [stopStream, toast])
 
   useEffect(() => {
     startStream()
-    
     return () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
+        stopStream()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream
-    }
-  }, [stream])
-
+  }, [startStream, stopStream])
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && stream) {
+    if (videoRef.current && canvasRef.current && videoRef.current.srcObject) {
       const video = videoRef.current
       const canvas = canvasRef.current
       canvas.width = video.videoWidth
@@ -135,8 +126,7 @@ export default function VerifyPage() {
           title: "Access Denied",
           description,
         })
-        setCapturedImage(null);
-        startStream();
+        retakePhoto()
       }
     } catch (error) {
       console.error("Verification failed:", error)
@@ -216,9 +206,9 @@ export default function VerifyPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={!stream} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {!stream && hasCameraPermission !== false ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
-                            {stream ? "Capture Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
+                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                            {hasCameraPermission === null ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
+                            {hasCameraPermission === true ? "Capture Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
                            </Button>
                         ) : (
                             <div className="grid grid-cols-2 gap-4">
