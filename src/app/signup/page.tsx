@@ -5,6 +5,7 @@ import { ArrowLeft, Globe, User } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -36,6 +37,7 @@ const formSchema = z.object({
 })
 
 export default function SignupPage() {
+  const router = useRouter()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -46,9 +48,10 @@ export default function SignupPage() {
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values)
     toast({
-      title: "Account created!",
-      description: "You have successfully created your account.",
+      title: "Account details saved!",
+      description: "Next, let's verify your identity.",
     })
+    router.push("/verify")
   }
 
   return (
@@ -324,7 +327,7 @@ export default function SignupPage() {
 
                 <Button
                   type="submit"
-                  className="w-full rounded-xl bg-[#EC008C] py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
+                  className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
                 >
                   Create Account
                 </Button>
