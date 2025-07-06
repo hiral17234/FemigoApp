@@ -1,13 +1,14 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft, ChevronRight, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"
+import { auth } from "@/lib/firebase"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -39,6 +40,7 @@ const formSchema = z.object({
 export default function VerifyPhonePage() {
   const router = useRouter()
   const [backUrl, setBackUrl] = useState("/verify");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
 
   useEffect(() => {
     const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
@@ -49,6 +51,33 @@ export default function VerifyPhonePage() {
     }
   }, []);
 
+  const setupRecaptcha = () => {
+    // Check if reCAPTCHA is already initialized
+    if ((window as any).recaptchaVerifier) {
+      return (window as any).recaptchaVerifier;
+    }
+    
+    const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'invisible',
+      'callback': (response: any) => {
+        // reCAPTCHA solved, you can proceed with phone number verification.
+        console.log("reCAPTCHA verified");
+      },
+      'expired-callback': () => {
+        // Response expired. Ask user to solve reCAPTCHA again.
+        console.log("reCAPTCHA expired");
+      }
+    });
+    
+    // Store it on the window object so it's not re-created on every render
+    (window as any).recaptchaVerifier = recaptchaVerifier;
+    return recaptchaVerifier;
+  };
+
+  useEffect(() => {
+    setupRecaptcha();
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -57,20 +86,46 @@ export default function VerifyPhonePage() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    if (typeof window !== "undefined") {
-      localStorage.setItem("userPhone", `${values.countryCode}${values.phone}`)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSendingOtp(true);
+    const phoneNumber = `${values.countryCode}${values.phone}`;
+    const appVerifier = (window as any).recaptchaVerifier;
+
+    try {
+      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+      // Store confirmationResult in window object to be used in OTP page
+      (window as any).confirmationResult = confirmationResult;
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userPhone", phoneNumber);
+      }
+      toast({
+        title: "OTP Sent!",
+        description: `We've sent a code to ${phoneNumber}.`,
+      });
+      router.push("/verify-otp");
+
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      toast({
+        variant: "destructive",
+        title: "Failed to send OTP",
+        description: "Please check the phone number and try again. You may need to refresh the page.",
+      });
+      // Reset reCAPTCHA
+      if ((window as any).recaptchaVerifier) {
+        (window as any).recaptchaVerifier.render().then((widgetId: any) => {
+          (window as any).grecaptcha.reset(widgetId);
+        });
+      }
+    } finally {
+      setIsSendingOtp(false);
     }
-    toast({
-      title: "OTP Sent!",
-      description: "We've sent a 4-digit code to your number.",
-    })
-    router.push("/verify-otp")
   }
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center bg-background p-4 pt-20">
+      <div id="recaptcha-container"></div>
       <div className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8">
         <Link href={backUrl} className="flex items-center gap-2">
             <ArrowLeft className="h-4 w-4" />
@@ -104,7 +159,7 @@ export default function VerifyPhonePage() {
                     name="countryCode"
                     render={({ field }) => (
                       <FormItem className="w-[130px]">
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSendingOtp}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Code" />
@@ -140,6 +195,7 @@ export default function VerifyPhonePage() {
                                 placeholder="Enter number"
                                 type="tel"
                                 {...field}
+                                disabled={isSendingOtp}
                             />
                         </FormControl>
                          <FormMessage />
@@ -149,13 +205,15 @@ export default function VerifyPhonePage() {
                 </div>
               </FormItem>
                <p className="text-xs text-muted-foreground">
-                A 4 digit OTP will be sent via SMS to verify your mobile number!
+                An OTP will be sent via SMS to verify your mobile number.
               </p>
 
               <Button
                 type="submit"
+                disabled={isSendingOtp}
                 className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
               >
+                {isSendingOtp && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                 Continue <ChevronRight className="h-5 w-5" />
               </Button>
             </form>

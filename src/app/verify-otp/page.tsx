@@ -1,12 +1,13 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
+import type { ConfirmationResult } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -33,6 +34,7 @@ const formSchema = z.object({
 export default function VerifyOtpPage() {
   const router = useRouter()
   const [phone, setPhone] = useState("")
+  const [isVerifying, setIsVerifying] = useState(false)
 
   useEffect(() => {
     const storedPhone = typeof window !== "undefined" ? localStorage.getItem("userPhone") : ""
@@ -50,14 +52,38 @@ export default function VerifyOtpPage() {
     },
   })
 
-  function onSubmit(data: z.infer<typeof formSchema>) {
-    console.log(data)
-    toast({
-      title: "Phone Verified! ✅",
-      description: "Your phone number has been successfully verified.",
-      className: "bg-green-500 text-white",
-    })
-    router.push("/dashboard")
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    setIsVerifying(true)
+    const confirmationResult = (window as any).confirmationResult as ConfirmationResult | undefined
+
+    if (!confirmationResult) {
+      toast({
+        variant: "destructive",
+        title: "Verification Error",
+        description: "Could not find verification session. Please go back and try sending the OTP again.",
+      });
+      setIsVerifying(false)
+      return
+    }
+
+    try {
+      await confirmationResult.confirm(data.pin)
+      toast({
+        title: "Phone Verified! ✅",
+        description: "Your phone number has been successfully verified.",
+        className: "bg-green-500 text-white",
+      })
+      router.push("/dashboard")
+    } catch (error) {
+      console.error("Error verifying OTP:", error)
+      toast({
+        variant: "destructive",
+        title: "Invalid OTP",
+        description: "The code you entered is incorrect. Please try again.",
+      })
+    } finally {
+      setIsVerifying(false)
+    }
   }
 
   return (
@@ -94,7 +120,7 @@ export default function VerifyOtpPage() {
                   <FormItem>
                     <FormLabel className="sr-only">One-Time Password</FormLabel>
                     <FormControl>
-                      <InputOTP maxLength={4} {...field}>
+                      <InputOTP maxLength={4} {...field} disabled={isVerifying}>
                         <InputOTPGroup className="mx-auto">
                           <InputOTPSlot index={0} />
                           <InputOTPSlot index={1} />
@@ -110,8 +136,10 @@ export default function VerifyOtpPage() {
 
               <Button
                 type="submit"
-                 className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
+                disabled={isVerifying}
+                className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
               >
+                {isVerifying && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                 Verify & Continue
               </Button>
             </form>
@@ -119,7 +147,7 @@ export default function VerifyOtpPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Didn't receive the code?{" "}
-            <button className="text-primary hover:underline font-medium">
+            <button className="text-primary hover:underline font-medium" onClick={() => router.push('/verify-phone')}>
               Resend OTP
             </button>
           </p>
