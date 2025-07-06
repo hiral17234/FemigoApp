@@ -51,7 +51,7 @@ export default function VerifyAadhaarPage() {
 
     try {
       setHasCameraPermission(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       streamRef.current = stream;
       setHasCameraPermission(true);
 
@@ -59,15 +59,19 @@ export default function VerifyAadhaarPage() {
         videoRef.current.srcObject = stream;
       }
     } catch (error) {
+      console.error("Error accessing camera:", error);
       setHasCameraPermission(false);
+      toast({
+        variant: "destructive",
+        title: "Camera Access Denied",
+        description: "Please enable camera permissions to use this feature.",
+      });
     }
-  }, [stopStream]);
+  }, [stopStream, toast]);
 
   useEffect(() => {
-    // The camera tab is active by default, so we should start the stream on mount.
     startStream();
     return () => {
-      // Ensure the stream is stopped when the component unmounts.
       stopStream();
     };
   }, [startStream, stopStream]);
@@ -110,18 +114,20 @@ export default function VerifyAadhaarPage() {
     }
   };
 
-  const resetState = () => {
+  const resetState = (isCameraTab: boolean) => {
     setImageDataUrl(null);
     setExtractedData(null);
     setFileName("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-    startStream();
+    if (isCameraTab) {
+        startStream();
+    }
   }
   
   const handleOcr = async () => {
-    if (!imageDataUrl) return;
+    if (!imageDataUrl || !name) return;
 
     setIsVerifying(true);
     setExtractedData(null);
@@ -157,8 +163,6 @@ export default function VerifyAadhaarPage() {
       router.push('/dashboard');
     }
   }
-
-  const isReadyForOcr = !!imageDataUrl && !!name;
   
   const renderCameraView = () => {
     if (imageDataUrl) {
@@ -166,11 +170,11 @@ export default function VerifyAadhaarPage() {
     }
 
     if(hasCameraPermission === false) {
-      return <div className="flex flex-col items-center gap-2 text-destructive"><AlertTriangle className="w-12 h-12" /><p className="text-center">Camera access was denied or is not available.</p></div>
+      return <div className="flex flex-col items-center gap-2 p-4 text-destructive"><AlertTriangle className="w-12 h-12" /><p className="text-center">Camera access was denied or is not available. Try uploading a file instead.</p></div>
     }
 
     if(hasCameraPermission === null) {
-      return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate-spin" /><p>Starting camera...</p></div>
+      return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate--spin" /><p>Starting camera...</p></div>
     }
 
     return <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
@@ -228,7 +232,7 @@ export default function VerifyAadhaarPage() {
                         <Camera className="mr-2"/> Capture Photo
                       </Button>
                     ) : (
-                      <Button onClick={resetState} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
+                      <Button onClick={() => resetState(true)} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
                     )}
                   </TabsContent>
                   <TabsContent value="upload">
@@ -242,15 +246,20 @@ export default function VerifyAadhaarPage() {
                         </div>
                         <Input id="file-upload" type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg" />
                     </Label>
-                    {imageDataUrl && <Button onClick={resetState} variant="outline" className="w-full mt-4"><RefreshCcw className="mr-2"/>Change File</Button>}
+                    {imageDataUrl && <Button onClick={() => resetState(false)} variant="outline" className="w-full mt-4"><RefreshCcw className="mr-2"/>Change File</Button>}
                   </TabsContent>
                 </Tabs>
 
-                {isReadyForOcr && !extractedData && (
-                    <Button onClick={handleOcr} disabled={isVerifying} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                {imageDataUrl && !extractedData && (
+                  <div className="pt-4 space-y-2">
+                    <Button onClick={handleOcr} disabled={isVerifying || !name} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
                       {isVerifying ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                       Extract Information
                     </Button>
+                    {!name && (
+                      <p className="text-xs text-center text-red-400">Please enter your name to enable verification.</p>
+                    )}
+                  </div>
                 )}
 
                 {extractedData && (
