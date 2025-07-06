@@ -31,7 +31,7 @@ export default function Home() {
 
           <div className="w-full space-y-4 pt-6">
             <Button asChild className="w-full rounded-xl bg-[#EC008C] py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-xl hover:bg-[#d4007a] focus:outline-none focus:ring-0">
-              <Link href="/signup">
+              <Link href="/onboarding/details">
                 Get Started
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
