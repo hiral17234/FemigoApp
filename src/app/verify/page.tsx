@@ -94,7 +94,9 @@ export default function VerifyIdentityPage() {
     try {
       const result = await verifyGender({ photoDataUri: capturedImage });
 
-      if (result.isFemale && result.isHuman && result.isClear) {
+      // The AI flow now sets isFemale to false if glasses are worn,
+      // or if not human/unclear. So we can just check isFemale for a pass.
+      if (result.isFemale) {
         toast({
           title: 'Verification Successful ✅',
           description: result.reason || 'You can proceed to the next step.',
@@ -112,10 +114,11 @@ export default function VerifyIdentityPage() {
           router.push('/verify-phone');
         }
       } else {
+        // The `reason` field from the AI should now give the specific failure cause.
         toast({
           variant: 'destructive',
           title: 'Verification Failed',
-          description: result.reason || 'Please try again with a clear photo of your face.',
+          description: result.reason || 'Please try again with a clear, unobstructed photo of your face without glasses.',
         });
       }
     } catch (error: any) {
