@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -85,7 +86,7 @@ export default function VerifyPhonePage() {
         </Link>
         <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-              Step 3: Phone Verification
+              Step 4: Phone Verification
             </CardTitle>
             <CardDescription className="pt-2">
                 Enter your phone number to receive a verification code.

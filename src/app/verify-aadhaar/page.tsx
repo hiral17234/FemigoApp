@@ -316,7 +316,7 @@ export default function VerifyAadhaarPage() {
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <Card className="relative w-full max-w-lg rounded-2xl bg-card p-6 shadow-xl">
+      <Card className="relative w-full max-w-lg rounded-2xl bg-card p-8 shadow-xl">
        <Link
         href="/verify"
         className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
@@ -326,7 +326,7 @@ export default function VerifyAadhaarPage() {
       </Link>
         <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 2a: Aadhaar Verification
+            Step 3: Aadhaar Verification
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
             {step === "capture" 

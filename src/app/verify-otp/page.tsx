@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -95,7 +96,7 @@ export default function VerifyOtpPage() {
         </Link>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 4: OTP Verification
+            Step 5: OTP Verification
           </CardTitle>
           <CardDescription className="mx-auto max-w-sm pt-2">
             A 6-digit code has been sent to {phone}.
