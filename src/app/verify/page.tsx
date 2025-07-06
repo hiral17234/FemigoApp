@@ -22,50 +22,40 @@ export default function VerifyIdentityPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
-  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    let isCancelled = false;
-
-    async function getCameraPermission() {
-      if (capturedImage || hasCameraPermission) {
-        if(stream) {
-            stream.getTracks().forEach((track) => track.stop());
-            setStream(null);
-        }
-        return;
-      }
-      try {
-        const newStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        if (!isCancelled) {
-          setStream(newStream);
-          setHasCameraPermission(true);
-          if (videoRef.current) {
-            videoRef.current.srcObject = newStream;
-          }
-        }
-      } catch (error) {
-        console.error('Error accessing camera:', error);
-        if (!isCancelled) {
-          setHasCameraPermission(false);
-          toast({
-            variant: 'destructive',
-            title: 'Camera Access Denied',
-            description: 'Please enable camera permissions in your browser settings to use this app.',
-          });
-        }
-      }
+    if (capturedImage) {
+      return;
     }
 
-    getCameraPermission();
+    let stream: MediaStream | null = null;
+    const startCamera = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        setHasCameraPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings to use this app.',
+        });
+      }
+    };
+
+    startCamera();
 
     return () => {
-      isCancelled = true;
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [capturedImage, hasCameraPermission, stream, toast]);
+  }, [capturedImage, toast]);
+
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
@@ -94,7 +84,6 @@ export default function VerifyIdentityPage() {
 
   const retakePhoto = () => {
     setCapturedImage(null)
-    setHasCameraPermission(null); 
   }
   
   const handleVerify = async () => {
@@ -104,7 +93,7 @@ export default function VerifyIdentityPage() {
     try {
       const result = await verifyGender({ photoDataUri: capturedImage });
 
-      if (result.isFemale) {
+      if (result.isFemale && result.isHuman && result.isClear) {
         toast({
           title: 'Verification Successful ✅',
           description: result.reason || 'You can proceed to the next step.',

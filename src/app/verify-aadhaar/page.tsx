@@ -32,44 +32,38 @@ export default function VerifyAadhaarPage() {
     }
   }, [router]);
 
-  // Effect to manage the camera stream
   useEffect(() => {
-    if (capturedImage) return;
+    if (capturedImage) {
+      return;
+    }
 
     let stream: MediaStream | null = null;
-    
     const startCamera = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        setHasCameraPermission(true);
       } catch (error) {
         console.error("Error accessing camera:", error);
         setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Please enable camera permissions in your browser settings to use this app.',
+        });
       }
     };
 
     startCamera();
-    
+
     return () => {
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
     };
-  }, [capturedImage]);
-
-  // Effect to show a toast message if camera access is denied
-  useEffect(() => {
-    if (hasCameraPermission === false) {
-      toast({
-        variant: "destructive",
-        title: "Camera Access Denied",
-        description: "Please enable camera permissions in your browser settings to use this app.",
-      });
-    }
-  }, [hasCameraPermission, toast]);
+  }, [capturedImage, toast]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
@@ -97,7 +91,6 @@ export default function VerifyAadhaarPage() {
   
   const retakePhoto = () => {
     setCapturedImage(null);
-    setHasCameraPermission(null);
   }
 
   const handleAadhaarUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -150,7 +143,7 @@ export default function VerifyAadhaarPage() {
                 </div>
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center text-center">
                     {capturedImage ? (
-                        <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
+                        <Image src={capturedImage} alt="Captured photo" fill objectFit="cover" />
                     ) : (
                         <>
                             <video 
@@ -226,5 +219,3 @@ export default function VerifyAadhaarPage() {
     </div>
   )
 }
-
-    
