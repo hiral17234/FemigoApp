@@ -21,16 +21,18 @@ export default function VerifyIdentityPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
-  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
-    let mediaStream: MediaStream;
-    const getCameraPermission = async () => {
+    // This effect should only run when we need the camera feed.
+    if (capturedImage) return;
+
+    let stream: MediaStream | null = null;
+    
+    const startCamera = async () => {
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        setStream(mediaStream);
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+          videoRef.current.srcObject = stream;
         }
         setHasCameraPermission(true);
       } catch (error) {
@@ -44,17 +46,16 @@ export default function VerifyIdentityPage() {
       }
     };
 
-    if (!capturedImage) {
-        getCameraPermission();
-    }
+    startCamera();
 
+    // The cleanup function is critical. It runs when the component unmounts
+    // or when the dependencies of the effect change.
     return () => {
-        if (stream) {
-            stream.getTracks().forEach((track) => track.stop());
-        }
-    }
-  }, [capturedImage, stream, toast]);
-
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [capturedImage, toast]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
@@ -90,8 +91,7 @@ export default function VerifyIdentityPage() {
     if (!capturedImage) return;
     setIsVerifying(true);
 
-    // AI verification is temporarily bypassed due to a build issue.
-    // This will simulate a successful verification.
+    // This simulates a successful verification.
     setTimeout(() => {
       toast({
         title: 'Verification Successful ✅',

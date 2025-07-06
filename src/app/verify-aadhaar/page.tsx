@@ -23,7 +23,6 @@ export default function VerifyAadhaarPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [uploadedAadhaar, setUploadedAadhaar] = useState<File | null>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('userCountry') !== 'india') {
@@ -32,13 +31,15 @@ export default function VerifyAadhaarPage() {
   }, [router]);
 
   useEffect(() => {
-    let mediaStream: MediaStream;
-    const getCameraPermission = async () => {
+    if (capturedImage) return;
+
+    let stream: MediaStream | null = null;
+    
+    const startCamera = async () => {
       try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        setStream(mediaStream)
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
         if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
+          videoRef.current.srcObject = stream;
         }
         setHasCameraPermission(true);
       } catch (error) {
@@ -52,16 +53,14 @@ export default function VerifyAadhaarPage() {
       }
     };
 
-    if (!capturedImage) {
-        getCameraPermission();
-    }
+    startCamera();
     
     return () => {
-        if (stream) {
-            stream.getTracks().forEach((track) => track.stop());
-        }
-    }
-  }, [capturedImage, stream, toast]);
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [capturedImage, toast]);
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
