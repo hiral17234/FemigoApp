@@ -52,17 +52,27 @@ const aadhaarOcrPrompt = ai.definePrompt({
   input: {schema: AadhaarOcrInputSchema},
   output: {schema: AadhaarOcrOutputSchemaInternal},
   prompt: `You are an expert OCR system and identity verification specialist.
-  Analyze the provided images and extract the following information accurately.
+  Your task is to analyze the provided images of an Aadhaar card and a live photo, and extract specific information in a structured JSON format.
 
-  1.  **Aadhaar Number**: Find the 12-digit number from the Aadhaar card. It is usually formatted as XXXX XXXX XXXX.
-  2.  **Full Name**: Extract the full name of the cardholder from the Aadhaar card.
-  3.  **Gender**: Extract the gender from the Aadhaar card. It will be written as 'Male' or 'Female' in English or 'पुरुष / Male' or 'महिला / Female' in Hindi/English. Map it to the enum 'Male' or 'Female'. If you cannot determine it, return 'Unspecified'.
-  4.  **Photo Match (isPhotoMatch)**: Compare the person's face from the live photo with the face on the Aadhaar card. They must be the same person. **Take into account that there might be a significant age difference between the two photos.** The person in the live photo could be much older than in the Aadhaar photo. Focus on matching core, stable facial features (like nose shape, eye spacing, jawline) rather than superficial changes from aging (like wrinkles, hair graying, or weight changes). If the core features match despite the age gap, consider it a match.
+  **Extraction and Verification Rules:**
 
-  **IMPORTANT RULES:**
-  *   If any piece of information is unclear, unreadable, or not present, omit the field from your JSON output.
-  *   Ensure the Aadhaar number is formatted with spaces.
-  *   Provide a concise reason for the photo match decision in 'photoMatchReason'. If the match is successful despite an age gap, mention it (e.g., "Faces match, accounting for age progression."). If it fails, specify why (e.g., "Faces appear to be different individuals.").
+  1.  **Aadhaar Number**: Extract the 12-digit Aadhaar number. It is typically formatted as XXXX XXXX XXXX.
+      - If the number is not found or unreadable, return an empty string ("").
+      - Ensure the extracted number maintains the space-separated format.
+
+  2.  **Full Name**: Extract the full name of the cardholder.
+      - If the name is not found or unreadable, return an empty string ("").
+
+  3.  **Gender**: Determine the gender from the card ('Male' or 'Female').
+      - If the gender cannot be determined, you MUST return "Unspecified".
+
+  4.  **Photo Match (isPhotoMatch & photoMatchReason)**: Compare the face in the live photo with the face on the Aadhaar card.
+      - **CRITICAL**: Account for age differences. The person in the live photo may be significantly older. Focus on matching stable facial features (e.g., nose shape, eye spacing) rather than superficial changes (wrinkles, hair color).
+      - If the faces match, set \`isPhotoMatch\` to \`true\` and \`photoMatchReason\` to a brief explanation like "Faces match, accounting for age progression."
+      - If the faces do not match, set \`isPhotoMatch\` to \`false\` and \`photoMatchReason\` to a reason like "Faces do not appear to match."
+      - If you cannot perform the comparison, set \`isPhotoMatch\` to \`false\` and \`photoMatchReason\` to "Could not perform photo comparison."
+
+  **You must always return all fields specified in the output schema.** Do not omit any fields.
 
   Live Photo to analyze: {{media url=livePhotoDataUri}}
   Aadhaar Card to analyze: {{media url=photoDataUri}}
@@ -82,6 +92,7 @@ const aadhaarVerificationFlow = ai.defineFlow(
         throw new Error('AI model was unable to process the image.');
       }
       // Sanitize the output to provide default values for any missing fields.
+      // This provides a fallback in case the model deviates from the prompt.
       return {
         aadhaarNumber: output.aadhaarNumber || '',
         fullName: output.fullName || '',
