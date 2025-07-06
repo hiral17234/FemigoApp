@@ -19,23 +19,22 @@ export default function VerifyPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
-  const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
+    let stream: MediaStream | null = null
     const getCameraPermission = async () => {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.error("Camera API not supported.");
-        setHasCameraPermission(false);
+        console.error("Camera API not supported.")
+        setHasCameraPermission(false)
         toast({
             variant: "destructive",
             title: "Unsupported Browser",
             description: "Your browser does not support the camera API.",
-        });
-        return;
+        })
+        return
       }
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-        setStream(stream);
+        stream = await navigator.mediaDevices.getUserMedia({ video: true })
         setHasCameraPermission(true)
         if (videoRef.current) {
           videoRef.current.srcObject = stream
@@ -53,11 +52,9 @@ export default function VerifyPage() {
     getCameraPermission()
 
     return () => {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
+        stream?.getTracks().forEach(track => track.stop());
     }
-  }, [stream, toast])
+  }, [toast])
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -124,7 +121,7 @@ export default function VerifyPage() {
 
         <div className="relative mb-6 aspect-video w-full overflow-hidden rounded-lg bg-black">
           {capturedImage ? (
-            <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
+            <Image src={capturedImage} alt="Captured photo" fill={true} objectFit="cover" />
           ) : (
              <>
                 <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
