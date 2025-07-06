@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -11,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { verifyGender } from "@/ai/flows/gender-verification-flow"
 import { Card, CardContent } from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function VerifyPage() {
   const router = useRouter()
@@ -20,18 +20,22 @@ export default function VerifyPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
+  const [stream, setStream] = useState<MediaStream | null>(null)
 
-  // This effect handles getting and cleaning up the camera stream
+  const stopStream = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  }
+
+  // Request camera permission and set up the stream
   useEffect(() => {
     if (capturedImage) {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        setStream(null);
-      }
-      return;
+        stopStream();
+        return;
     }
 
     let isMounted = true;
@@ -39,8 +43,8 @@ export default function VerifyPage() {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         if (isMounted) {
-          setStream(mediaStream);
           setHasCameraPermission(true);
+          setStream(mediaStream);
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
@@ -54,23 +58,16 @@ export default function VerifyPage() {
 
     return () => {
       isMounted = false;
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
+      stopStream();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capturedImage]);
 
+  // Attach stream to video element when it's available
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
-    return () => {
-      if (videoRef.current && stream) {
-        // Clean up stream reference
-        videoRef.current.srcObject = null;
-      }
-    };
   }, [stream]);
 
   const capturePhoto = () => {
@@ -81,6 +78,7 @@ export default function VerifyPage() {
       canvas.height = video.videoHeight;
       const context = canvas.getContext("2d");
       if (context) {
+        // Flip the image horizontally for a mirror effect
         context.translate(video.videoWidth, 0);
         context.scale(-1, 1);
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
@@ -149,37 +147,47 @@ export default function VerifyPage() {
   }
 
   const renderCameraView = () => {
+    if (hasCameraPermission === false) {
+        return (
+            <Alert variant="destructive" className="m-4">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertTitle>Camera Access Denied</AlertTitle>
+                <AlertDescription>
+                    You must grant camera permission in your browser settings to continue.
+                </AlertDescription>
+            </Alert>
+        )
+    }
+    
+    if (hasCameraPermission === null) {
+      return (
+        <div className="flex flex-col items-center justify-center gap-2 text-white/70 h-full">
+            <Loader2 className="w-12 h-12 animate-spin" />
+            <p>Requesting camera access...</p>
+        </div>
+      )
+    }
+
     if (capturedImage) {
       return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
     }
-    
-    if (hasCameraPermission === false) {
-        return (
-            <div className="flex flex-col items-center justify-center gap-2 p-4 text-destructive text-center">
-                <AlertTriangle className="w-12 h-12" />
-                <p>Camera access was denied.</p>
-                <p className="text-xs">You may need to grant permission in your browser settings and refresh the page.</p>
-            </div>
-        )
-    }
-
-    if (!stream) {
-        return (
-            <div className="flex flex-col items-center justify-center gap-2 text-white/70">
-                <Loader2 className="w-12 h-12 animate-spin" />
-                <p>Starting camera...</p>
-            </div>
-        )
-    }
 
     return (
-        <video 
-            ref={videoRef} 
-            className="h-full w-full object-cover transform -scale-x-100" 
-            autoPlay 
-            muted 
-            playsInline
-        />
+        <>
+            <video 
+                ref={videoRef} 
+                className="h-full w-full object-cover transform -scale-x-100" 
+                autoPlay 
+                muted 
+                playsInline
+            />
+            {!stream && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/70 bg-black/50">
+                    <Loader2 className="w-12 h-12 animate-spin" />
+                    <p>Starting camera...</p>
+                </div>
+            )}
+        </>
     )
   }
 
@@ -221,7 +229,7 @@ export default function VerifyPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={!stream || isVerifying} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                           <Button onClick={capturePhoto} disabled={!stream || isVerifying || hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
                             <Camera className="mr-2"/>
                             Capture Photo
                            </Button>
