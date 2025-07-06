@@ -114,7 +114,7 @@ export default function CongratulationsPage() {
               Now let's fill some basic details to let the others know about you, pal.
             </p>
             <Button
-              onClick={() => router.push("/dashboard")}
+              onClick={() => router.push("/onboarding/details")}
               className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
             >
               Let's Go!
