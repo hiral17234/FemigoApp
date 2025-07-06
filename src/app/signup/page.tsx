@@ -142,10 +142,10 @@ export default function SignupPage() {
                             <CommandGroup>
                               {countries.map((country) => (
                                 <CommandItem
-                                  value={country.value}
+                                  value={country.label}
                                   key={country.value}
-                                  onSelect={(currentValue) => {
-                                    form.setValue("country", currentValue)
+                                  onSelect={() => {
+                                    form.setValue("country", country.value)
                                     setOpen(false)
                                   }}
                                 >

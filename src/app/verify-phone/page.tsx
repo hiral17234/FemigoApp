@@ -121,13 +121,10 @@ export default function VerifyPhonePage() {
                                   <CommandGroup>
                                     {countries.map((country) => (
                                       <CommandItem
-                                        value={country.value}
+                                        value={country.label}
                                         key={country.value}
-                                        onSelect={(currentValue) => {
-                                          const selectedCountry = countries.find(c => c.value === currentValue)
-                                          if (selectedCountry) {
-                                            form.setValue("countryCode", selectedCountry.phone)
-                                          }
+                                        onSelect={() => {
+                                          form.setValue("countryCode", country.phone)
                                           setOpen(false)
                                         }}
                                       >

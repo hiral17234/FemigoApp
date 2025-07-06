@@ -217,8 +217,8 @@ export default function OnboardingDetailsPage() {
                                      <CommandItem
                                        value={state}
                                        key={state}
-                                       onSelect={(currentValue) => {
-                                         form.setValue("state", currentValue === form.getValues("state") ? "" : currentValue)
+                                       onSelect={() => {
+                                         form.setValue("state", state === field.value ? "" : state)
                                          setStatePopoverOpen(false)
                                        }}
                                      >
@@ -256,8 +256,8 @@ export default function OnboardingDetailsPage() {
                                      <CommandItem
                                        value={city}
                                        key={city}
-                                       onSelect={(currentValue) => {
-                                         form.setValue("city", currentValue === form.getValues("city") ? "" : currentValue)
+                                       onSelect={() => {
+                                         form.setValue("city", city === field.value ? "" : city)
                                          setCityPopoverOpen(false)
                                        }}
                                      >
@@ -312,13 +312,10 @@ export default function OnboardingDetailsPage() {
                                       <CommandGroup>
                                         {countries.map((country) => (
                                           <CommandItem
-                                            value={country.value}
+                                            value={country.label}
                                             key={country.value}
-                                            onSelect={(currentValue) => {
-                                              const selectedCountry = countries.find(c => c.value === currentValue)
-                                              if (selectedCountry) {
-                                                form.setValue("altCountryCode", selectedCountry.phone)
-                                              }
+                                            onSelect={() => {
+                                              form.setValue("altCountryCode", country.phone)
                                               setCountryCodePopoverOpen(false)
                                             }}
                                           >
