@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Camera, Loader2, RefreshCcw, Upload, User, ShieldCheck, ScanLine, KeyRound } from "lucide-react"
+import { ArrowLeft, Camera, Loader2, RefreshCcw, Upload, User, ShieldCheck, ScanLine, KeyRound, AlertTriangle } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
@@ -12,8 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { extractAadhaarData, type AadhaarOcrOutput } from "@/ai/flows/aadhaar-verification-flow"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
 type VerificationStep = "capture" | "verify"
+type CaptureMode = "camera" | "upload"
 
 export default function VerifyAadhaarPage() {
   const router = useRouter()
@@ -24,10 +27,11 @@ export default function VerifyAadhaarPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [step, setStep] = useState<VerificationStep>("capture")
+  const [captureMode, setCaptureMode] = useState<CaptureMode>("camera")
   const [aadhaarImage, setAadhaarImage] = useState<string | null>(null);
   const [extractedData, setExtractedData] = useState<AadhaarOcrOutput | null>(null)
   
-  const [isCameraReady, setIsCameraReady] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [userName, setUserName] = useState("")
@@ -44,29 +48,41 @@ export default function VerifyAadhaarPage() {
     }
   }, [router]);
 
-  // Start Camera
+  // Start/Stop Camera based on mode and step
   useEffect(() => {
-    if (step !== 'capture' || aadhaarImage) return
+    // We only need the camera if we are in capture step and camera mode
+    if (step !== 'capture' || captureMode !== 'camera' || aadhaarImage) {
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach((track) => track.stop());
+        videoRef.current.srcObject = null;
+      }
+      return
+    }
 
     let stream: MediaStream | null = null;
     const startCamera = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        setHasCameraPermission(true)
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        setIsCameraReady(true)
       } catch (error) {
         console.error("Error accessing camera:", error);
+        setHasCameraPermission(false);
         toast({ variant: 'destructive', title: 'Camera Error', description: 'Could not access the camera. Please check permissions.' });
       }
     };
     startCamera();
 
+    // Cleanup function to stop the camera stream
     return () => {
-      stream?.getTracks().forEach((track) => track.stop());
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
     }
-  }, [step, aadhaarImage, toast]);
+  }, [step, captureMode, aadhaarImage, toast]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -81,7 +97,14 @@ export default function VerifyAadhaarPage() {
   };
   
   const capturePhoto = () => {
-    if (!videoRef.current || !canvasRef.current) return
+    if (!videoRef.current || !canvasRef.current || !hasCameraPermission) {
+        toast({
+            variant: "destructive",
+            title: "Camera not ready",
+            description: "Please grant camera permission and wait for the feed to appear.",
+        })
+        return
+    }
     const video = videoRef.current
     const canvas = canvasRef.current
     canvas.width = video.videoWidth
@@ -153,6 +176,109 @@ export default function VerifyAadhaarPage() {
     router.push("/verify-phone");
   }
 
+  const renderCaptureUI = () => (
+     <Tabs value={captureMode} onValueChange={(value) => setCaptureMode(value as CaptureMode)} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4" />Scan Card</TabsTrigger>
+            <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" />Upload File</TabsTrigger>
+        </TabsList>
+        <TabsContent value="camera" className="mt-4">
+            <div className="space-y-4">
+                <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
+                    <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+                    {hasCameraPermission === false && (
+                        <Alert variant="destructive" className="absolute m-4 max-w-sm">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Camera Access Denied</AlertTitle>
+                        <AlertDescription>Please enable camera permissions in your browser settings and refresh the page.</AlertDescription>
+                        </Alert>
+                    )}
+                    {captureMode === 'camera' && hasCameraPermission === null && !aadhaarImage && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
+                            <Loader2 className="h-12 w-12 animate-spin" />
+                            <p>Starting camera...</p>
+                        </div>
+                    )}
+                </div>
+                <canvas ref={canvasRef} className="hidden" />
+
+                <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full">
+                    <Camera className="mr-2 h-4 w-4" /> Capture Photo
+                </Button>
+            </div>
+        </TabsContent>
+        <TabsContent value="upload" className="mt-4">
+            <div 
+                className="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50"
+                onClick={() => fileInputRef.current?.click()}
+            >
+                <Upload className="h-10 w-10 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
+                <p className="text-xs text-muted-foreground">PNG, JPG (MAX. 5MB)</p>
+            </div>
+            <Input
+                id="aadhaar-upload"
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                onChange={handleFileChange}
+                accept="image/jpeg,image/png"
+            />
+        </TabsContent>
+    </Tabs>
+  );
+
+  const renderVerifyUI = () => (
+    <div className="space-y-6">
+        {aadhaarImage && (
+            <Image src={aadhaarImage} width={400} height={250} alt="Aadhaar Card" className="rounded-lg w-full object-contain" />
+        )}
+
+        <Card className="bg-muted/30">
+            <CardHeader>
+                <CardTitle className="text-xl flex items-center gap-2">
+                    <ScanLine /> Extracted Information
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                {isExtracting ? (
+                    <div className="space-y-4 p-4">
+                        <Skeleton className="h-8 w-full" />
+                        <Skeleton className="h-8 w-3/4" />
+                        <Skeleton className="h-8 w-1/2" />
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-3">
+                            <KeyRound className="w-5 h-5 text-muted-foreground" />
+                            <p className="flex-1 text-sm font-mono tracking-wider">{extractedData?.aadhaarNumber || 'Not found'}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <User className="w-5 h-5 text-muted-foreground" />
+                            <p className="flex-1 text-sm">{extractedData?.fullName || 'Not found'}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <ShieldCheck className="w-5 h-5 text-muted-foreground" />
+                            <p className="flex-1 text-sm">{extractedData?.gender || 'Not found'}</p>
+                        </div>
+                    </>
+                )}
+            </CardContent>
+        </Card>
+        
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Button onClick={resetCapture} variant="outline" disabled={isExtracting || isVerifying}>
+                <RefreshCcw className="mr-2 h-4 w-4" /> Recapture
+            </Button>
+            <Button onClick={handleFinalVerification} disabled={isExtracting || isVerifying || !extractedData} className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105">
+                {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Verify Now
+            </Button>
+        </div>
+    </div>
+  )
+
+
   return (
     <div className="relative flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
        <Link
@@ -177,88 +303,7 @@ export default function VerifyAadhaarPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                {step === 'capture' && (
-                    <div className="space-y-4">
-                        <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
-                            <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
-                            {!isCameraReady && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
-                                    <Loader2 className="h-12 w-12 animate-spin" />
-                                    <p>Starting camera...</p>
-                                </div>
-                            )}
-                        </div>
-                        <canvas ref={canvasRef} className="hidden" />
-
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                             <Button onClick={capturePhoto} disabled={!isCameraReady} className="bg-gradient-to-r from-blue-500 to-indigo-600 text-primary-foreground">
-                                <Camera className="mr-2 h-4 w-4" /> Capture Card
-                            </Button>
-                            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                                <Upload className="mr-2 h-4 w-4" /> Upload Image
-                            </Button>
-                             <Input
-                                id="aadhaar-upload"
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                onChange={handleFileChange}
-                                accept="image/jpeg,image/png"
-                            />
-                        </div>
-                    </div>
-                )}
-                
-                {step === 'verify' && (
-                    <div className="space-y-6">
-                        {aadhaarImage && (
-                            <Image src={aadhaarImage} width={400} height={250} alt="Aadhaar Card" className="rounded-lg w-full object-contain" />
-                        )}
-
-                        <Card className="bg-muted/30">
-                            <CardHeader>
-                                <CardTitle className="text-xl flex items-center gap-2">
-                                    <ScanLine /> Extracted Information
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {isExtracting ? (
-                                    <div className="space-y-4 p-4">
-                                        <Skeleton className="h-8 w-full" />
-                                        <Skeleton className="h-8 w-3/4" />
-                                        <Skeleton className="h-8 w-1/2" />
-                                    </div>
-                                ) : (
-                                    <>
-                                        <div className="flex items-center gap-3">
-                                            <KeyRound className="w-5 h-5 text-muted-foreground" />
-                                            <p className="flex-1 text-sm font-mono tracking-wider">{extractedData?.aadhaarNumber || 'Not found'}</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <User className="w-5 h-5 text-muted-foreground" />
-                                            <p className="flex-1 text-sm">{extractedData?.fullName || 'Not found'}</p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <ShieldCheck className="w-5 h-5 text-muted-foreground" />
-                                            <p className="flex-1 text-sm">{extractedData?.gender || 'Not found'}</p>
-                                        </div>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-                        
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <Button onClick={resetCapture} variant="outline" disabled={isExtracting || isVerifying}>
-                                <RefreshCcw className="mr-2 h-4 w-4" /> Recapture
-                            </Button>
-                            <Button onClick={handleFinalVerification} disabled={isExtracting || isVerifying || !extractedData}>
-                                {isVerifying && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Verify Now
-                            </Button>
-                        </div>
-                    </div>
-                )}
-
+                {step === 'capture' ? renderCaptureUI() : renderVerifyUI()}
             </CardContent>
         </Card>
       </div>
