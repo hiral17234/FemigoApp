@@ -29,7 +29,7 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport className="sm:top-0 sm:flex-col" />
+      <ToastViewport />
     </ToastProvider>
   )
 }

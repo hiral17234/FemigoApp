@@ -70,7 +70,7 @@ export default function VerifyPhonePage() {
       }
       toast({
         title: "OTP Sent!",
-        description: `We've sent a verification code to ${phoneNumber}. (Hint: use 123456)`,
+        description: `We've sent a verification code to ${phoneNumber}.`,
       });
       router.push("/verify-otp");
       setIsSubmitting(false);

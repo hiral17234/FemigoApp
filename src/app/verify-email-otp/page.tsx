@@ -65,10 +65,10 @@ const OtpToastContent = ({ otp }: { otp: string }) => {
 };
 
 
-export default function VerifyOtpPage() {
+export default function VerifyEmailOtpPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [phone, setPhone] = useState("")
+  const [email, setEmail] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [otp, setOtp] = useState("")
 
@@ -92,12 +92,12 @@ export default function VerifyOtpPage() {
   }, []);
 
   useEffect(() => {
-    const storedPhone = typeof window !== "undefined" ? localStorage.getItem("userPhone") : ""
-    if (storedPhone) {
-      setPhone(storedPhone)
+    const storedEmail = typeof window !== "undefined" ? localStorage.getItem("userEmail") : ""
+    if (storedEmail) {
+      setEmail(storedEmail)
     } else {
-      // If no phone number, something went wrong, go back.
-      router.push('/verify-phone');
+      // If no email, something went wrong, go back.
+      router.push('/verify-email');
     }
   }, [router])
 
@@ -115,11 +115,15 @@ export default function VerifyOtpPage() {
     setTimeout(() => {
         if (data.pin === otp) {
             toast({
-                title: "Phone Verified! ✅",
-                description: "Next, let's verify your email.",
+                title: "Email Verified! ✅",
+                description: "Your account is now fully set up.",
                 className: "bg-green-500 text-white",
             });
-            router.push("/verify-email");
+            // Final step, clear phone and proceed to dashboard
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("userPhone")
+            }
+            router.push("/dashboard");
         } else {
             toast({
                 variant: "destructive",
@@ -142,7 +146,7 @@ export default function VerifyOtpPage() {
      <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
       <Card className="relative w-full max-w-md rounded-2xl bg-card p-8 shadow-xl">
         <Link
-          href="/verify-phone"
+          href="/verify-email"
           className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -150,7 +154,7 @@ export default function VerifyOtpPage() {
         </Link>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 4: OTP Verification
+            Step 5: OTP Verification
           </CardTitle>
           <CardDescription className="mx-auto max-w-sm pt-2">
             A 6-digit code has been sent to your device. Check the notification and enter the code below.
@@ -189,7 +193,7 @@ export default function VerifyOtpPage() {
                 className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
               >
                 {isVerifying && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                Verify & Continue
+                Verify & Finish
               </Button>
             </form>
           </Form>
