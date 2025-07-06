@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -94,6 +95,15 @@ export default function VerifyIdentityPage() {
     try {
       const result = await verifyGender({ photoDataUri: capturedImage });
 
+      if (result.hasGlasses) {
+        toast({
+          variant: 'destructive',
+          title: 'Verification Failed',
+          description: 'Please remove your glasses and try again.',
+        });
+        return;
+      }
+
       if (result.isFemale) {
         toast({
           title: 'Verification Successful ✅',
@@ -115,7 +125,7 @@ export default function VerifyIdentityPage() {
         toast({
           variant: 'destructive',
           title: 'Verification Failed',
-          description: result.reason || 'Verification failed. This platform is for women only. Please try again with a clear photo.',
+          description: result.reason || 'This platform is for women only. Please try again with a clear photo.',
         });
       }
     } catch (error: any) {
@@ -146,7 +156,8 @@ export default function VerifyIdentityPage() {
               Step 2: Face Verification
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-              Please take a clear picture of your face. This helps us ensure a safe and supportive space for all.
+              Please take a clear picture of your face. This helps us ensure a safe space.
+              <span className="font-semibold text-destructive"> Please remove any glasses.</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

@@ -1,10 +1,11 @@
+
 'use server';
 /**
- * @fileOverview A gender verification AI agent.
+ * @fileOverview A gender and glasses verification AI agent.
  *
- * - verifyGender - A function that handles the gender verification process.
- * - GenderVerificationInput - The input type for the verifyGender function.
- * - GenderVerificationOutput - The return type for the verifyGender function.
+ * - verifyGenderAndGlasses - A function that handles the verification process.
+ * - GenderVerificationInput - The input type for the function.
+ * - GenderVerificationOutput - The return type for the function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -21,7 +22,8 @@ export type GenderVerificationInput = z.infer<typeof GenderVerificationInputSche
 
 const GenderVerificationOutputSchema = z.object({
   isFemale: z.boolean().describe('Whether the person in the image is female.'),
-  reason: z.string().describe('A brief explanation for the decision, e.g., "User identified as female.", "User identified as male."'),
+  hasGlasses: z.boolean().describe('Whether the person in the image is wearing glasses (spectacles or sunglasses).'),
+  reason: z.string().describe('A brief explanation for the decision, e.g., "User identified as female and is not wearing glasses.", "User is wearing glasses."'),
 });
 export type GenderVerificationOutput = z.infer<typeof GenderVerificationOutputSchema>;
 
@@ -36,11 +38,14 @@ const genderVerificationPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
-  prompt: `You are an expert in identity verification. Analyze the user's photo and determine if the person is female.
+  prompt: `You are an expert in identity verification. Analyze the user's photo.
 
-  The image must be clear and contain a human face. If not, consider it as not female.
+  1.  **Determine Gender**: Identify if the person in the photo is female.
+  2.  **Detect Glasses**: Check if the person is wearing any kind of glasses (spectacles, sunglasses, etc.).
+
+  The image must be clear and contain a human face. If not, consider it as not female and not wearing glasses.
   
-  Provide your final analysis in the specified JSON format.
+  Provide your final analysis in the specified JSON format. The 'reason' should summarize your findings.
 
   Photo to analyze: {{media url=photoDataUri}}
   `,
