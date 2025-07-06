@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Camera, ShieldCheck, Heart, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
@@ -18,60 +18,53 @@ export default function VerifyPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
-
-  const stopStream = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-  }, [])
-
-  const startStream = useCallback(async () => {
-    stopStream()
-    setCapturedImage(null)
-    setIsVerifying(false)
-    
-    if (!navigator.mediaDevices?.getUserMedia) {
-      console.error("Camera API not supported.")
-      setHasCameraPermission(false)
-      toast({
-          variant: "destructive",
-          title: "Unsupported Browser",
-          description: "Your browser does not support the camera API.",
-      })
-      return;
-    }
-
-    try {
-      setHasCameraPermission(null)
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-      streamRef.current = stream
-      setHasCameraPermission(true)
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error)
-      setHasCameraPermission(false)
-      toast({
-        variant: "destructive",
-        title: "Camera Access Denied",
-        description: "Please enable camera permissions in your browser settings to continue.",
-      })
-    }
-  }, [stopStream, toast])
+  const [cameraTrigger, setCameraTrigger] = useState(0)
 
   useEffect(() => {
-    startStream()
-    return () => {
-        stopStream()
+    let stream: MediaStream | null = null;
+    
+    const getCamera = async () => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        console.error("Camera API not supported.")
+        setHasCameraPermission(false)
+        toast({
+            variant: "destructive",
+            title: "Unsupported Browser",
+            description: "Your browser does not support the camera API.",
+        })
+        return;
+      }
+
+      try {
+        setHasCameraPermission(null)
+        stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        setHasCameraPermission(true)
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error)
+        setHasCameraPermission(false)
+        toast({
+          variant: "destructive",
+          title: "Camera Access Denied",
+          description: "Please enable camera permissions in your browser settings to continue.",
+        })
+      }
+    };
+    
+    if (!capturedImage) {
+        getCamera();
     }
-  }, [startStream, stopStream])
+
+    return () => {
+      stream?.getTracks().forEach(track => track.stop())
+    }
+  }, [capturedImage, cameraTrigger, toast])
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current && videoRef.current.srcObject) {
@@ -86,7 +79,6 @@ export default function VerifyPage() {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
         const dataUrl = canvas.toDataURL("image/jpeg")
         setCapturedImage(dataUrl)
-        stopStream()
       }
     } else {
         toast({
@@ -98,7 +90,8 @@ export default function VerifyPage() {
   }
 
   const retakePhoto = () => {
-    startStream();
+    setCapturedImage(null);
+    setCameraTrigger(count => count + 1);
   }
   
   const handleVerify = async () => {
@@ -163,7 +156,7 @@ export default function VerifyPage() {
             <div className="flex flex-col items-center gap-2 text-destructive">
                 <AlertTriangle className="w-12 h-12" />
                 <p className="text-center">Camera access was denied.</p>
-                <Button variant="outline" size="sm" onClick={startStream}>Try Again</Button>
+                <Button variant="outline" size="sm" onClick={() => setCameraTrigger(c => c + 1)}>Try Again</Button>
             </div>
         )
     }

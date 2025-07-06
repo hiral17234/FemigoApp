@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Camera, ShieldCheck, User, Loader2, RefreshCcw, AlertTriangle, Upload, FileCheck } from "lucide-react"
@@ -21,7 +22,6 @@ export default function VerifyAadhaarPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const streamRef = useRef<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
@@ -30,6 +30,8 @@ export default function VerifyAadhaarPage() {
   const [name, setName] = useState("")
   const [extractedData, setExtractedData] = useState<AadhaarVerificationOutput | null>(null);
   const [fileName, setFileName] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("camera")
+  const [cameraTrigger, setCameraTrigger] = useState(0)
 
   useEffect(() => {
     const savedName = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
@@ -38,59 +40,42 @@ export default function VerifyAadhaarPage() {
     }
   }, []);
 
-  const stopStream = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-  }, []);
-
-  const startStream = useCallback(async () => {
-    stopStream();
-    setImageDataUrl(null);
-    setExtractedData(null);
-    setIsVerifying(false);
-    
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setHasCameraPermission(false);
-      return;
-    }
-
-    try {
-      setHasCameraPermission(null);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      streamRef.current = stream;
-      setHasCameraPermission(true);
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error);
-      setHasCameraPermission(false);
-      toast({
-        variant: "destructive",
-        title: "Camera Access Denied",
-        description: "Please enable camera permissions to use this feature.",
-      });
-    }
-  }, [stopStream, toast]);
-
   useEffect(() => {
-    // Start stream on mount since camera is the default tab
-    startStream();
-    return () => {
-      stopStream();
-    }
-  }, [startStream, stopStream]);
+    let stream: MediaStream | null = null;
+    
+    const getCamera = async () => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setHasCameraPermission(false);
+        return;
+      }
 
-  const handleTabChange = (value: string) => {
-    if (value === "camera") {
-      startStream();
-    } else {
-      stopStream();
+      try {
+        setHasCameraPermission(null);
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setHasCameraPermission(true);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Error accessing camera:", error);
+        setHasCameraPermission(false);
+        toast({
+          variant: "destructive",
+          title: "Camera Access Denied",
+          description: "Please enable camera permissions to use this feature.",
+        });
+      }
+    };
+
+    if (activeTab === "camera" && !imageDataUrl) {
+      getCamera();
     }
-  }
+
+    return () => {
+      stream?.getTracks().forEach(track => track.stop());
+    }
+  }, [activeTab, imageDataUrl, cameraTrigger, toast]);
 
   const capturePhoto = () => {
     if (videoRef.current?.srcObject && canvasRef.current) {
@@ -104,7 +89,6 @@ export default function VerifyAadhaarPage() {
         const dataUrl = canvas.toDataURL("image/jpeg")
         setImageDataUrl(dataUrl)
         setExtractedData(null);
-        stopStream()
       }
     }
   }
@@ -130,7 +114,7 @@ export default function VerifyAadhaarPage() {
       fileInputRef.current.value = "";
     }
     if (isCameraTab) {
-        startStream();
+        setCameraTrigger(c => c + 1);
     }
   }
   
@@ -181,7 +165,7 @@ export default function VerifyAadhaarPage() {
       return <div className="flex flex-col items-center gap-2 p-4 text-destructive"><AlertTriangle className="w-12 h-12" /><p className="text-center">Camera access was denied or is not available. Try uploading a file instead.</p></div>
     }
 
-    if(hasCameraPermission === null && !streamRef.current) {
+    if(hasCameraPermission === null) {
       return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate-spin" /><p>Starting camera...</p></div>
     }
 
@@ -225,7 +209,7 @@ export default function VerifyAadhaarPage() {
                     </div>
                 </div>
 
-                <Tabs defaultValue="camera" className="w-full" onValueChange={handleTabChange}>
+                <Tabs defaultValue="camera" className="w-full" onValueChange={setActiveTab}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="camera">Use Camera</TabsTrigger>
                     <TabsTrigger value="upload">Upload File</TabsTrigger>
