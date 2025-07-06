@@ -17,7 +17,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription as FormDescriptionHint,
 } from "@/components/ui/form"
 import {
   InputOTP,
@@ -25,7 +24,7 @@ import {
   InputOTPSlot,
   InputOTPSeparator,
 } from "@/components/ui/input-otp"
-import { toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
   pin: z.string().min(6, {
@@ -35,6 +34,7 @@ const formSchema = z.object({
 
 export default function VerifyOtpPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [phone, setPhone] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [otp, setOtp] = useState("")
@@ -43,10 +43,16 @@ export default function VerifyOtpPage() {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  // Set initial OTP on the client-side to prevent hydration issues
+  // Set initial OTP on the client-side and show initial toast
   useEffect(() => {
-    setOtp(generateOtp())
-  }, [])
+    const initialOtp = generateOtp();
+    setOtp(initialOtp);
+    toast({
+      title: "OTP Sent!",
+      description: `For demo purposes, your code is: ${initialOtp}`,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const storedPhone = typeof window !== "undefined" ? localStorage.getItem("userPhone") : ""
@@ -97,13 +103,13 @@ export default function VerifyOtpPage() {
     setOtp(newOtp);
     toast({ 
       title: 'OTP Resent!', 
-      description: `A new code has been sent. (Hint: use ${newOtp})`
+      description: `A new code has been sent. For demo, use: ${newOtp}`
     });
   }
 
   return (
      <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <Card className="relative w-full max-w-md rounded-2xl p-6 shadow-xl">
+      <Card className="relative w-full max-w-md rounded-2xl bg-card p-8 shadow-xl">
         <Link
           href="/verify-phone"
           className="absolute left-4 top-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary md:left-6 md:top-6"
@@ -113,10 +119,10 @@ export default function VerifyOtpPage() {
         </Link>
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
-            Step 5: OTP Verification
+            Step 4: OTP Verification
           </CardTitle>
           <CardDescription className="mx-auto max-w-sm pt-2">
-            A 6-digit code has been sent to {phone}.
+            A 6-digit code has been sent to {phone}. Check the pop-up notification.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -141,11 +147,6 @@ export default function VerifyOtpPage() {
                         </InputOTPGroup>
                       </InputOTP>
                     </FormControl>
-                    {otp && (
-                      <FormDescriptionHint className="pt-2 text-center text-xs">
-                        (For demo purposes, use code: {otp})
-                      </FormDescriptionHint>
-                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -164,7 +165,7 @@ export default function VerifyOtpPage() {
 
           <p className="pt-4 text-center text-sm text-muted-foreground">
             Didn't receive the code?{" "}
-            <button className="font-medium text-primary hover:underline" onClick={handleResendOtp}>
+            <button type="button" className="font-medium text-primary hover:underline" onClick={handleResendOtp}>
               Resend OTP
             </button>
           </p>
