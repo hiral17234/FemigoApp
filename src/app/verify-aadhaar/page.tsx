@@ -64,10 +64,13 @@ export default function VerifyAadhaarPage() {
   }, [stopStream]);
 
   useEffect(() => {
+    // The camera tab is active by default, so we should start the stream on mount.
+    startStream();
     return () => {
+      // Ensure the stream is stopped when the component unmounts.
       stopStream();
     };
-  }, [stopStream]);
+  }, [startStream, stopStream]);
 
   const handleTabChange = (value: string) => {
     if (value === "camera") {
