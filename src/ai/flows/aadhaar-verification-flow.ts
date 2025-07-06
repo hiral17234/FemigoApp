@@ -43,27 +43,21 @@ const aadhaarOcrPrompt = ai.definePrompt({
   model: 'googleai/gemini-1.5-flash-latest',
   input: {schema: AadhaarOcrInputSchema},
   output: {schema: AadhaarOcrOutputSchema},
-  prompt: `You are an expert OCR system and identity verification specialist.
-  Your task is to analyze the provided images of an Aadhaar card and a live photo, and extract specific information in a structured JSON format.
+  prompt: `You are an AI assistant tasked with two things: extracting text from a document and comparing two images.
 
-  **Extraction and Verification Rules:**
+  **Task 1: Extract Information**
+  Analyze the Aadhaar Card image and extract the following information. If a field is unreadable, return an empty string for it.
+  - Aadhaar Number: The 12-digit number, formatted as XXXX XXXX XXXX.
+  - Full Name: The cardholder's full name.
+  - Gender: The gender specified on the card ('Male' or 'Female'). If not present, use "Unspecified".
 
-  1.  **Aadhaar Number**: Extract the 12-digit Aadhaar number from the card. It is typically formatted as XXXX XXXX XXXX.
-      - If the number is not found or unreadable, return an empty string for the field.
+  **Task 2: Compare Photos**
+  Compare the face in the live photo with the face on the Aadhaar card.
+  - Consider that the person may be older in the live photo. Focus on stable facial features.
+  - Set \`isPhotoMatch\` to \`true\` if they are the same person, otherwise \`false\`.
+  - Provide a brief, neutral explanation in \`photoMatchReason\`. Examples: "Facial features appear consistent, accounting for age." or "Facial features do not appear to match."
 
-  2.  **Full Name**: Extract the full name of the cardholder from the card.
-      - If the name is not found or unreadable, return an empty string for the field.
-
-  3.  **Gender**: Determine the gender from the card's text ('Male' or 'Female').
-      - If the gender cannot be determined from the text, return "Unspecified".
-
-  4.  **Photo Match (isPhotoMatch & photoMatchReason)**: Compare the face in the live photo with the face on the Aadhaar card.
-      - **CRITICAL**: Account for age differences. The person in the live photo may be significantly older. Focus on matching stable facial features (e.g., nose shape, eye spacing) rather than superficial changes (wrinkles, hair color).
-      - If the faces match, set \`isPhotoMatch\` to \`true\` and \`photoMatchReason\` to a brief explanation like "Faces match, accounting for age progression."
-      - If the faces do not match, set \`isPhotoMatch\` to \`false\` and \`photoMatchReason\` to a reason like "Faces do not appear to match."
-      - If you cannot perform the comparison, set \`isPhotoMatch\` to \`false\` and \`photoMatchReason\` to "Could not perform photo comparison."
-
-  Live Photo to analyze: {{media url=livePhotoDataUri}}
+  Live Photo to compare: {{media url=livePhotoDataUri}}
   Aadhaar Card to analyze: {{media url=photoDataUri}}
   `,
 });
@@ -83,10 +77,10 @@ const aadhaarVerificationFlow = ai.defineFlow(
       return output;
     } catch (e: any) {
       console.error("Critical error in aadhaarVerificationFlow:", e);
-      if (e.message && e.message.includes('429')) {
-        throw new Error('You have made too many requests. Please wait a moment and try again.');
+      // Check for policy/safety blocks which often return a 429 or similar error code but are not true rate limits.
+      if (e.message && (e.message.includes('429') || e.message.includes('SAFETY'))) {
+        throw new Error('Verification request was blocked. This may be due to image quality or content policy. Please try again with a clear, well-lit photo.');
       }
-      // Provide a more user-friendly message for schema validation errors.
       if (e.message && e.message.includes('Schema validation failed')) {
         throw new Error('The AI could not read the document clearly. Please try again with a clearer image.');
       }
