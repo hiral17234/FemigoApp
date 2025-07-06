@@ -61,7 +61,7 @@ export default function SignupPage() {
         Back to Home
       </Link>
       <div className="flex min-h-screen w-full items-center justify-center p-4">
-        <div className="w-full max-w-md rounded-2xl bg-card p-8 shadow-xl">
+        <div className="w-full max-w-sm rounded-2xl bg-card p-8 shadow-xl">
           <div className="flex flex-col items-center space-y-6 text-center">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold tracking-tight text-foreground">
