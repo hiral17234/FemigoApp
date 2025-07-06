@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -18,80 +17,88 @@ export default function VerifyPage() {
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null);
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
-  const [cameraTrigger, setCameraTrigger] = useState(0)
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    
-    const getCamera = async () => {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        console.error("Camera API not supported.")
-        setHasCameraPermission(false)
-        toast({
-            variant: "destructive",
-            title: "Unsupported Browser",
-            description: "Your browser does not support the camera API.",
-        })
-        return;
-      }
-
+    const startCamera = async () => {
       try {
-        setHasCameraPermission(null)
-        stream = await navigator.mediaDevices.getUserMedia({ video: true })
-        setHasCameraPermission(true)
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error("Camera API not supported.");
         }
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setHasCameraPermission(true);
       } catch (error) {
-        console.error("Error accessing camera:", error)
-        setHasCameraPermission(false)
+        console.error("Error accessing camera:", error);
+        setHasCameraPermission(false);
         toast({
           variant: "destructive",
           title: "Camera Access Denied",
           description: "Please enable camera permissions in your browser settings to continue.",
-        })
+        });
       }
     };
-    
+
+    const stopCamera = () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    };
+
     if (!capturedImage) {
-        getCamera();
+      startCamera();
+    } else {
+      stopCamera();
     }
 
     return () => {
-      stream?.getTracks().forEach(track => track.stop())
-    }
-  }, [capturedImage, cameraTrigger, toast])
+      stopCamera();
+    };
+  }, [capturedImage, toast]);
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && videoRef.current.srcObject) {
-      const video = videoRef.current
-      const canvas = canvasRef.current
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const context = canvas.getContext("2d")
+    if (videoRef.current && canvasRef.current && streamRef.current) {
+      const video = videoRef.current;
+
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        toast({
+            variant: "destructive",
+            title: "Camera Not Ready",
+            description: "The camera is still initializing. Please wait a moment.",
+        });
+        return;
+      }
+
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext("2d");
       if (context) {
         context.translate(video.videoWidth, 0);
         context.scale(-1, 1);
-        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
-        const dataUrl = canvas.toDataURL("image/jpeg")
-        setCapturedImage(dataUrl)
+        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        const dataUrl = canvas.toDataURL("image/jpeg");
+        setCapturedImage(dataUrl);
       }
     } else {
-        toast({
-            variant: "destructive",
-            title: "Camera Error",
-            description: "Could not capture photo. Please ensure camera is enabled and try again.",
-        })
+      toast({
+        variant: "destructive",
+        title: "Camera Error",
+        description: "Could not access camera stream. Please ensure camera is enabled and try again.",
+      });
     }
-  }
+  };
 
   const retakePhoto = () => {
     setCapturedImage(null);
-    setCameraTrigger(count => count + 1);
   }
   
   const handleVerify = async () => {
@@ -142,6 +149,10 @@ export default function VerifyPage() {
   }
   
   const renderCameraView = () => {
+    if(capturedImage) {
+      return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
+    }
+
     if(hasCameraPermission === null) {
         return (
             <div className="flex flex-col items-center gap-2 text-white/70">
@@ -156,13 +167,9 @@ export default function VerifyPage() {
             <div className="flex flex-col items-center gap-2 text-destructive">
                 <AlertTriangle className="w-12 h-12" />
                 <p className="text-center">Camera access was denied.</p>
-                <Button variant="outline" size="sm" onClick={() => setCameraTrigger(c => c + 1)}>Try Again</Button>
+                <Button variant="outline" size="sm" onClick={retakePhoto}>Try Again</Button>
             </div>
         )
-    }
-
-    if(capturedImage) {
-        return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
     }
 
     return (

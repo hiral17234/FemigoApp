@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useRef, useEffect } from "react"
@@ -23,6 +22,7 @@ export default function VerifyAadhaarPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const streamRef = useRef<MediaStream | null>(null);
   
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
@@ -31,7 +31,6 @@ export default function VerifyAadhaarPage() {
   const [extractedData, setExtractedData] = useState<AadhaarVerificationOutput | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [activeTab, setActiveTab] = useState("camera")
-  const [cameraTrigger, setCameraTrigger] = useState(0)
 
   useEffect(() => {
     const savedName = typeof window !== 'undefined' ? localStorage.getItem('userName') : null;
@@ -41,22 +40,17 @@ export default function VerifyAadhaarPage() {
   }, []);
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    
-    const getCamera = async () => {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setHasCameraPermission(false);
-        return;
-      }
-
+    const startCamera = async () => {
       try {
-        setHasCameraPermission(null);
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        setHasCameraPermission(true);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error("Camera API not supported.");
         }
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        streamRef.current = stream;
+        if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+        }
+        setHasCameraPermission(true);
       } catch (error) {
         console.error("Error accessing camera:", error);
         setHasCameraPermission(false);
@@ -68,18 +62,35 @@ export default function VerifyAadhaarPage() {
       }
     };
 
+    const stopCamera = () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+    };
+
     if (activeTab === "camera" && !imageDataUrl) {
-      getCamera();
+      startCamera();
+    } else {
+      stopCamera();
     }
 
     return () => {
-      stream?.getTracks().forEach(track => track.stop());
-    }
-  }, [activeTab, imageDataUrl, cameraTrigger, toast]);
+      stopCamera();
+    };
+  }, [activeTab, imageDataUrl, toast]);
 
   const capturePhoto = () => {
-    if (videoRef.current?.srcObject && canvasRef.current) {
-      const video = videoRef.current
+    if (videoRef.current && canvasRef.current && streamRef.current) {
+        const video = videoRef.current;
+        if (video.videoWidth === 0 || video.videoHeight === 0) {
+            toast({
+                variant: "destructive",
+                title: "Camera Not Ready",
+                description: "The camera is still initializing. Please wait a moment.",
+            });
+            return;
+        }
       const canvas = canvasRef.current
       canvas.width = video.videoWidth
       canvas.height = video.videoHeight
@@ -90,6 +101,12 @@ export default function VerifyAadhaarPage() {
         setImageDataUrl(dataUrl)
         setExtractedData(null);
       }
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Camera Error",
+            description: "Could not access camera stream. Please ensure camera is enabled and try again.",
+        });
     }
   }
 
@@ -106,15 +123,12 @@ export default function VerifyAadhaarPage() {
     }
   };
 
-  const resetState = (isCameraTab: boolean) => {
+  const resetState = () => {
     setImageDataUrl(null);
     setExtractedData(null);
     setFileName("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
-    }
-    if (isCameraTab) {
-        setCameraTrigger(c => c + 1);
     }
   }
   
@@ -157,7 +171,7 @@ export default function VerifyAadhaarPage() {
   }
   
   const renderCameraView = () => {
-    if (imageDataUrl) {
+    if (activeTab === 'camera' && imageDataUrl) {
       return <Image src={imageDataUrl} alt="Captured Aadhaar photo" layout="fill" objectFit="contain" />
     }
 
@@ -209,7 +223,7 @@ export default function VerifyAadhaarPage() {
                     </div>
                 </div>
 
-                <Tabs defaultValue="camera" className="w-full" onValueChange={setActiveTab}>
+                <Tabs defaultValue="camera" className="w-full" onValueChange={(value) => { resetState(); setActiveTab(value); }}>
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="camera">Use Camera</TabsTrigger>
                     <TabsTrigger value="upload">Upload File</TabsTrigger>
@@ -224,7 +238,7 @@ export default function VerifyAadhaarPage() {
                         <Camera className="mr-2"/> Capture Photo
                       </Button>
                     ) : (
-                      <Button onClick={() => resetState(true)} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
+                      <Button onClick={resetState} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
                     )}
                   </TabsContent>
                   <TabsContent value="upload">
@@ -238,7 +252,7 @@ export default function VerifyAadhaarPage() {
                         </div>
                         <Input id="file-upload" type="file" className="hidden" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg" />
                     </Label>
-                    {imageDataUrl && <Button onClick={() => resetState(false)} variant="outline" className="w-full mt-4"><RefreshCcw className="mr-2"/>Change File</Button>}
+                    {imageDataUrl && <Button onClick={resetState} variant="outline" className="w-full mt-4"><RefreshCcw className="mr-2"/>Change File</Button>}
                   </TabsContent>
                 </Tabs>
 
