@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { extractAadhaarData, type AadhaarOcrOutput } from "@/ai/flows/aadhaar-verification-flow"
+// import { extractAadhaarData, type AadhaarOcrOutput } from "@/ai/flows/aadhaar-verification-flow"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
@@ -20,6 +20,15 @@ import { cn } from "@/lib/utils"
 type VerificationStep = "capture" | "verify"
 type CaptureMode = "camera" | "upload"
 type FacingMode = "user" | "environment"
+
+// Define the type here temporarily until the flow is rebuilt
+type AadhaarOcrOutput = {
+  aadhaarNumber: string | null;
+  fullName: string | null;
+  gender: string | null;
+  isPhotoMatch: boolean | null;
+  photoMatchReason: string | null;
+}
 
 export default function VerifyAadhaarPage() {
   const router = useRouter()
@@ -143,8 +152,14 @@ export default function VerifyAadhaarPage() {
     }
 
     try {
-      const result = await extractAadhaarData({ photoDataUri: dataUrl, livePhotoDataUri });
-      setExtractedData(result);
+      // AI call is temporarily disabled.
+      console.log("AI call to extractAadhaarData is temporarily disabled while the flow is rebuilt.");
+      toast({
+        title: "AI Logic Offline",
+        description: "Ready to rebuild the Aadhaar verification flow.",
+      });
+      // const result = await extractAadhaarData({ photoDataUri: dataUrl, livePhotoDataUri });
+      // setExtractedData(result);
     } catch (error: any) {
       toast({ variant: "destructive", title: "OCR Failed", description: error.message || "Could not read data from the image." });
       resetCapture();
@@ -372,3 +387,5 @@ export default function VerifyAadhaarPage() {
     </main>
   )
 }
+
+    
