@@ -76,6 +76,9 @@ const aadhaarVerificationFlow = ai.defineFlow(
       return output;
     } catch (e: any) {
       console.error("Critical error in aadhaarVerificationFlow:", e);
+      if (e.message && e.message.includes('429')) {
+        throw new Error('You have made too many requests. Please wait a moment and try again.');
+      }
       throw new Error(`An unexpected error occurred during OCR: ${e.message || 'Please try again later.'}`);
     }
   }

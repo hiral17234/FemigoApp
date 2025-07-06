@@ -65,19 +65,15 @@ const genderVerificationFlow = ai.defineFlow(
     try {
       const {output} = await genderVerificationPrompt(input);
       if (!output) {
-        // Fallback in case the model fails to generate valid JSON
-        return {
-          isFemale: false,
-          reason: 'AI model was unable to process the image. Please try again.',
-        };
+        throw new Error('AI model was unable to process the image. Please try again.');
       }
       return output;
     } catch (e: any) {
         console.error("Critical error in genderVerificationFlow:", e);
-        return {
-            isFemale: false,
-            reason: `An unexpected error occurred: ${e.message || 'Please try again later.'}`
+        if (e.message && e.message.includes('429')) {
+            throw new Error('You have made too many requests. Please wait a moment and try again.');
         }
+        throw new Error(`An unexpected error occurred during verification: ${e.message || 'Please try again later.'}`);
     }
   }
 );
