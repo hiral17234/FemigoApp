@@ -123,7 +123,7 @@ export default function VerifyEmailOtpPage() {
             if (typeof window !== "undefined") {
               localStorage.removeItem("userPhone")
             }
-            router.push("/dashboard");
+            router.push("/congratulations");
         } else {
             toast({
                 variant: "destructive",
