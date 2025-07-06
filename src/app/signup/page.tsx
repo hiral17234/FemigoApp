@@ -55,7 +55,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-br from-[#f0f2ff] to-[#fff0f5] dark:from-gray-900 dark:to-black">
+    <div className="relative min-h-screen w-full bg-background">
       <Link
         href="/"
         className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8"

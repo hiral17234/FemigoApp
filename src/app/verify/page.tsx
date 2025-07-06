@@ -123,7 +123,7 @@ export default function VerifyPage() {
   const isVerifiable = !!capturedImage;
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-gradient-to-br from-[#f0f2ff] to-[#fff0f5] p-4">
+    <div className="flex min-h-screen w-full items-center justify-center bg-background p-4">
         <div className="w-full max-w-md">
             <header className="text-center mb-8">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground flex items-center justify-center gap-2">
