@@ -218,7 +218,7 @@ export default function OnboardingDetailsPage() {
                                        value={state}
                                        key={state}
                                        onSelect={(currentValue) => {
-                                         form.setValue("state", currentValue)
+                                         form.setValue("state", currentValue === form.getValues("state") ? "" : currentValue)
                                          setStatePopoverOpen(false)
                                        }}
                                      >
@@ -257,7 +257,7 @@ export default function OnboardingDetailsPage() {
                                        value={city}
                                        key={city}
                                        onSelect={(currentValue) => {
-                                         form.setValue("city", currentValue)
+                                         form.setValue("city", currentValue === form.getValues("city") ? "" : currentValue)
                                          setCityPopoverOpen(false)
                                        }}
                                      >
@@ -299,7 +299,7 @@ export default function OnboardingDetailsPage() {
                                 <PopoverTrigger asChild>
                                   <FormControl>
                                     <Button variant="outline" role="combobox" className={cn("w-full justify-between bg-transparent border-white/20 backdrop-blur-sm hover:bg-white/10 hover:text-white", !field.value && "text-muted-foreground")}>
-                                      {field.value ? `+${countries.find(c => c.phone === field.value)?.phone}` : "Code"}
+                                      {field.value ? `+${field.value}` : "Code"}
                                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                   </FormControl>
@@ -312,10 +312,13 @@ export default function OnboardingDetailsPage() {
                                       <CommandGroup>
                                         {countries.map((country) => (
                                           <CommandItem
-                                            value={country.phone}
+                                            value={country.value}
                                             key={country.value}
                                             onSelect={(currentValue) => {
-                                              form.setValue("altCountryCode", currentValue)
+                                              const selectedCountry = countries.find(c => c.value === currentValue)
+                                              if (selectedCountry) {
+                                                form.setValue("altCountryCode", selectedCountry.phone)
+                                              }
                                               setCountryCodePopoverOpen(false)
                                             }}
                                           >

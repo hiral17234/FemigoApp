@@ -108,7 +108,7 @@ export default function VerifyPhonePage() {
                             <PopoverTrigger asChild>
                               <FormControl>
                                 <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
-                                  {field.value ? `+${countries.find(c => c.phone === field.value)?.phone}` : "Code"}
+                                  {field.value ? `+${field.value}` : "Code"}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                               </FormControl>
@@ -121,10 +121,13 @@ export default function VerifyPhonePage() {
                                   <CommandGroup>
                                     {countries.map((country) => (
                                       <CommandItem
-                                        value={country.phone}
+                                        value={country.value}
                                         key={country.value}
                                         onSelect={(currentValue) => {
-                                          form.setValue("countryCode", currentValue)
+                                          const selectedCountry = countries.find(c => c.value === currentValue)
+                                          if (selectedCountry) {
+                                            form.setValue("countryCode", selectedCountry.phone)
+                                          }
                                           setOpen(false)
                                         }}
                                       >
