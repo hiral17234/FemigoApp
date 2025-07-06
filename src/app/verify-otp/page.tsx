@@ -1,4 +1,3 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -38,7 +37,16 @@ export default function VerifyOtpPage() {
   const router = useRouter()
   const [phone, setPhone] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
-  const DEMO_OTP = "123456"
+  const [otp, setOtp] = useState("")
+
+  const generateOtp = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  // Set initial OTP on the client-side to prevent hydration issues
+  useEffect(() => {
+    setOtp(generateOtp())
+  }, [])
 
   useEffect(() => {
     const storedPhone = typeof window !== "undefined" ? localStorage.getItem("userPhone") : ""
@@ -62,7 +70,7 @@ export default function VerifyOtpPage() {
     
     // Simulate OTP check
     setTimeout(() => {
-        if (data.pin === DEMO_OTP) {
+        if (data.pin === otp) {
             toast({
                 title: "Phone Verified! ✅",
                 description: "Your phone number has been successfully verified.",
@@ -82,6 +90,15 @@ export default function VerifyOtpPage() {
         }
         setIsVerifying(false)
     }, 1000);
+  }
+  
+  const handleResendOtp = () => {
+    const newOtp = generateOtp();
+    setOtp(newOtp);
+    toast({ 
+      title: 'OTP Resent!', 
+      description: `A new code has been sent. (Hint: use ${newOtp})`
+    });
   }
 
   return (
@@ -124,9 +141,11 @@ export default function VerifyOtpPage() {
                         </InputOTPGroup>
                       </InputOTP>
                     </FormControl>
-                    <FormDescriptionHint className="pt-2 text-center text-xs">
-                      (For demo purposes, use code: 123456)
-                    </FormDescriptionHint>
+                    {otp && (
+                      <FormDescriptionHint className="pt-2 text-center text-xs">
+                        (For demo purposes, use code: {otp})
+                      </FormDescriptionHint>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -145,7 +164,7 @@ export default function VerifyOtpPage() {
 
           <p className="pt-4 text-center text-sm text-muted-foreground">
             Didn't receive the code?{" "}
-            <button className="font-medium text-primary hover:underline" onClick={() => toast({ title: 'OTP Resent!', description: 'A new code has been sent (use 123456).'})}>
+            <button className="font-medium text-primary hover:underline" onClick={handleResendOtp}>
               Resend OTP
             </button>
           </p>
