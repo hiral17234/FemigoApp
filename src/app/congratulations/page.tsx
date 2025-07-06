@@ -79,15 +79,15 @@ export default function CongratulationsPage() {
         </>
       )}
 
-      <div className="absolute -left-20 -top-20 z-0 h-80 w-80 rounded-full bg-pink-500/10 blur-3xl dark:bg-pink-500/20" />
-      <div className="absolute -right-20 -bottom-20 z-0 h-80 w-80 rounded-full bg-rose-500/10 blur-3xl dark:bg-rose-500/20" />
+      <div className="absolute -left-20 -top-20 z-0 h-80 w-80 rounded-full bg-primary/20 blur-3xl dark:bg-primary/30" />
+      <div className="absolute -right-20 -bottom-20 z-0 h-80 w-80 rounded-full bg-rose-500/20 blur-3xl dark:bg-rose-500/30" />
 
-      <Card className="z-10 w-full max-w-lg animate-in fade-in zoom-in-90 duration-700 rounded-2xl p-6 shadow-xl text-center">
+      <Card className="z-10 w-full max-w-lg animate-in fade-in zoom-in-90 duration-700 rounded-2xl border border-primary/30 bg-card p-6 text-center shadow-2xl shadow-primary/30">
         <CardHeader>
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-rose-400 text-white shadow-lg">
             <PartyPopper size={40} />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-foreground mt-4">
+          <h1 className="text-4xl font-bold tracking-tight mt-4 bg-gradient-to-r from-pink-500 to-rose-400 bg-clip-text text-transparent">
             Congratulations!
           </h1>
           <p className="text-muted-foreground pt-2">
@@ -115,7 +115,7 @@ export default function CongratulationsPage() {
             </p>
             <Button
               onClick={() => router.push("/onboarding/details")}
-              className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
+              className="w-full rounded-xl bg-gradient-to-r from-[#EC008C] to-[#FF55A5] py-3 text-lg font-semibold text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-primary/40 focus:outline-none"
             >
               Let's Go!
             </Button>
