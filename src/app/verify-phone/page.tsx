@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,7 +27,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { auth } from "@/lib/firebase"
 
 const formSchema = z.object({
   countryCode: z.string().min(1, { message: "Please select a country code." }),
@@ -36,14 +34,6 @@ const formSchema = z.object({
     message: "Please enter a valid phone number.",
   }),
 })
-
-// Store the confirmation result on the window object to pass it between pages.
-declare global {
-  interface Window {
-    recaptchaVerifier?: RecaptchaVerifier;
-    confirmationResult?: any;
-  }
-}
 
 export default function VerifyPhonePage() {
   const router = useRouter()
@@ -67,56 +57,22 @@ export default function VerifyPhonePage() {
     },
   })
 
-  // Initialize reCAPTCHA
-  useEffect(() => {
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible',
-      'callback': (response: any) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-      }
-    });
-  }, []);
-
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     const phoneNumber = `${values.countryCode}${values.phone}`;
-    const appVerifier = window.recaptchaVerifier;
 
-    if (!appVerifier) {
-       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "reCAPTCHA not initialized. Please refresh.",
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-      // Pass the confirmationResult to the next page
-      window.confirmationResult = confirmationResult;
-
+    // Simulate sending OTP
+    setTimeout(() => {
       if (typeof window !== "undefined") {
         localStorage.setItem("userPhone", phoneNumber);
       }
       toast({
         title: "OTP Sent!",
-        description: `We've sent a verification code to ${phoneNumber}.`,
+        description: `We've sent a verification code to ${phoneNumber}. (Hint: use 123456)`,
       });
       router.push("/verify-otp");
-
-    } catch (error: any) {
-      console.error("SMS not sent:", error);
-      toast({
-        variant: "destructive",
-        title: "Failed to send OTP",
-        description: error.message || "Please check the phone number and try again.",
-      });
-    } finally {
-        setIsSubmitting(false);
-    }
+      setIsSubmitting(false);
+    }, 1000)
   }
 
   return (
@@ -203,8 +159,6 @@ export default function VerifyPhonePage() {
                 An OTP will be sent via SMS to verify your mobile number.
               </p>
               
-              <div id="recaptcha-container"></div>
-
               <Button
                 type="submit"
                 disabled={isSubmitting}

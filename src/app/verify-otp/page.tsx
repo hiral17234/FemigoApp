@@ -31,17 +31,11 @@ const formSchema = z.object({
   }),
 })
 
-// Access the confirmation result from the window object.
-declare global {
-  interface Window {
-    confirmationResult?: any;
-  }
-}
-
 export default function VerifyOtpPage() {
   const router = useRouter()
   const [phone, setPhone] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
+  const DEMO_OTP = "123456"
 
   useEffect(() => {
     const storedPhone = typeof window !== "undefined" ? localStorage.getItem("userPhone") : ""
@@ -62,41 +56,29 @@ export default function VerifyOtpPage() {
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsVerifying(true)
-    const confirmationResult = window.confirmationResult;
-
-    if (!confirmationResult) {
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Verification session expired. Please try sending the OTP again.",
-        });
-        setIsVerifying(false);
-        router.push("/verify-phone");
-        return;
-    }
-
-    try {
-      const result = await confirmationResult.confirm(data.pin);
-      // User signed in successfully.
-      const user = result.user;
-      console.log("User verified:", user);
-      toast({
-        title: "Phone Verified! ✅",
-        description: "Your phone number has been successfully verified.",
-        className: "bg-green-500 text-white",
-      });
-      router.push("/dashboard");
-
-    } catch (error: any) {
-        // User couldn't sign in (bad verification code?)
-        toast({
-            variant: "destructive",
-            title: "Invalid OTP",
-            description: "The code you entered is incorrect. Please try again.",
-        });
-    } finally {
+    
+    // Simulate OTP check
+    setTimeout(() => {
+        if (data.pin === DEMO_OTP) {
+            toast({
+                title: "Phone Verified! ✅",
+                description: "Your phone number has been successfully verified.",
+                className: "bg-green-500 text-white",
+            });
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("userEmail")
+            }
+            router.push("/dashboard");
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Invalid OTP",
+                description: "The code you entered is incorrect. Please try again.",
+            });
+            form.setError("pin", { message: "Invalid OTP" })
+        }
         setIsVerifying(false)
-    }
+    }, 1000);
   }
 
   return (

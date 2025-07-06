@@ -7,9 +7,6 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { signInWithEmailAndPassword } from "firebase/auth"
-import { auth } from "@/lib/firebase"
-
 
 import { Button } from "@/components/ui/button"
 import {
@@ -27,8 +24,8 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email.",
   }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters.",
+  password: z.string().min(1, {
+    message: "Password is required.",
   }),
 })
 
@@ -47,38 +44,23 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        values.email,
-        values.password
-      )
-      
-      const user = userCredential.user;
-      console.log("User logged in:", user);
-      
-      if (typeof window !== "undefined") {
-        localStorage.setItem("userEmail", values.email)
-      }
+    
+    // Simulate network delay
+    setTimeout(() => {
+        if (typeof window !== "undefined") {
+            localStorage.removeItem("userPhone")
+            localStorage.setItem("userEmail", values.email)
+        }
 
-      toast({
-        title: "Logged In!",
-        description: "Welcome back.",
-        className: "bg-green-500 text-white",
-      })
+        toast({
+            title: "Logged In!",
+            description: "Welcome back.",
+            className: "bg-green-500 text-white",
+        })
 
-      router.push("/dashboard")
-
-    } catch (error: any) {
-      console.error("Login failed:", error.code, error.message)
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: "Invalid email or password. Please try again.",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+        router.push("/dashboard")
+        setIsSubmitting(false)
+    }, 1000)
   }
 
   return (
