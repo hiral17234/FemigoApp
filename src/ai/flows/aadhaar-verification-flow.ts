@@ -21,13 +21,18 @@ const AadhaarVerificationInputSchema = z.object({
 });
 export type AadhaarVerificationInput = z.infer<typeof AadhaarVerificationInputSchema>;
 
-const AadhaarVerificationOutputSchema = z.object({
+// Schema for the data extracted by the AI model
+const AadhaarVerificationModelOutputSchema = z.object({
   isAadhaarCard: z.boolean().describe('Whether or not the image contains a valid Aadhaar card.'),
   isAadhaarValid: z.boolean().describe("Whether the Aadhaar number passed the simulated government validation. This is true if the tool 'validateAadhaarNumber' returns true."),
-  isNameMatch: z.boolean().describe("Whether the name on the card matches the provided name."),
-  extractedName: z.string().describe("The full name extracted from the Aadhaar card."),
+  extractedName: z.string().describe("The full name extracted from the Aadhaar card in English."),
   extractedAadhaarNumber: z.string().describe("The 12-digit Aadhaar number extracted from the card, with spaces removed."),
   gender: z.enum(['female', 'male', 'unknown']).describe("The gender identified from the Aadhaar card. It can be 'female', 'male', or 'unknown'."),
+});
+
+// Final output schema for the flow, including the server-side name match check
+export const AadhaarVerificationOutputSchema = AadhaarVerificationModelOutputSchema.extend({
+  isNameMatch: z.boolean().describe("Whether the name on the card matches the provided name."),
 });
 export type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutputSchema>;
 
@@ -38,26 +43,25 @@ export async function verifyAadhaar(input: AadhaarVerificationInput): Promise<Aa
 const prompt = ai.definePrompt({
   name: 'aadhaarVerificationPrompt',
   input: {schema: AadhaarVerificationInputSchema},
-  output: {schema: AadhaarVerificationOutputSchema},
+  output: {schema: AadhaarVerificationModelOutputSchema},
   tools: [validateAadhaarNumber],
-  prompt: `You are an expert OCR system specializing in Indian identity documents. Your task is to verify an Aadhaar card from a provided image and validate its details.
+  prompt: `You are an expert OCR system specializing in Indian identity documents. Your task is to analyze an Aadhaar card from a provided image and extract its details.
 
 Follow these steps precisely:
 
-1.  **Card Identification**: First, determine if the image is a clear photo of a valid Indian Aadhaar card. Set 'isAadhaarCard' to true or false. If it is false, stop here and return false for all other boolean fields and empty strings/unknown for other fields.
+1.  **Card Identification**: First, determine if the image is a clear photo of a valid Indian Aadhaar card. Set 'isAadhaarCard' to true or false. If it is false, stop here and return empty strings/unknown for other fields.
 
 2.  **Data Extraction**: If 'isAadhaarCard' is true, extract the following information from the card:
-    *   The full name. Set this value to 'extractedName'.
-    *   The 12-digit Aadhaar number, formatted as XXXX XXXX XXXX. Remove the spaces for the next step.
+    *   The full name as written in English. Set this value to 'extractedName'.
+    *   The 12-digit Aadhaar number (e.g., XXXX XXXX XXXX).
     *   The gender. Set this to 'gender' ('female', 'male', or 'unknown').
 
-3.  **Aadhaar Number Validation**: Use the 'validateAadhaarNumber' tool with the 'extractedAadhaarNumber' (with spaces removed). The tool will simulate a check against a government database. Based on the tool's response, set 'isAadhaarValid' to true or false.
+3.  **Aadhaar Number Formatting & Validation**:
+    *   Take the extracted 12-digit number and store it **without spaces** in 'extractedAadhaarNumber'.
+    *   Use the 'validateAadhaarNumber' tool with the 'extractedAadhaarNumber'. The tool will simulate a check against a government database. Based on the tool's response, set 'isAadhaarValid' to true or false.
 
-4.  **Name Matching**: Compare the 'extractedName' with the user-provided name: '{{name}}'. Perform a case-insensitive comparison. Set 'isNameMatch' to true if the names match, and false otherwise.
+4.  **Final Output**: Return the complete output object with all fields populated according to the steps above.
 
-5.  **Final Output**: Return the complete output object with all fields populated according to the steps above. Store the Aadhaar number without spaces in 'extractedAadhaarNumber'.
-
-User-provided name: {{name}}
 Image of Aadhaar Card: {{media url=photoDataUri}}`,
 });
 
@@ -67,24 +71,37 @@ const aadhaarVerificationFlow = ai.defineFlow(
     inputSchema: AadhaarVerificationInputSchema,
     outputSchema: AadhaarVerificationOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
-    if (!output) {
-        return {
-            isAadhaarCard: false,
-            isAadhaarValid: false,
-            isNameMatch: false,
-            extractedName: "",
-            extractedAadhaarNumber: "",
-            gender: "unknown",
-        };
-    }
-    // Re-format the Aadhaar number for display if it was extracted successfully
-    if (output.extractedAadhaarNumber && output.extractedAadhaarNumber.length === 12) {
-      const formattedNumber = output.extractedAadhaarNumber.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3');
-      output.extractedAadhaarNumber = formattedNumber;
+  async (input) => {
+    const { output: modelOutput } = await prompt(input);
+
+    if (!modelOutput || !modelOutput.isAadhaarCard) {
+      return {
+        isAadhaarCard: false,
+        isAadhaarValid: false,
+        isNameMatch: false,
+        extractedName: '',
+        extractedAadhaarNumber: '',
+        gender: 'unknown',
+      };
     }
 
-    return output;
+    // Perform case-insensitive name comparison in code for reliability
+    const isNameMatch =
+      modelOutput.extractedName.trim().toLowerCase() ===
+      input.name.trim().toLowerCase();
+    
+    // Re-format the Aadhaar number for display if it was extracted successfully
+    let formattedAadhaarNumber = modelOutput.extractedAadhaarNumber;
+    if (formattedAadhaarNumber && formattedAadhaarNumber.length === 12) {
+      formattedAadhaarNumber = formattedAadhaarNumber.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3');
+    }
+
+    const finalOutput: AadhaarVerificationOutput = {
+      ...modelOutput,
+      isNameMatch: isNameMatch,
+      extractedAadhaarNumber: formattedAadhaarNumber,
+    };
+
+    return finalOutput;
   }
 );
