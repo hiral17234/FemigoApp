@@ -48,7 +48,7 @@ export default function VerifyPage() {
 
     try {
       setHasCameraPermission(null)
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
       streamRef.current = stream
       setHasCameraPermission(true)
       if (videoRef.current) {
@@ -120,7 +120,7 @@ export default function VerifyPage() {
         if (userCountry === 'india') {
           router.push("/verify-aadhaar")
         } else {
-          router.push("/dashboard")
+          router.push("/verify-phone")
         }
 
       } else {
@@ -220,7 +220,7 @@ export default function VerifyPage() {
 
                     <div className="mt-4">
                         {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
+                           <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || isVerifying} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
                             {hasCameraPermission === null ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Camera className="mr-2"/>}
                             {hasCameraPermission === true ? "Capture Photo" : (hasCameraPermission === false ? "Camera Disabled" : "Waiting for camera...")}
                            </Button>

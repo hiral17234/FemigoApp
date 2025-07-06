@@ -77,11 +77,9 @@ export default function VerifyAadhaarPage() {
   }, [stopStream, toast]);
 
   useEffect(() => {
-    startStream();
-    return () => {
-      stopStream();
-    };
-  }, [startStream, stopStream]);
+    // Only start stream if camera tab is active
+    // This will be handled by the Tabs onValueChange
+  }, []);
 
   const handleTabChange = (value: string) => {
     if (value === "camera") {
@@ -166,8 +164,8 @@ export default function VerifyAadhaarPage() {
     } else if (!extractedData.isNameMatch) {
       toast({ variant: 'destructive', title: 'Name Mismatch', description: `The name on the card ("${extractedData.extractedName}") does not match the name you entered.` });
     } else {
-      toast({ title: 'Aadhaar Verified Successfully ✅', description: 'Welcome to Femigo!', className: 'bg-green-500 text-white' });
-      router.push('/dashboard');
+      toast({ title: 'Aadhaar Verified Successfully ✅', description: 'Proceeding to next step.', className: 'bg-green-500 text-white' });
+      router.push('/verify-phone');
     }
   }
   
@@ -180,8 +178,8 @@ export default function VerifyAadhaarPage() {
       return <div className="flex flex-col items-center gap-2 p-4 text-destructive"><AlertTriangle className="w-12 h-12" /><p className="text-center">Camera access was denied or is not available. Try uploading a file instead.</p></div>
     }
 
-    if(hasCameraPermission === null) {
-      return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate--spin" /><p>Starting camera...</p></div>
+    if(hasCameraPermission === null && !streamRef.current) {
+      return <div className="flex flex-col items-center gap-2 text-white/70"><Loader2 className="w-12 h-12 animate-spin" /><p>Starting camera...</p></div>
     }
 
     return <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
@@ -235,7 +233,7 @@ export default function VerifyAadhaarPage() {
                     </div>
                     <canvas ref={canvasRef} className="hidden" />
                     {!imageDataUrl ? (
-                      <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                      <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || isVerifying} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
                         <Camera className="mr-2"/> Capture Photo
                       </Button>
                     ) : (
