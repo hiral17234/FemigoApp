@@ -38,9 +38,8 @@ const formSchema = z.object({
   state: z.string({ required_error: "Please select a state." }),
   city: z.string({ required_error: "Please select a city." }),
   otherCity: z.string().optional(),
-  altPhone: z.string().optional().refine((val) => !val || /^\d{10}$/.test(val), {
-    message: "Please enter a valid 10-digit phone number.",
-  }),
+  altCountryCode: z.string().optional(),
+  altPhone: z.string().optional(),
 }).refine((data) => {
     if (data.city === "Other") {
         return !!data.otherCity && data.otherCity.trim().length > 0;
@@ -49,6 +48,29 @@ const formSchema = z.object({
 }, {
     message: "Please specify your city when 'Other' is selected.",
     path: ["otherCity"],
+}).superRefine((data, ctx) => {
+    if (data.altPhone) {
+        if (!data.altCountryCode) {
+            ctx.addIssue({
+                path: ['altCountryCode'],
+                message: 'Code is required.',
+                code: z.ZodIssueCode.custom
+            });
+        }
+        if (!/^\d{5,15}$/.test(data.altPhone)) {
+             ctx.addIssue({
+                path: ['altPhone'],
+                message: 'Invalid number.',
+                code: z.ZodIssueCode.custom
+            });
+        }
+    } else if (data.altCountryCode) {
+        ctx.addIssue({
+            path: ['altPhone'],
+            message: 'Number is required.',
+            code: z.ZodIssueCode.custom
+        });
+    }
 });
 
 export default function OnboardingDetailsPage() {
@@ -63,6 +85,7 @@ export default function OnboardingDetailsPage() {
       address1: "",
       address2: "",
       address3: "",
+      altCountryCode: "",
       altPhone: "",
       otherCity: "",
     },
@@ -117,7 +140,7 @@ export default function OnboardingDetailsPage() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Link>
-            <div className="w-full rounded-2xl border border-white/10 bg-black/10 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
+            <div className="w-full rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
               <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
                 Tell Us About Yourself
               </h1>
@@ -217,15 +240,60 @@ export default function OnboardingDetailsPage() {
                      )} />
                   )}
 
-                  <FormField control={form.control} name="altPhone" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Alternate Phone Number (Optional)</FormLabel>
-                      <FormControl>
-                        <Input type="tel" placeholder="10-digit mobile number" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
+                 <FormItem>
+                    <FormLabel>Alternate Phone Number (Optional)</FormLabel>
+                    <div className="flex items-start gap-2">
+                        <FormField
+                            control={form.control}
+                            name="altCountryCode"
+                            render={({ field }) => (
+                            <FormItem className="w-[130px]">
+                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                                <FormControl>
+                                    <SelectTrigger className="bg-transparent border-white/20 backdrop-blur-sm">
+                                    <SelectValue placeholder="Code" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent className="dark">
+                                    <ScrollArea className="h-72">
+                                        <SelectItem value="+91">🇮🇳 India (+91)</SelectItem>
+                                        <SelectItem value="+1">🇺🇸 USA (+1)</SelectItem>
+                                        <SelectItem value="+44">🇬🇧 UK (+44)</SelectItem>
+                                        <SelectItem value="+1">🇨🇦 Canada (+1)</SelectItem>
+                                        <SelectItem value="+61">🇦🇺 Australia (+61)</SelectItem>
+                                        <SelectItem value="+49">🇩🇪 Germany (+49)</SelectItem>
+                                        <SelectItem value="+33">🇫🇷 France (+33)</SelectItem>
+                                        <SelectItem value="+81">🇯🇵 Japan (+81)</SelectItem>
+                                        <SelectItem value="+55">🇧🇷 Brazil (+55)</SelectItem>
+                                        <SelectItem value="+27">🇿🇦 South Africa (+27)</SelectItem>
+                                        <SelectItem value="+86">🇨🇳 China (+86)</SelectItem>
+                                    </ScrollArea>
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="altPhone"
+                            render={({ field }) => (
+                            <FormItem className="flex-1">
+                                <FormControl>
+                                <Input
+                                    type="tel"
+                                    placeholder="Enter number"
+                                    {...field}
+                                    disabled={isSubmitting}
+                                    className="bg-transparent border-white/20 backdrop-blur-sm"
+                                />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
+                 </FormItem>
                   
                   <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-lg font-semibold text-white py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/50 hover:scale-105">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : "Next Step"}
