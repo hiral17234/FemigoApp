@@ -46,20 +46,27 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
 
-    // Simulate network delay
+    // Simulate network delay and DB check
     setTimeout(() => {
       if (typeof window !== "undefined") {
-        localStorage.removeItem("userPhone")
-        localStorage.setItem("userEmail", values.email)
+        const storedEmail = localStorage.getItem("userEmail")
+
+        // Since password isn't stored, we'll only check for the email for this demo.
+        if (storedEmail && storedEmail === values.email) {
+          toast({
+            title: "Logged In!",
+            description: "Welcome back.",
+            className: "bg-green-500 text-white",
+          })
+          router.push("/dashboard")
+        } else {
+          toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "No account found, please make a account.",
+          })
+        }
       }
-
-      toast({
-        title: "Logged In!",
-        description: "Welcome back.",
-        className: "bg-green-500 text-white",
-      })
-
-      router.push("/dashboard")
       setIsSubmitting(false)
     }, 1000)
   }
