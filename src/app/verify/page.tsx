@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { verifyLivePhoto } from "@/ai/flows/aadhaar-verification-flow"
 
 export default function VerifyIdentityPage() {
   const router = useRouter()
@@ -87,28 +88,48 @@ export default function VerifyIdentityPage() {
     setHasCameraPermission(null)
   }
   
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!capturedImage) return;
     setIsProcessing(true);
 
-    if (typeof window !== 'undefined') {
-        localStorage.setItem('userLivePhoto', capturedImage);
-    }
-
-    toast({
-        title: 'Photo Captured!',
-        description: "Next, let's verify your identity document.",
-        className: 'bg-green-500 text-white',
-    });
-    
-    setTimeout(() => {
+    try {
+      const result = await verifyLivePhoto({ photoDataUri: capturedImage });
+      
+      if (result.isAllowed) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('userLivePhoto', capturedImage);
+        }
+        toast({
+            title: 'Verification Successful!',
+            description: "Next, let's verify your identity document.",
+            className: 'bg-green-500 text-white',
+        });
+        
         const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
         if (country === 'india') {
-        router.push('/verify-aadhaar');
+          router.push('/verify-aadhaar');
         } else {
-        router.push('/verify-phone');
+          router.push('/verify-phone');
         }
-    }, 500);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Verification Failed",
+          description: result.reason,
+        });
+        // Force a retake
+        retakePhoto();
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      toast({
+        variant: "destructive",
+        title: "An Error Occurred",
+        description: "Something went wrong during verification. Please try again."
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   return (
@@ -127,7 +148,7 @@ export default function VerifyIdentityPage() {
               <UserCheck /> Step 2: Live Photo Capture
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-               Please take a clear, live photo of your face. This will be compared with your ID in the next step.
+               Please take a clear, live photo of your face. This helps us ensure our community is safe and authentic.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
