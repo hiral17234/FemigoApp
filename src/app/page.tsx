@@ -18,12 +18,11 @@ export default function Home() {
         <div className="relative">
           <div className="bg-gradient-to-tr from-mint-gradient-from to-mint-gradient-to p-2 rounded-full shadow-lg" style={{ background: 'linear-gradient(to top right, #e0f2f1, #b2dfdb)' }}>
             <Image
-              src="https://placehold.co/160x160.png"
+              src="https://i.imgur.com/DFegeIc.jpeg"
               alt="A stylized illustration of a woman"
               width={160}
               height={160}
               className="rounded-full object-cover"
-              data-ai-hint="woman vector"
             />
           </div>
         </div>
