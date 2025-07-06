@@ -20,10 +20,10 @@ export default function VerifyAadhaarPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
-  const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
-  const [isCameraReady, setIsCameraReady] = useState(false)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isCameraInitializing, setIsCameraInitializing] = useState(true)
   const [uploadedAadhaar, setUploadedAadhaar] = useState<File | null>(null);
 
   const stopStream = useCallback(() => {
@@ -34,33 +34,36 @@ export default function VerifyAadhaarPage() {
   }, [stream]);
 
   useEffect(() => {
-    // Redirect if not from India
     if (typeof window !== 'undefined' && localStorage.getItem('userCountry') !== 'india') {
       router.push('/verify-phone');
       return;
     }
     
-    if (capturedImage) {
-        stopStream();
-        return;
+    if (capturedImage || error) {
+      stopStream()
+      return
     }
 
-    let isMounted = true;
+    let isMounted = true
     const getCameraStream = async () => {
+      setIsCameraInitializing(true)
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
         if (isMounted) {
-          setHasCameraPermission(true);
-          setStream(mediaStream);
+          setStream(mediaStream)
+          if (videoRef.current) {
+            videoRef.current.srcObject = mediaStream
+          }
         }
-      } catch (error) {
-        console.error("Error accessing camera:", error);
+      } catch (err) {
+        console.error("Error accessing camera:", err);
         if (isMounted) {
-          setHasCameraPermission(false);
+          const errorMessage = "Camera access denied. Please enable permissions and refresh the page."
+          setError(errorMessage)
           toast({
               variant: "destructive",
               title: "Camera Access Denied",
-              description: "Please enable camera permissions in your browser settings.",
+              description: "Please enable permissions and refresh the page.",
           })
         }
       }
@@ -72,40 +75,41 @@ export default function VerifyAadhaarPage() {
       isMounted = false;
       stopStream();
     };
-  }, [capturedImage, stopStream, toast, router]);
+  }, [capturedImage, error, stopStream, toast, router]);
 
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
+  const handleVideoReady = () => {
+    if (videoRef.current && videoRef.current.readyState > 0) {
+        setIsCameraInitializing(false)
     }
-  }, [stream]);
+  }
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current && videoRef.current.readyState >= 3) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext("2d");
-      if (context) {
-        context.translate(video.videoWidth, 0);
-        context.scale(-1, 1);
-        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        const dataUrl = canvas.toDataURL("image/jpeg");
-        setCapturedImage(dataUrl);
-      }
-    } else {
+    if (!videoRef.current || !canvasRef.current || isCameraInitializing) {
       toast({
         variant: "destructive",
         title: "Camera Not Ready",
-        description: "The camera is still initializing. Please wait a moment and try again.",
+        description: "Please wait for the camera to initialize.",
       });
+      return
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    if (context) {
+      context.translate(video.videoWidth, 0);
+      context.scale(-1, 1);
+      context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+      const dataUrl = canvas.toDataURL("image/jpeg");
+      setCapturedImage(dataUrl);
     }
   };
   
   const retakePhoto = () => {
     setCapturedImage(null);
-    setIsCameraReady(false);
+    setError(null);
   }
 
   const handleAadhaarUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -131,27 +135,16 @@ export default function VerifyAadhaarPage() {
   };
 
   const renderCameraView = () => {
-     if (hasCameraPermission === false) {
+     if (error) {
         return (
             <Alert variant="destructive" className="m-4">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Camera Access Denied</AlertTitle>
-                <AlertDescription>
-                    You must grant camera permission in your browser settings to continue.
-                </AlertDescription>
+                <AlertTitle>Camera Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
             </Alert>
         )
     }
     
-    if (hasCameraPermission === null && !capturedImage) {
-      return (
-        <div className="flex flex-col items-center justify-center gap-2 text-white/70 h-full">
-            <Loader2 className="w-12 h-12 animate-spin" />
-            <p>Requesting camera access...</p>
-        </div>
-      )
-    }
-
     if (capturedImage) {
       return <Image src={capturedImage} alt="Captured photo" layout="fill" objectFit="cover" />
     }
@@ -160,15 +153,15 @@ export default function VerifyAadhaarPage() {
         <>
             <video 
                 ref={videoRef} 
-                className="h-full w-full object-cover transform -scale-x-100" 
+                className="h-full w-full -scale-x-100 object-cover" 
                 autoPlay 
                 muted 
                 playsInline
-                onCanPlay={() => setIsCameraReady(true)}
+                onLoadedData={handleVideoReady}
             />
-            {!isCameraReady && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/70 bg-black/50">
-                    <Loader2 className="w-12 h-12 animate-spin" />
+            {isCameraInitializing && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
+                    <Loader2 className="h-12 w-12 animate-spin" />
                     <p>Starting camera...</p>
                 </div>
             )}
@@ -205,9 +198,18 @@ export default function VerifyAadhaarPage() {
                 </div>
                 <canvas ref={canvasRef} className="hidden" />
                  {!capturedImage ? (
-                    <Button onClick={capturePhoto} disabled={!isCameraReady} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
-                    {!isCameraReady && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                    {isCameraReady ? 'Capture Photo' : 'Initializing...' }
+                    <Button onClick={capturePhoto} disabled={isCameraInitializing || !!error} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                      {isCameraInitializing && !error ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Initializing...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="mr-2" />
+                          Capture Photo
+                        </>
+                      )}
                     </Button>
                 ) : (
                     <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake Photo</Button>
