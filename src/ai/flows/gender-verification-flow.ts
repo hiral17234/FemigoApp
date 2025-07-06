@@ -35,6 +35,7 @@ export async function verifyGender(input: GenderVerificationInput): Promise<Gend
 
 const genderVerificationPrompt = ai.definePrompt({
   name: 'genderVerificationPrompt',
+  model: 'googleai/gemini-pro-vision',
   input: {schema: GenderVerificationInputSchema},
   output: {schema: GenderVerificationOutputSchema},
   prompt: `Analyze the user's photo. You must determine three things:
