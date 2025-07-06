@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -141,10 +142,10 @@ export default function SignupPage() {
                             <CommandGroup>
                               {countries.map((country) => (
                                 <CommandItem
-                                  value={country.label}
+                                  value={country.value}
                                   key={country.value}
-                                  onSelect={() => {
-                                    form.setValue("country", country.value)
+                                  onSelect={(currentValue) => {
+                                    form.setValue("country", currentValue)
                                     setOpen(false)
                                   }}
                                 >

@@ -217,8 +217,8 @@ export default function OnboardingDetailsPage() {
                                      <CommandItem
                                        value={state}
                                        key={state}
-                                       onSelect={() => {
-                                         form.setValue("state", state)
+                                       onSelect={(currentValue) => {
+                                         form.setValue("state", currentValue)
                                          setStatePopoverOpen(false)
                                        }}
                                      >
@@ -256,8 +256,8 @@ export default function OnboardingDetailsPage() {
                                      <CommandItem
                                        value={city}
                                        key={city}
-                                       onSelect={() => {
-                                         form.setValue("city", city)
+                                       onSelect={(currentValue) => {
+                                         form.setValue("city", currentValue)
                                          setCityPopoverOpen(false)
                                        }}
                                      >
@@ -312,10 +312,10 @@ export default function OnboardingDetailsPage() {
                                       <CommandGroup>
                                         {countries.map((country) => (
                                           <CommandItem
-                                            value={`${country.label} (+${country.phone})`}
+                                            value={country.phone}
                                             key={country.value}
-                                            onSelect={() => {
-                                              form.setValue("altCountryCode", country.phone)
+                                            onSelect={(currentValue) => {
+                                              form.setValue("altCountryCode", currentValue)
                                               setCountryCodePopoverOpen(false)
                                             }}
                                           >
