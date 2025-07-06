@@ -34,6 +34,12 @@ export default function VerifyAadhaarPage() {
   }, [stream]);
 
   useEffect(() => {
+    // Redirect if not from India
+    if (typeof window !== 'undefined' && localStorage.getItem('userCountry') !== 'india') {
+      router.push('/verify-phone');
+      return;
+    }
+    
     if (capturedImage) {
         stopStream();
         return;
@@ -66,7 +72,7 @@ export default function VerifyAadhaarPage() {
       isMounted = false;
       stopStream();
     };
-  }, [capturedImage, stopStream, toast]);
+  }, [capturedImage, stopStream, toast, router]);
 
   useEffect(() => {
     if (videoRef.current && stream) {
@@ -96,6 +102,11 @@ export default function VerifyAadhaarPage() {
       });
     }
   };
+  
+  const retakePhoto = () => {
+    setCapturedImage(null);
+    setIsCameraReady(false);
+  }
 
   const handleAadhaarUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -112,10 +123,9 @@ export default function VerifyAadhaarPage() {
   
   const handleContinue = async () => {
     if (!capturedImage || !uploadedAadhaar) return;
-    // In a real app, you would send these to a server for verification
     toast({
         title: "Details captured!",
-        description: "Proceeding to the next step.",
+        description: "Proceeding to phone verification.",
     });
     router.push("/verify-phone");
   };
@@ -169,7 +179,7 @@ export default function VerifyAadhaarPage() {
   return (
     <div className="relative flex min-h-screen w-full items-center justify-center bg-background p-4">
       <Link
-        href="/signup"
+        href="/verify"
         className="absolute left-4 top-4 flex items-center gap-2 text-sm text-foreground transition-colors hover:text-primary md:left-8 md:top-8"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -200,7 +210,7 @@ export default function VerifyAadhaarPage() {
                     {isCameraReady ? 'Capture Photo' : 'Initializing...' }
                     </Button>
                 ) : (
-                    <Button onClick={() => setCapturedImage(null)} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake Photo</Button>
+                    <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake Photo</Button>
                 )}
             </div>
 

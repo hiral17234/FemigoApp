@@ -101,7 +101,16 @@ export default function VerifyPage() {
   
   const handleContinue = () => {
     if (!capturedImage) return
-    router.push("/verify-phone")
+    
+    // In a real app, you'd save the image dataUrl to state or send to a server
+    // For now, we'll just navigate based on country
+    
+    const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+    if (country === 'india') {
+      router.push("/verify-aadhaar");
+    } else {
+      router.push("/verify-phone");
+    }
   }
 
   const renderCameraView = () => {
