@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Camera, ShieldCheck, Heart, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
@@ -30,7 +30,6 @@ export default function VerifyPage() {
     }
   }, [stream]);
 
-  // Request camera permission and set up the stream
   useEffect(() => {
     if (capturedImage) {
         stopStream();
@@ -47,13 +46,13 @@ export default function VerifyPage() {
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
-        toast({
-            variant: "destructive",
-            title: "Camera Access Denied",
-            description: "Please enable camera permissions in your browser settings.",
-        })
         if (isMounted) {
           setHasCameraPermission(false);
+          toast({
+              variant: "destructive",
+              title: "Camera Access Denied",
+              description: "Please enable camera permissions in your browser settings.",
+          })
         }
       }
     };
@@ -66,7 +65,6 @@ export default function VerifyPage() {
     };
   }, [capturedImage, stopStream, toast]);
 
-  // Attach stream to video element when it's available
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
@@ -86,7 +84,6 @@ export default function VerifyPage() {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
         const dataUrl = canvas.toDataURL("image/jpeg");
         setCapturedImage(dataUrl);
-        setIsCameraReady(false); // No longer need the stream
       }
     } else {
       toast({
@@ -99,7 +96,7 @@ export default function VerifyPage() {
 
   const retakePhoto = () => {
     setCapturedImage(null);
-    setIsCameraReady(false); // Re-initialize camera
+    setIsCameraReady(false);
   }
   
   const handleContinue = () => {
@@ -164,49 +161,37 @@ export default function VerifyPage() {
         </Link>
         <div className="w-full max-w-md">
             <header className="text-center mb-8">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground flex items-center justify-center gap-2">
-                Femigo <Heart className="text-primary" fill="currentColor" />
+                <h1 className="text-4xl font-bold tracking-tight text-foreground">
+                Step 1: Photo Capture
                 </h1>
-                <p className="text-muted-foreground">Your Personal Safety Companion</p>
+                <p className="text-muted-foreground">Please take a clear picture of your face.</p>
             </header>
 
             <Card className="w-full">
-            <CardContent className="p-6 space-y-6">
-                <div>
-                    <div className="flex items-center gap-2 mb-2">
-                        <ShieldCheck className="w-6 h-6 text-primary" />
-                        <h2 className="text-xl font-bold">Step 1: Photo Capture</h2>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                        Please take a clear picture of your face.
-                    </p>
+            <CardContent className="p-6 space-y-4">
+                <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center text-center">
+                    {renderCameraView()}
                 </div>
+                
+                <canvas ref={canvasRef} className="hidden" />
 
-                <div className="space-y-4">
-                    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black flex items-center justify-center text-center">
-                       {renderCameraView()}
-                    </div>
-                    
-                    <canvas ref={canvasRef} className="hidden" />
-
-                    <div className="mt-4">
-                        {!capturedImage ? (
-                           <Button onClick={capturePhoto} disabled={!isCameraReady} className="w-full col-span-2 bg-[#EC008C] hover:bg-[#d4007a]">
-                            {!isCameraReady && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
-                            {isCameraReady ? <><Camera className="mr-2"/>Capture Photo</> : 'Initializing Camera...' }
-                           </Button>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-4">
-                                <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
-                                <Button
-                                    onClick={handleContinue}
-                                    className="w-full bg-[#EC008C] hover:bg-[#d4007a]"
-                                >
-                                    Continue
-                                </Button>
-                           </div>
-                        )}
-                    </div>
+                <div className="mt-4">
+                    {!capturedImage ? (
+                        <Button onClick={capturePhoto} disabled={!isCameraReady} className="w-full bg-[#EC008C] hover:bg-[#d4007a]">
+                        {!isCameraReady && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                        {isCameraReady ? <><Camera className="mr-2"/>Capture Photo</> : 'Initializing Camera...' }
+                        </Button>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-4">
+                            <Button onClick={retakePhoto} variant="outline" className="w-full"><RefreshCcw className="mr-2"/>Retake</Button>
+                            <Button
+                                onClick={handleContinue}
+                                className="w-full bg-[#EC008C] hover:bg-[#d4007a]"
+                            >
+                                Continue
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </CardContent>
             </Card>
