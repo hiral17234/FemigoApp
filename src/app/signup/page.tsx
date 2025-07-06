@@ -86,7 +86,7 @@ export default function SignupPage() {
             </div>
             
             <div className="space-y-1">
-              <h1 className="font-headline text-2xl font-bold tracking-tight">
+              <h1 className="text-2xl font-bold tracking-tight">
                 Create your account
               </h1>
               <p className="text-xs text-pink-100">
@@ -102,29 +102,29 @@ export default function SignupPage() {
                 <div className="flex gap-4">
                     <FormField control={form.control} name="firstName" render={({ field }) => (
                         <FormItem className="flex-1">
-                            <FormControl><Input placeholder="First Name" {...field} className="rounded-full bg-pink-400/50 border-0 placeholder-pink-200" disabled={isSubmitting} /></FormControl>
+                            <FormControl><Input placeholder="First Name" {...field} className="rounded-full bg-pink-400/50 border-0 placeholder-pink-100" disabled={isSubmitting} /></FormControl>
                             <FormMessage className="text-xs px-2" />
                         </FormItem>
                     )} />
                     <FormField control={form.control} name="lastName" render={({ field }) => (
                         <FormItem className="flex-1">
-                            <FormControl><Input placeholder="Last Name" {...field} className="rounded-full bg-pink-400/50 border-0 placeholder-pink-200" disabled={isSubmitting} /></FormControl>
+                            <FormControl><Input placeholder="Last Name" {...field} className="rounded-full bg-pink-400/50 border-0 placeholder-pink-100" disabled={isSubmitting} /></FormControl>
                              <FormMessage className="text-xs px-2" />
                         </FormItem>
                     )} />
                 </div>
                 
                 <FormField control={form.control} name="username" render={({ field }) => (
-                    <FormItem><FormControl><div className="relative"><User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-200" /><Input placeholder="Username" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-200" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
+                    <FormItem><FormControl><div className="relative"><User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-100" /><Input placeholder="Username" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-100" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
                 )} />
                 <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem><FormControl><div className="relative"><Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-200" /><Input type="email" placeholder="Email" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-200" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
+                    <FormItem><FormControl><div className="relative"><Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-100" /><Input type="email" placeholder="Email" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-100" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
                 )} />
                 <FormField control={form.control} name="password" render={({ field }) => (
-                    <FormItem><FormControl><div className="relative"><Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-200" /><Input type="password" placeholder="Password" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-200" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
+                    <FormItem><FormControl><div className="relative"><Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-100" /><Input type="password" placeholder="Password" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-100" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
                 )} />
                 <FormField control={form.control} name="confirmPassword" render={({ field }) => (
-                    <FormItem><FormControl><div className="relative"><Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-200" /><Input type="password" placeholder="Confirm Password" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-200" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
+                    <FormItem><FormControl><div className="relative"><Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-100" /><Input type="password" placeholder="Confirm Password" {...field} className="pl-11 rounded-full bg-pink-400/50 border-0 placeholder-pink-100" disabled={isSubmitting} /></div></FormControl><FormMessage className="text-xs px-2" /></FormItem>
                 )} />
 
                 <FormField
@@ -136,7 +136,7 @@ export default function SignupPage() {
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          className="border-pink-300 data-[state=checked]:bg-white data-[state=checked]:text-pink-500"
+                          className="border-pink-200 data-[state=checked]:bg-white data-[state=checked]:text-pink-500"
                           disabled={isSubmitting}
                         />
                       </FormControl>
@@ -160,7 +160,7 @@ export default function SignupPage() {
               </form>
             </Form>
 
-            <p className="pt-2 text-center text-xs text-pink-200">
+            <p className="pt-2 text-center text-xs text-pink-100">
               Already a member?{" "}
               <Link
                 href="/login"
