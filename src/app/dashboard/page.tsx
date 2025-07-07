@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -79,8 +80,8 @@ export default function DashboardPage() {
 
         {/* Emergency Button */}
         <div className="group relative my-4">
-          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-[#FF007A] to-[#9C00FF] opacity-75 blur-lg transition duration-300 group-hover:opacity-100" />
-          <button className="relative flex h-24 w-full items-center justify-center gap-4 rounded-2xl bg-white/5 text-2xl font-bold text-white transition-transform duration-200 active:scale-95 backdrop-blur-sm">
+          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-[#9C00FF] to-[#FF007A] opacity-75 blur-xl transition duration-300 group-hover:opacity-100" />
+          <button className="relative flex h-24 w-full items-center justify-center gap-4 rounded-2xl bg-gradient-to-r from-[#9C00FF] to-[#FF007A] text-2xl font-bold text-white transition-transform duration-200 active:scale-95">
             <Siren className="h-8 w-8 text-[#FF007A]" />
             <span>Emergency</span>
           </button>
