@@ -18,7 +18,7 @@ export default function Home() {
           </div>
 
           <div className="relative">
-            <div className="rounded-full p-2 shadow-md" style={{ background: 'linear-gradient(to top right, #e9fbf9, #d1f2eb)' }}>
+             <div className="rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 p-2 shadow-lg">
               <Image
                 src="https://i.imgur.com/DFegeIc.jpeg"
                 alt="A stylized illustration of a woman"
