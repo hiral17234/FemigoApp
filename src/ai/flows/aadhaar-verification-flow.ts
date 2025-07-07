@@ -63,8 +63,7 @@ const verificationPrompt = ai.definePrompt({
 
     **Input Images:**
     - User's Live Photo: {{media url=livePhotoDataUri}}
-    - User's Aadhaar Card Photo: {{media url=aadhaarPhotoDataUri}}
-    `,
+    - User's Aadhaar Card Photo: {{media url=aadhaarPhotoDataUri}}`
 });
 
 const aadhaarVerificationFlow = ai.defineFlow(
