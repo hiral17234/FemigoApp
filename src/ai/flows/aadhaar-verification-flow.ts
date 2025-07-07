@@ -36,20 +36,30 @@ const verificationPrompt = ai.definePrompt({
     outputSchema: AadhaarVerificationOutputSchema,
     prompt: `You are an AI assistant for Femigo, a platform exclusively for women. Your task is to verify a user's identity using a picture of their Aadhaar card.
 
-    Follow these steps precisely:
-    1.  **Analyze the Aadhaar Card Image**:
-        *   Read the text on the Aadhaar card provided in {{media url=aadhaarPhotoDataUri}}.
-        *   Extract the person's name and the 12-digit Aadhaar number.
-        *   Crucially, identify the gender listed on the card.
-        *   Based on the identified gender, set the 'isFemale' boolean field. It must be true if the gender is "Female", otherwise it must be false.
+    Follow these steps precisely and populate the JSON output fields accordingly:
 
-    2.  **Provide a Final Reason**:
-        *   If not female, state "Verification failed: Platform is for women only."
-        *   If the check passes, state "Verification successful."
-        *   If the Aadhaar card is unreadable, state "Could not read Aadhaar card. Please upload a clearer image."
+    1.  **Analyze the Aadhaar Card Image**:
+        *   Carefully read all text on the Aadhaar card image provided in \`{{media url=aadhaarPhotoDataUri}}\`.
+        *   If the image is blurry, unreadable, or not an Aadhaar card, set the 'reason' field to "Could not read Aadhaar card. Please upload a clearer image.", set 'isFemale' to false, and leave other fields empty.
+
+    2.  **Extract Information**:
+        *   If the card is readable, extract the person's full name and set it as the 'extractedName' field.
+        *   Extract the 12-digit Aadhaar number and set it as the 'extractedAadhaarNumber' field.
+        *   Identify the gender from the card.
+
+    3.  **Determine Final Output**:
+        *   **If Gender is "Female"**:
+            *   Set the 'isFemale' field to \`true\`.
+            *   Set the 'reason' field to "Verification successful."
+        *   **If Gender is not "Female" (e.g., "Male" or "Third Gender")**:
+            *   Set the 'isFemale' field to \`false\`.
+            *   Set the 'reason' field to "Verification failed: Platform is for women only."
+        *   **If Gender cannot be identified from the card**:
+            *   Set the 'isFemale' field to \`false\`.
+            *   Set the 'reason' field to "Could not determine gender from Aadhaar card."
 
     **Input Image:**
-    - User's Aadhaar Card Photo: {{media url=aadhaarPhotoDataUri}}`
+    - User's Aadhaar Card Photo: \`{{media url=aadhaarPhotoDataUri}}\``
 });
 
 const aadhaarVerificationFlow = ai.defineFlow(
