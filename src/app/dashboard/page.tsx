@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -97,12 +96,13 @@ export default function DashboardPage() {
         <section className="mt-8">
           <div className="grid grid-cols-3 gap-4 sm:gap-6">
             {features.map((feature) => (
-              <div key={feature.name} className="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl bg-[#1A1A2E] p-4 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/40 aspect-square">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-background/50 ring-1 ring-primary/30 transition-all duration-300 group-hover:bg-primary/10 group-hover:ring-primary/50 group-hover:shadow-[0_0_20px_0_hsl(var(--primary)/0.4)]">
-                  <feature.icon className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+              <a href={feature.href} key={feature.name} className="group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl bg-[#1A1A2E]/80 p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 aspect-square">
+                <div className="absolute -inset-px rounded-2xl bg-primary opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-40" aria-hidden="true" />
+                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-black/30">
+                  <feature.icon className="h-8 w-8 text-primary drop-shadow-[0_0_5px_hsl(var(--primary)/0.8)] transition-transform duration-300 group-hover:scale-110" />
                 </div>
-                <span className="text-center text-sm font-medium text-white/80">{feature.name}</span>
-              </div>
+                <span className="relative text-center text-sm font-medium text-white/80">{feature.name}</span>
+              </a>
             ))}
           </div>
         </section>
