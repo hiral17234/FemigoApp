@@ -56,15 +56,21 @@ export default function DashboardPage() {
         {/* Header */}
         <header className="flex items-center justify-between py-4">
           <div>
-            <h1 className="text-3xl font-bold text-white [text-shadow:0_0_8px_hsl(var(--primary)/0.5)]">Femigo</h1>
+            <h1 className="text-3xl font-bold text-white">Femigo</h1>
             <p className="text-sm font-medium text-[#888DFF]">
               Safety. Strength. Solidarity.
             </p>
           </div>
-          <Avatar className="h-12 w-12 border-2 border-primary/50 shadow-[0_0_15px_hsl(var(--primary)/0.5)]">
-            <AvatarImage src={userProfileImage} alt={userName} />
-            <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <div
+              className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-75 blur"
+              aria-hidden="true"
+            />
+            <Avatar className="relative h-12 w-12">
+              <AvatarImage src={userProfileImage} alt={userName} />
+              <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
+            </Avatar>
+          </div>
         </header>
 
         {/* Welcome Message */}
@@ -83,7 +89,7 @@ export default function DashboardPage() {
             className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-60 blur-xl transition duration-300 group-hover:opacity-100"
             aria-hidden="true"
           />
-          <button className="relative w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1 transition-transform duration-200 active:scale-95">
+          <button className="relative w-full rounded-3xl bg-gradient-to-r from-[#FF0080] via-[#9C00FF] to-[#7928CA] p-1 transition-transform duration-200 active:scale-95">
             <div className="flex h-[100px] w-full items-center justify-center gap-4 rounded-[22px] bg-[#0A0A0F]">
               <Siren className="h-8 w-8 text-[#FF0080]" />
               <span className="text-2xl font-bold text-white">Emergency</span>
