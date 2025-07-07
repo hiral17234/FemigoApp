@@ -85,14 +85,18 @@ export default function DashboardPage() {
 
         <Link href="/emergency">
           <div className="group relative my-8 transition-transform duration-150 active:scale-95">
-              <div
-                className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-pink-500 to-blue-500 opacity-50 blur-xl transition-all duration-300 group-hover:opacity-75"
-                aria-hidden="true"
-              />
-              <div className="relative flex h-24 w-full cursor-pointer items-center justify-center gap-4 rounded-3xl bg-[#0A0A0F] p-1 ring-1 ring-white/10">
-                    <Siren className="h-7 w-7 text-[#FF0080]" />
-                    <span className="text-2xl font-bold text-white">Emergency</span>
+            {/* Outer Glow */}
+            <div
+              className="absolute -inset-2.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-30 blur-xl transition-all duration-300 group-hover:opacity-50"
+              aria-hidden="true"
+            />
+            {/* Gradient Border */}
+            <div className="relative h-24 w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1">
+              <div className="flex h-full w-full items-center justify-center gap-4 rounded-[22px] bg-[#0A0A0F]">
+                <Siren className="h-8 w-8 text-[#FF0080]" />
+                <span className="text-2xl font-bold text-white">Emergency</span>
               </div>
+            </div>
           </div>
         </Link>
         
