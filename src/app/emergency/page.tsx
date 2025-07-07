@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Phone, UserPlus, Siren, ShieldCheck, Hospital } from 'lucide-react';
+import { ArrowLeft, Phone, UserPlus, Siren, ShieldCheck, Hospital, Flame } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -19,8 +19,9 @@ type TrustedContact = {
 
 const emergencyServices = [
   { name: 'Police', number: '100', icon: Siren },
-  { name: 'Security', number: '192', icon: ShieldCheck },
   { name: 'Ambulance', number: '108', icon: Hospital },
+  { name: 'Fire Brigade', number: '101', icon: Flame },
+  { name: 'Security', number: '192', icon: ShieldCheck },
 ];
 
 export default function EmergencyPage() {
