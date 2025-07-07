@@ -157,6 +157,7 @@ export default function VerifyIdentityPage() {
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
                Please take a clear, live photo. We'll verify you're female to ensure our community is safe and authentic.
+               <p className="font-semibold text-destructive mt-2">Please remove glasses for the photo.</p>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
