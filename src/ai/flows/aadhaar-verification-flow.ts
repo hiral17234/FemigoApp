@@ -45,18 +45,17 @@ const verificationPrompt = ai.definePrompt({
     Follow these steps precisely and populate the JSON output fields accordingly:
 
     1.  **Analyze the Aadhaar Card Image**:
-        *   Carefully examine the image provided in \`{{media url=aadhaarPhotoDataUri}}\`.
-        *   If the image is blurry, unreadable, or not an Aadhaar card, set 'verificationPassed' to \`false\`, set the 'reason' field to "Could not read Aadhaar card. Please upload a clearer image.", and leave other fields empty/false.
+        *   **CRITICAL FIRST STEP**: Carefully examine the image provided in \`{{media url=aadhaarPhotoDataUri}}\`. If the image is not a photo of an Aadhaar card, or if it is too blurry to be readable, you MUST immediately stop. Set 'verificationPassed' to \`false\`, set the 'reason' to "Please upload or capture a clear Aadhaar photo.", and leave all other optional fields empty. Do not proceed to the other steps.
 
-    2.  **Verify Name**:
+    2.  **Verify Name (only if image is a clear Aadhaar card)**:
         *   Extract the full name from the card. Set it as 'extractedName'.
         *   Compare the extracted name with the user's provided name: \`{{userName}}\`. The match should be case-insensitive and allow for partial matches (e.g., "Hiral Goyal" matches "Hiral R Goyal"). If they match, set 'nameMatch' to \`true\`. Otherwise, set it to \`false\`.
 
-    3.  **Verify Gender**:
+    3.  **Verify Gender (only if image is a clear Aadhaar card)**:
         *   Identify the gender from the card.
         *   If the gender is "Female", set 'isFemale' to \`true\`. Otherwise, set it to \`false\`.
 
-    4.  **Verify Aadhaar Number**:
+    4.  **Verify Aadhaar Number (only if image is a clear Aadhaar card)**:
         *   Use OCR to extract any visible 12-digit number from the image.
         *   Prefer numbers that appear near labels like "Aadhaar", "UID", or "Identity Number".
         *   Ignore any numbers found inside barcodes or QR codes.
@@ -67,7 +66,7 @@ const verificationPrompt = ai.definePrompt({
     5.  **Determine Final Outcome**:
         *   Set 'verificationPassed' to \`true\` ONLY IF 'nameMatch' is true, 'isFemale' is true, AND 'aadhaarNumberValid' is true.
         *   If 'verificationPassed' is \`true\`, set 'reason' to "Verification successful."
-        *   If 'verificationPassed' is \`false\`, construct a helpful 'reason' based on which check failed. For example: "Name on card does not match.", "Platform is for women only.", "Invalid Aadhaar number detected.", or a combination. If multiple checks fail, list the primary reason.
+        *   If 'verificationPassed' is \`false\` (and it's not due to a bad image), construct a helpful 'reason' based on which check failed. For example: "Name on card does not match.", "Platform is for women only.", "Invalid Aadhaar number detected.", or a combination.
 
     **Input:**
     - User's Name: \`{{userName}}\`
@@ -83,7 +82,7 @@ const aadhaarVerificationFlow = ai.defineFlow(
   async (input) => {
     const { output } = await verificationPrompt(input);
     if (!output) {
-      throw new Error("The AI failed to generate a valid response. This can happen if the Aadhaar card is unclear, contains inappropriate content, or if the service is temporarily unavailable. Please try again with a clearer image.");
+      throw new Error("The AI service failed to process the image. Please try again or use a different image.");
     }
     return output;
   }
