@@ -38,6 +38,7 @@ export type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutput
 
 const verificationPrompt = ai.definePrompt({
     name: 'aadhaarVerificationPrompt',
+    model: 'googleai/gemini-1.5-flash-preview-0514',
     inputSchema: AadhaarVerificationInputSchema,
     outputSchema: AadhaarVerificationOutputSchema,
     prompt: `You are an AI assistant for Femigo, a platform exclusively for women. Your task is to verify a user's identity using their live photo and a picture of their Aadhaar card.
