@@ -86,7 +86,7 @@ export default function DashboardPage() {
 
         <div className="group relative my-8">
           <div
-            className="absolute -inset-0.5 rounded-3xl bg-gradient-to-l from-[#FF0080] to-[#5D26C1] opacity-75 blur-xl transition duration-500 group-hover:opacity-100"
+            className="absolute -inset-0.5 rounded-3xl bg-gradient-to-l from-[#FF0080] to-[#5D26C1] opacity-60 blur-lg transition duration-500 group-hover:opacity-100"
             aria-hidden="true"
           />
           <button className="relative w-full rounded-3xl p-1">
