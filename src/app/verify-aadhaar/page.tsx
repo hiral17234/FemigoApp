@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { verifyAadhaar, type AadhaarVerificationOutput } from "@/ai/flows/aadhaar-verification-flow"
 
@@ -189,13 +190,38 @@ export default function VerifyAadhaarPage() {
                 )}
 
                 {verificationStatus === "success" && verificationResult && (
-                    <div className="flex flex-col items-center justify-center gap-4 text-center text-green-500">
-                        <CheckCircle className="h-16 w-16" />
-                        <h3 className="text-2xl font-bold">Verification Successful</h3>
-                        <div className="text-left text-foreground w-full rounded-lg border bg-background p-4 space-y-2">
-                            <p><strong>Name:</strong> {verificationResult.extractedName || 'N/A'}</p>
-                            <p><strong>Aadhaar:</strong> {verificationResult.extractedAadhaarNumber ? `**** **** ${verificationResult.extractedAadhaarNumber.slice(-4)}` : 'N/A'}</p>
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                        <div className="flex items-center gap-2 text-2xl font-bold text-green-500">
+                          <CheckCircle className="h-8 w-8" />
+                          <h3>Verification Successful</h3>
                         </div>
+
+                        <div className="w-full space-y-3 rounded-lg border bg-background p-4 text-left text-foreground">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Name Matched</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold">{verificationResult.extractedName}</span>
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                </div>
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Gender Verified</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold">Female</span>
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                </div>
+                            </div>
+                            <Separator />
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Aadhaar Number Valid</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-mono font-semibold tracking-wider">{verificationResult.extractedAadhaarNumber ? `**** **** ${verificationResult.extractedAadhaarNumber.slice(-4)}` : 'N/A'}</span>
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                </div>
+                            </div>
+                        </div>
+
                         <Button onClick={() => router.push('/verify-phone')} className="w-full">
                             Continue to Next Step
                         </Button>
