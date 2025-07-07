@@ -44,7 +44,6 @@ const verificationPrompt = ai.definePrompt({
         *   Based on the identified gender, set the 'isFemale' boolean field. It must be true if the gender is "Female", otherwise it must be false.
 
     2.  **Provide a Final Reason**:
-        *   Based on your findings, provide a concise reason for the verification outcome.
         *   If not female, state "Verification failed: Platform is for women only."
         *   If the check passes, state "Verification successful."
         *   If the Aadhaar card is unreadable, state "Could not read Aadhaar card. Please upload a clearer image."
