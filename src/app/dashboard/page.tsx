@@ -82,12 +82,12 @@ export default function DashboardPage() {
           </p>
         </section>
 
-        <div className="group relative my-8 h-24">
+        <div className="group relative my-8">
             <div
-              className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-50 blur-xl transition-all duration-300 group-hover:opacity-75"
+              className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-50 blur-xl transition-all duration-300 group-hover:opacity-75 group-active:opacity-60"
               aria-hidden="true"
             />
-            <div className="relative h-full w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1">
+            <div className="relative h-full w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1 transition-transform duration-150 group-active:scale-95">
               <button className="flex h-full w-full items-center justify-center gap-4 rounded-[22px] bg-[#06010F]">
                   <Siren className="h-7 w-7 text-[#FF0080]" />
                   <span className="text-2xl font-bold text-white">Emergency</span>
