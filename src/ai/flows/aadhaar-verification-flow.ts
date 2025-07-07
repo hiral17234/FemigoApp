@@ -11,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const LiveVerificationInputSchema = z.object({
+const LiveVerificationInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
@@ -20,7 +20,7 @@ export const LiveVerificationInputSchema = z.object({
 });
 export type LiveVerificationInput = z.infer<typeof LiveVerificationInputSchema>;
 
-export const LiveVerificationOutputSchema = z.object({
+const LiveVerificationOutputSchema = z.object({
   isAllowed: z
     .boolean()
     .describe('Whether the user is allowed to proceed based on the policies.'),
