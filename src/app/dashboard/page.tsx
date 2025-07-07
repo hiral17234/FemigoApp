@@ -2,6 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
   Siren,
@@ -82,18 +83,18 @@ export default function DashboardPage() {
           </p>
         </section>
 
-        <div className="group relative my-8 transition-transform duration-150 group-active:scale-95">
-            <div
-              className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-50 blur-xl transition-all duration-300 group-hover:opacity-75 group-active:opacity-60"
-              aria-hidden="true"
-            />
-            <div className="relative h-24 w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1">
-              <button className="flex h-full w-full items-center justify-center gap-4 rounded-[22px] bg-[#06010F]">
-                  <Siren className="h-7 w-7 text-[#FF0080]" />
-                  <span className="text-2xl font-bold text-white">Emergency</span>
-              </button>
-            </div>
-        </div>
+        <Link href="/emergency">
+          <div className="group relative my-8 transition-transform duration-150 active:scale-95">
+              <div
+                className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-pink-500 to-blue-500 opacity-50 blur-xl transition-all duration-300 group-hover:opacity-75"
+                aria-hidden="true"
+              />
+              <div className="relative flex h-24 w-full cursor-pointer items-center justify-center gap-4 rounded-3xl bg-[#0A0A0F] p-1 ring-1 ring-white/10">
+                    <Siren className="h-7 w-7 text-[#FF0080]" />
+                    <span className="text-2xl font-bold text-white">Emergency</span>
+              </div>
+          </div>
+        </Link>
         
         <section className="mt-12">
           <div className="grid grid-cols-3 gap-x-4 gap-y-6">
@@ -105,7 +106,7 @@ export default function DashboardPage() {
               >
                 <div className="relative h-24 w-24">
                   <div className="absolute inset-0 rounded-full bg-gradient-radial from-pink-500/10 via-purple-500/5 to-transparent blur-lg transition-all duration-300 group-hover:from-pink-500/20" />
-                  <div className="relative z-10 flex h-full w-full items-center justify-center rounded-full bg-gray-900/50 backdrop-blur-sm border border-white/10">
+                  <div className="relative z-10 flex h-full w-full items-center justify-center rounded-full border border-white/10 bg-gray-900/50 backdrop-blur-sm">
                     <feature.icon className="h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF007A] transition-transform duration-300 group-hover:scale-110" />
                   </div>
                 </div>
