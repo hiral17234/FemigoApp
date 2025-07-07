@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -59,7 +58,7 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-3xl font-bold text-white [text-shadow:0_0_8px_hsl(var(--primary)/0.5)]">Femigo</h1>
             <p className="text-sm font-medium text-[#888DFF]">
-              Daily Empowerment Thoughts
+              Safety. Strength. Solidarity.
             </p>
           </div>
           <Avatar className="h-12 w-12 border-2 border-primary/50 shadow-[0_0_15px_hsl(var(--primary)/0.5)]">
