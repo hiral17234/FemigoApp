@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Camera, Loader2, Upload, AlertTriangle, SwitchCamera, CheckCircle, XCircle } from "lucide-react"
+import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -31,36 +32,42 @@ export default function VerifyAadhaarPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [facingMode, setFacingMode] = useState<FacingMode>("environment")
   
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("pending")
   const [verificationResult, setVerificationResult] = useState<AadhaarVerificationOutput | null>(null)
-  const [apiKeyMissing, setApiKeyMissing] = useState(false);
+  const [apiKeyMissing, setApiKeyMissing] = useState(false)
+  const [userName, setUserName] = useState("")
 
   useEffect(() => {
-    // Check for API key on component mount
     if (!process.env.NEXT_PUBLIC_GOOGLE_AI_KEY) {
-      setApiKeyMissing(true);
+      setApiKeyMissing(true)
     }
     
-    // Redirect if not from India
     const country = localStorage.getItem('userCountry')
     if (country !== 'india') {
-      router.push('/verify-phone');
+      router.push('/verify-phone')
     }
-  }, [router]);
 
-  // Start/Stop Camera based on mode
+    const name = localStorage.getItem('userName')
+    if (name) {
+      setUserName(name)
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: 'User name not found. Please go back to step 1.' })
+    }
+  }, [router, toast]);
+
+  // Start/Stop Camera based on mode and permission
   useEffect(() => {
-    if (captureMode !== 'camera') {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => track.stop());
-        videoRef.current.srcObject = null;
-      }
-      return
-    }
-
     let stream: MediaStream | null = null;
     const startCamera = async () => {
+       if (captureMode !== 'camera' || capturedImage) {
+        if (videoRef.current?.srcObject) {
+          const mediaStream = videoRef.current.srcObject as MediaStream;
+          mediaStream.getTracks().forEach((track) => track.stop());
+          videoRef.current.srcObject = null;
+        }
+        return;
+      }
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode } });
         setHasCameraPermission(true)
@@ -80,15 +87,15 @@ export default function VerifyAadhaarPage() {
         stream.getTracks().forEach((track) => track.stop());
       }
     }
-  }, [captureMode, toast, facingMode]);
+  }, [captureMode, toast, facingMode, capturedImage]);
 
   const processImageAndContinue = async (aadhaarPhotoDataUri: string) => {
     setVerificationStatus("processing");
 
     try {
-        const result = await verifyAadhaar({ aadhaarPhotoDataUri });
+        const result = await verifyAadhaar({ aadhaarPhotoDataUri, userName });
         setVerificationResult(result);
-        if (result.isFemale) {
+        if (result.verificationPassed) {
             setVerificationStatus("success");
             toast({ title: "Verification Successful!", className: "bg-green-500 text-white" });
             localStorage.setItem('aadhaarImage', aadhaarPhotoDataUri); 
@@ -105,7 +112,7 @@ export default function VerifyAadhaarPage() {
         }
 
         setVerificationStatus("failed");
-        setVerificationResult({ reason: reason, isFemale: false });
+        setVerificationResult({ reason, verificationPassed: false });
         toast({ variant: "destructive", title: "Verification Error", description: reason });
     }
   }
@@ -116,6 +123,7 @@ export default function VerifyAadhaarPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
+        setCapturedImage(dataUrl);
         processImageAndContinue(dataUrl);
       };
       reader.readAsDataURL(file);
@@ -139,7 +147,8 @@ export default function VerifyAadhaarPage() {
       }
       context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
       const dataUrl = canvas.toDataURL("image/jpeg")
-      processImageAndContinue(dataUrl)
+      setCapturedImage(dataUrl);
+      processImageAndContinue(dataUrl);
     }
   }
 
@@ -150,10 +159,110 @@ export default function VerifyAadhaarPage() {
   const resetVerification = () => {
     setVerificationStatus("pending");
     setVerificationResult(null);
+    setCapturedImage(null);
     if(fileInputRef.current) fileInputRef.current.value = "";
   }
 
   const isProcessing = verificationStatus === "processing";
+
+  const renderContent = () => {
+    if (isProcessing || verificationStatus === "success" || verificationStatus === "failed") {
+        return (
+            <div className="space-y-4">
+                {capturedImage && (
+                    <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
+                        <Image src={capturedImage} alt="Captured Aadhaar Card" layout="fill" objectFit="contain" />
+                    </div>
+                )}
+                
+                {isProcessing && (
+                    <div className="flex flex-col items-center justify-center gap-4 text-center">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        <h3 className="text-lg font-semibold">Verifying your Aadhaar...</h3>
+                        <p className="text-sm text-muted-foreground">This may take a moment. Please don't close the page.</p>
+                        <div className="w-full space-y-2">
+                            <Skeleton className="h-4 w-3/4" />
+                            <Skeleton className="h-4 w-1/2" />
+                            <Skeleton className="h-4 w-2/3" />
+                        </div>
+                    </div>
+                )}
+
+                {verificationStatus === "success" && verificationResult && (
+                    <div className="flex flex-col items-center justify-center gap-4 text-center text-green-500">
+                        <CheckCircle className="h-16 w-16" />
+                        <h3 className="text-2xl font-bold">Verification Successful</h3>
+                        <div className="text-left text-foreground w-full rounded-lg border bg-background p-4 space-y-2">
+                            <p><strong>Name:</strong> {verificationResult.extractedName || 'N/A'}</p>
+                            <p><strong>Aadhaar:</strong> {verificationResult.extractedAadhaarNumber ? `**** **** ${verificationResult.extractedAadhaarNumber.slice(-4)}` : 'N/A'}</p>
+                        </div>
+                        <Button onClick={() => router.push('/verify-phone')} className="w-full">
+                            Continue to Next Step
+                        </Button>
+                         <Button onClick={resetVerification} className="w-full" variant="outline">
+                            Verify Another
+                        </Button>
+                    </div>
+                )}
+
+                {verificationStatus === "failed" && verificationResult && (
+                    <div className="flex flex-col items-center justify-center gap-4 text-center text-destructive">
+                        <XCircle className="h-16 w-16" />
+                        <h3 className="text-2xl font-bold">Verification Failed</h3>
+                        <p className="text-red-700 dark:text-red-300 max-w-sm">{verificationResult.reason}</p>
+                        <Button onClick={resetVerification} className="w-full" variant="outline">
+                            Try Again
+                        </Button>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // Default view: Tabs for camera or upload
+    return (
+        <Tabs value={captureMode} onValueChange={(value) => setCaptureMode(value as CaptureMode)} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4" />Scan Card</TabsTrigger>
+                <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" />Upload File</TabsTrigger>
+            </TabsList>
+            <TabsContent value="camera" className="mt-4">
+                <div className="space-y-4">
+                    <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
+                        <video 
+                            ref={videoRef} 
+                            className={cn("h-full w-full object-cover", facingMode === 'user' && "-scale-x-100")}
+                            autoPlay muted playsInline 
+                        />
+                        {hasCameraPermission && captureMode === 'camera' && (
+                            <Button size="icon" variant="ghost" className="absolute bottom-2 right-2 bg-black/50 text-white hover:bg-black/75 rounded-full z-10" onClick={handleToggleFacingMode}>
+                                <SwitchCamera className="h-5 w-5" />
+                                <span className="sr-only">Switch Camera</span>
+                            </Button>
+                        )}
+                        {hasCameraPermission === false && (
+                            <Alert variant="destructive" className="absolute m-4 max-w-sm">
+                                <AlertTriangle className="h-4 w-4" />
+                                <AlertTitle>Camera Access Denied</AlertTitle>
+                            </Alert>
+                        )}
+                    </div>
+                    <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || apiKeyMissing} className="w-full">
+                        <Camera className="mr-2 h-4 w-4" /> Capture & Verify
+                    </Button>
+                </div>
+            </TabsContent>
+            <TabsContent value="upload" className="mt-4">
+                <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-10 w-10 text-muted-foreground" />
+                    <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG (MAX. 5MB)</p>
+                </div>
+                <Input id="aadhaar-upload" type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png" disabled={apiKeyMissing} />
+            </TabsContent>
+        </Tabs>
+    );
+  }
 
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
@@ -180,91 +289,11 @@ export default function VerifyAadhaarPage() {
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Configuration Error</AlertTitle>
                   <AlertDescription>
-                    The Google AI API key is missing. Please add <code className="font-mono bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_AI_KEY</code> to your <code className="font-mono bg-muted px-1 py-0.5 rounded">.env</code> file. The AI verification will not work without it.
+                    The Google AI API key is missing. Please set it in your environment variables to proceed.
                   </AlertDescription>
                 </Alert>
               )}
-              {verificationStatus === "pending" && (
-                <Tabs value={captureMode} onValueChange={(value) => setCaptureMode(value as CaptureMode)} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4" />Scan Card</TabsTrigger>
-                      <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" />Upload File</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="camera" className="mt-4">
-                      <div className="space-y-4">
-                          <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
-                              <video 
-                                ref={videoRef} 
-                                className={cn("h-full w-full object-cover", facingMode === 'user' && "-scale-x-100")}
-                                autoPlay muted playsInline 
-                              />
-                              {hasCameraPermission && captureMode === 'camera' && (
-                                <Button size="icon" variant="ghost" className="absolute bottom-2 right-2 bg-black/50 text-white hover:bg-black/75 rounded-full z-10" onClick={handleToggleFacingMode}>
-                                  <SwitchCamera className="h-5 w-5" />
-                                  <span className="sr-only">Switch Camera</span>
-                                </Button>
-                              )}
-                              {hasCameraPermission === false && (
-                                <Alert variant="destructive" className="absolute m-4 max-w-sm">
-                                  <AlertTriangle className="h-4 w-4" />
-                                  <AlertTitle>Camera Access Denied</AlertTitle>
-                                </Alert>
-                              )}
-                          </div>
-                          <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || apiKeyMissing} className="w-full">
-                              <Camera className="mr-2 h-4 w-4" /> Capture & Verify
-                          </Button>
-                      </div>
-                  </TabsContent>
-                  <TabsContent value="upload" className="mt-4">
-                      <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50" onClick={() => fileInputRef.current?.click()}>
-                          <Upload className="h-10 w-10 text-muted-foreground" />
-                          <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
-                          <p className="text-xs text-muted-foreground">PNG, JPG (MAX. 5MB)</p>
-                      </div>
-                      <Input id="aadhaar-upload" type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png" disabled={apiKeyMissing} />
-                  </TabsContent>
-                </Tabs>
-              )}
-              
-              {isProcessing && (
-                 <div className="flex flex-col items-center justify-center gap-4 text-center">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                    <h3 className="text-lg font-semibold">Verifying your Aadhaar...</h3>
-                    <p className="text-sm text-muted-foreground">This may take a moment. Please don't close the page.</p>
-                    <div className="w-full space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                        <Skeleton className="h-4 w-2/3" />
-                    </div>
-                </div>
-              )}
-
-              {verificationStatus === "success" && verificationResult && (
-                <div className="flex flex-col items-center justify-center gap-4 text-center text-green-500">
-                    <CheckCircle className="h-16 w-16" />
-                    <h3 className="text-2xl font-bold">Verification Successful</h3>
-                    <p className="text-green-700 dark:text-green-300">{verificationResult.reason}</p>
-                    <div className="text-left text-foreground w-full rounded-lg border bg-background p-4 space-y-2">
-                        <p><strong>Name:</strong> {verificationResult.extractedName || 'N/A'}</p>
-                        <p><strong>Aadhaar:</strong> {verificationResult.extractedAadhaarNumber ? `**** **** ${verificationResult.extractedAadhaarNumber.slice(-4)}` : 'N/A'}</p>
-                    </div>
-                    <Button onClick={() => router.push('/verify-phone')} className="w-full">
-                        Continue to Next Step
-                    </Button>
-                </div>
-              )}
-
-              {verificationStatus === "failed" && verificationResult && (
-                 <div className="flex flex-col items-center justify-center gap-4 text-center text-destructive">
-                    <XCircle className="h-16 w-16" />
-                    <h3 className="text-2xl font-bold">Verification Failed</h3>
-                    <p className="text-red-700 dark:text-red-300 max-w-sm">{verificationResult.reason}</p>
-                    <Button onClick={resetVerification} className="w-full" variant="outline">
-                        Try Again
-                    </Button>
-                </div>
-              )}
+              {renderContent()}
           </CardContent>
         </Card>
       </div>
