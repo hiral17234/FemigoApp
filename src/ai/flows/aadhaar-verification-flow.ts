@@ -38,8 +38,8 @@ export type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutput
 
 const verificationPrompt = ai.definePrompt({
     name: 'aadhaarVerificationPrompt',
-    input: {schema: AadhaarVerificationInputSchema},
-    output: {schema: AadhaarVerificationOutputSchema},
+    inputSchema: AadhaarVerificationInputSchema,
+    outputSchema: AadhaarVerificationOutputSchema,
     prompt: `You are an AI assistant for Femigo, a platform exclusively for women. Your task is to verify a user's identity using their live photo and a picture of their Aadhaar card.
 
     Follow these steps precisely:
@@ -74,7 +74,10 @@ const aadhaarVerificationFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await verificationPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("The AI failed to generate a valid response. This can happen if the Aadhaar card is unclear, contains inappropriate content, or if the service is temporarily unavailable. Please try again with a clearer image.");
+    }
+    return output;
   }
 );
 

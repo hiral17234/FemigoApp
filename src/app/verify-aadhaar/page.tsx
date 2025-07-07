@@ -98,7 +98,6 @@ export default function VerifyAadhaarPage() {
         if (result.isFemale && result.facesMatch) {
             setVerificationStatus("success");
             toast({ title: "Verification Successful!", className: "bg-green-500 text-white" });
-            // Save verified Aadhaar image
             localStorage.setItem('aadhaarImage', aadhaarPhotoDataUri); 
         } else {
             setVerificationStatus("failed");
@@ -106,15 +105,15 @@ export default function VerifyAadhaarPage() {
         }
     } catch (error) {
         console.error('Verification failed:', error);
-        let description = 'An unexpected error occurred.';
-        if (error instanceof Error && error.message.includes('API key not valid')) {
-          description = 'The Google AI API key is invalid or missing. Please configure it in your .env file.';
-        } else if (error instanceof Error && error.message.includes('429')) {
-            description = 'Verification request was blocked. This may be due to image quality or content policy. Please try again with a clear, well-lit photo.';
+        
+        let reason = 'An unexpected error occurred. Please try again.';
+        if (error instanceof Error) {
+            reason = error.message;
         }
+
         setVerificationStatus("failed");
-        setVerificationResult({ reason: description, isFemale: false, facesMatch: false });
-        toast({ variant: "destructive", title: "Verification Error", description });
+        setVerificationResult({ reason: reason, isFemale: false, facesMatch: false });
+        toast({ variant: "destructive", title: "Verification Error", description: reason });
     }
   }
 
@@ -267,7 +266,7 @@ export default function VerifyAadhaarPage() {
                  <div className="flex flex-col items-center justify-center gap-4 text-center text-destructive">
                     <XCircle className="h-16 w-16" />
                     <h3 className="text-2xl font-bold">Verification Failed</h3>
-                    <p className="text-red-700 dark:text-red-300">{verificationResult.reason}</p>
+                    <p className="text-red-700 dark:text-red-300 max-w-sm">{verificationResult.reason}</p>
                     <Button onClick={resetVerification} className="w-full" variant="outline">
                         Try Again
                     </Button>
