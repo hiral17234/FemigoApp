@@ -82,12 +82,12 @@ export default function DashboardPage() {
           </p>
         </section>
 
-        <div className="group relative my-8">
+        <div className="group relative my-8 transition-transform duration-150 group-active:scale-95">
             <div
               className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-50 blur-xl transition-all duration-300 group-hover:opacity-75 group-active:opacity-60"
               aria-hidden="true"
             />
-            <div className="relative h-full w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1 transition-transform duration-150 group-active:scale-95">
+            <div className="relative h-24 w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1">
               <button className="flex h-full w-full items-center justify-center gap-4 rounded-[22px] bg-[#06010F]">
                   <Siren className="h-7 w-7 text-[#FF0080]" />
                   <span className="text-2xl font-bold text-white">Emergency</span>
@@ -104,9 +104,8 @@ export default function DashboardPage() {
                 className="group flex cursor-pointer flex-col items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-1"
               >
                 <div className="relative h-24 w-24">
-                  <div className="absolute inset-0 rounded-full bg-[#06010F] opacity-80" />
-                   <div className="absolute -inset-4 rounded-full bg-gradient-radial from-[#FF0080]/20 via-transparent to-transparent blur-lg transition-all duration-300 group-hover:from-[#FF0080]/30" />
-                  <div className="relative z-10 flex h-full w-full items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-gradient-radial from-pink-500/10 via-purple-500/5 to-transparent blur-lg transition-all duration-300 group-hover:from-pink-500/20" />
+                  <div className="relative z-10 flex h-full w-full items-center justify-center rounded-full bg-gray-900/50 backdrop-blur-sm border border-white/10">
                     <feature.icon className="h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF007A] transition-transform duration-300 group-hover:scale-110" />
                   </div>
                 </div>
