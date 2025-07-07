@@ -86,7 +86,7 @@ export default function DashboardPage() {
         {/* Emergency Button */}
         <div className="group relative my-8">
           <div
-            className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-60 blur-xl transition duration-300 group-hover:opacity-100"
+            className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] via-[#9C00FF] to-[#7928CA] opacity-60 blur-xl transition duration-300 group-hover:opacity-100"
             aria-hidden="true"
           />
           <button className="relative w-full rounded-3xl bg-gradient-to-r from-[#FF0080] via-[#9C00FF] to-[#7928CA] p-1 transition-transform duration-200 active:scale-95">
@@ -99,15 +99,17 @@ export default function DashboardPage() {
 
 
         {/* Features Grid */}
-        <section className="mt-8">
-          <div className="grid grid-cols-3 gap-4 sm:gap-6">
+        <section className="mt-12">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-8">
             {features.map((feature) => (
-              <a href={feature.href} key={feature.name} className="group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl bg-[#1A1A2E]/80 p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 aspect-square">
-                <div className="absolute -inset-px rounded-2xl bg-primary opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-40" aria-hidden="true" />
-                <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-black/30">
-                  <feature.icon className="h-8 w-8 text-primary drop-shadow-[0_0_5px_hsl(var(--primary)/0.8)] transition-transform duration-300 group-hover:scale-110" />
+              <a href={feature.href} key={feature.name} className="group flex cursor-pointer flex-col items-center justify-center gap-3 transition-transform duration-300 hover:-translate-y-1">
+                <div className="relative flex h-24 w-24 items-center justify-center rounded-full">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-75" aria-hidden="true" />
+                  <div className="relative flex h-full w-full items-center justify-center rounded-full bg-[#0A0A0F] ring-1 ring-white/10">
+                    <feature.icon className="h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF0080]" />
+                  </div>
                 </div>
-                <span className="relative text-center text-sm font-medium text-white/80">{feature.name}</span>
+                <span className="text-center text-sm font-medium text-white/90">{feature.name}</span>
               </a>
             ))}
           </div>
