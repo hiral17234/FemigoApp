@@ -49,23 +49,23 @@ export default function DashboardPage() {
   }, [router])
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#06010F] font-body text-[#F5F5F5]">
-      <div className="absolute -left-1/4 -top-1/4 z-0 h-1/2 w-1/2 rounded-full bg-gradient-radial from-primary/10 to-transparent blur-3xl" />
-      <div className="absolute -right-1/4 -bottom-1/4 z-0 h-1/2 w-1/2 rounded-full bg-gradient-radial from-secondary/10 to-transparent blur-3xl" />
+    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#0A0A0F] to-[#1A0E2A] font-body text-[#F5F5F5]">
+      <div className="absolute -left-1/4 -top-1/4 z-0 h-1/2 w-1/2 rounded-full bg-gradient-radial from-pink-500/10 to-transparent blur-3xl" />
+      <div className="absolute -right-1/4 -bottom-1/4 z-0 h-1/2 w-1/2 rounded-full bg-gradient-radial from-purple-500/10 to-transparent blur-3xl" />
 
       <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
         <header className="flex items-center justify-between py-4">
           <div>
-            <h1 className="text-3xl font-bold text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+            <h1 className="text-3xl font-bold text-white">
               Femigo
             </h1>
-            <p className="text-sm font-medium text-[#888DFF]">
+            <p className="text-sm font-medium text-purple-300/80">
               Safety. Strength. Solidarity.
             </p>
           </div>
           <div className="relative">
             <div
-              className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF0080] to-[#7928CA] blur-md"
+              className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-75 blur-md"
               aria-hidden="true"
             />
             <Avatar className="relative h-12 w-12 border-2 border-transparent">
@@ -84,15 +84,17 @@ export default function DashboardPage() {
           </p>
         </section>
 
-        <div className="group relative my-8">
+        <div className="group relative my-8 h-24">
             <div
-                className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-75 blur transition-all duration-300 group-hover:opacity-100 group-hover:blur-lg"
-                aria-hidden="true"
+              className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-50 blur-xl transition-all duration-300 group-hover:opacity-75"
+              aria-hidden="true"
             />
-            <button className="relative flex w-full items-center justify-center gap-4 rounded-3xl bg-[#06010F] px-7 py-4 text-white">
-                <Siren className="h-8 w-8 text-[#FF0080]" />
-                <span className="text-2xl font-bold">Emergency</span>
-            </button>
+            <div className="relative h-full w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1">
+              <button className="flex h-full w-full items-center justify-center gap-4 rounded-[22px] bg-[#0A0A0F]">
+                  <Siren className="h-7 w-7 text-[#FF0080]" />
+                  <span className="text-2xl font-bold text-white">Emergency</span>
+              </button>
+            </div>
         </div>
         
         <section className="mt-12">
@@ -103,13 +105,11 @@ export default function DashboardPage() {
                 key={feature.name}
                 className="group flex cursor-pointer flex-col items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-1"
               >
-                <div className="relative h-24 w-24 overflow-hidden rounded-full bg-black">
-                  <div
-                    className="absolute -left-1/4 -top-1/4 h-full w-full bg-gradient-radial from-[#FF007A]/50 via-[#9C00FF]/30 to-transparent blur-2xl transition-transform duration-300 group-hover:scale-125"
-                    aria-hidden="true"
-                  />
+                <div className="relative h-24 w-24">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#0A0A0F] to-[#1A0E2A] opacity-80" />
+                   <div className="absolute -inset-4 rounded-full bg-gradient-radial from-[#FF0080]/20 via-transparent to-transparent blur-lg transition-all duration-300 group-hover:from-[#FF0080]/30" />
                   <div className="relative z-10 flex h-full w-full items-center justify-center">
-                    <feature.icon className="h-10 w-10 text-[#FF007A] drop-shadow-[0_0_8px_#FF007A] transition-transform duration-300 group-hover:scale-110" />
+                    <feature.icon className="h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF007A] transition-transform duration-300 group-hover:scale-110" />
                   </div>
                 </div>
                 <span className="text-center text-sm font-medium text-white/80">
