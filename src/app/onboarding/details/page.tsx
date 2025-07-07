@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils"
 
 
 const formSchema = z.object({
-  age: z.coerce.number().min(18, "You must be at least 18 years old.").max(100),
+  age: z.coerce.number().min(3, "You must be at least 3 years old.").max(100),
   nickname: z.string().optional(),
   address1: z.string().min(3, "Address is required."),
   address2: z.string().optional(),
