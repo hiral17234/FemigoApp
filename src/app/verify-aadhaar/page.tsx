@@ -84,18 +84,11 @@ export default function VerifyAadhaarPage() {
 
   const processImageAndContinue = async (aadhaarPhotoDataUri: string) => {
     setVerificationStatus("processing");
-    const livePhotoDataUri = localStorage.getItem('userLivePhoto');
-
-    if (!livePhotoDataUri) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Live photo not found. Please go back to Step 2.' });
-        setVerificationStatus("failed");
-        return;
-    }
 
     try {
-        const result = await verifyAadhaar({ livePhotoDataUri, aadhaarPhotoDataUri });
+        const result = await verifyAadhaar({ aadhaarPhotoDataUri });
         setVerificationResult(result);
-        if (result.isFemale && result.facesMatch) {
+        if (result.isFemale) {
             setVerificationStatus("success");
             toast({ title: "Verification Successful!", className: "bg-green-500 text-white" });
             localStorage.setItem('aadhaarImage', aadhaarPhotoDataUri); 
@@ -112,7 +105,7 @@ export default function VerifyAadhaarPage() {
         }
 
         setVerificationStatus("failed");
-        setVerificationResult({ reason: reason, isFemale: false, facesMatch: false });
+        setVerificationResult({ reason: reason, isFemale: false });
         toast({ variant: "destructive", title: "Verification Error", description: reason });
     }
   }
