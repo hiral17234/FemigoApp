@@ -79,13 +79,19 @@ export default function DashboardPage() {
         </section>
 
         {/* Emergency Button */}
-        <div className="group relative my-4">
-          <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF007A] to-[#9C00FF] opacity-60 blur-2xl transition duration-300 group-hover:opacity-100" />
-          <button className="relative flex h-24 w-full items-center justify-center gap-4 rounded-3xl bg-[#06010F] text-2xl font-bold text-white ring-1 ring-inset ring-white/10 transition-transform duration-200 active:scale-95">
-            <Siren className="h-8 w-8 text-[#FF007A]" />
-            <span>Emergency</span>
+        <div className="group relative my-8">
+          <div
+            className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-60 blur-xl transition duration-300 group-hover:opacity-100"
+            aria-hidden="true"
+          />
+          <button className="relative w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1 transition-transform duration-200 active:scale-95">
+            <div className="flex h-[100px] w-full items-center justify-center gap-4 rounded-[22px] bg-[#0A0A0F]">
+              <Siren className="h-8 w-8 text-[#FF0080]" />
+              <span className="text-2xl font-bold text-white">Emergency</span>
+            </div>
           </button>
         </div>
+
 
         {/* Features Grid */}
         <section className="mt-8">
