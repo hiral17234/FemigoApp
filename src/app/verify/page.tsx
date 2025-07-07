@@ -87,23 +87,34 @@ export default function VerifyIdentityPage() {
     setHasCameraPermission(null)
   }
   
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!capturedImage) return;
     setIsProcessing(true);
 
-    if (typeof window !== 'undefined') {
-        localStorage.setItem('userLivePhoto', capturedImage);
-    }
-    toast({
-        title: 'Photo Saved!',
-        description: "Next, let's verify your identity document.",
-    });
-    
-    const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-    if (country === 'india') {
-        router.push('/verify-aadhaar');
-    } else {
-        router.push('/verify-phone');
+    try {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('userLivePhoto', capturedImage);
+        }
+        toast({
+            title: 'Photo Saved!',
+            description: "Next, let's verify your identity document.",
+        });
+        
+        const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+        if (country === 'india') {
+            router.push('/verify-aadhaar');
+        } else {
+            router.push('/verify-phone');
+        }
+    } catch (error) {
+        console.error('Verification failed:', error);
+        toast({
+            variant: "destructive",
+            title: "Verification Failed",
+            description: "An unexpected error occurred. Please try again."
+        });
+    } finally {
+        setIsProcessing(false);
     }
   }
 
