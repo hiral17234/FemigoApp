@@ -10,7 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const AadhaarVerificationInputSchema = z.object({
+const AadhaarVerificationInputSchema = z.object({
   livePhotoDataUri: z
     .string()
     .describe(
@@ -24,7 +24,7 @@ export const AadhaarVerificationInputSchema = z.object({
 });
 export type AadhaarVerificationInput = z.infer<typeof AadhaarVerificationInputSchema>;
 
-export const AadhaarVerificationOutputSchema = z.object({
+const AadhaarVerificationOutputSchema = z.object({
   isFemale: z.boolean().describe('Whether the gender identified on the card is Female.'),
   facesMatch: z
     .boolean()
