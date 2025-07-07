@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -9,6 +10,7 @@ import {
   ShieldCheck,
   Compass,
   BarChartBig,
+  ShieldPlus,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
@@ -23,8 +25,8 @@ const features: Feature[] = [
   { name: "SOS", icon: RadioTower, href: "#" },
   { name: "Check Safe", icon: ShieldCheck, href: "#" },
   { name: "Track Me", icon: Compass, href: "#" },
-  { name: "Women Safety Score", icon: BarChartBig, href: "#" },
-  { name: "Safe Mode", icon: ShieldCheck, href: "#" },
+  { name: "Safety Score", icon: BarChartBig, href: "#" },
+  { name: "Safe Mode", icon: ShieldPlus, href: "#" },
 ]
 
 export default function DashboardPage() {
@@ -85,12 +87,8 @@ export default function DashboardPage() {
 
         {/* Emergency Button */}
         <div className="group relative my-8">
-          <div
-            className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF0080] via-[#9C00FF] to-[#7928CA] opacity-60 blur-xl transition duration-300 group-hover:opacity-100"
-            aria-hidden="true"
-          />
-          <button className="relative w-full rounded-3xl bg-gradient-to-r from-[#FF0080] via-[#9C00FF] to-[#7928CA] p-1 transition-transform duration-200 active:scale-95">
-            <div className="flex h-[100px] w-full items-center justify-center gap-4 rounded-[22px] bg-[#0A0A0F]">
+          <button className="relative w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#5D26C1] p-1 transition-transform duration-200 active:scale-95">
+            <div className="flex h-[100px] w-full items-center justify-center gap-4 rounded-[22px] bg-[#06010F]">
               <Siren className="h-8 w-8 text-[#FF0080]" />
               <span className="text-2xl font-bold text-white">Emergency</span>
             </div>
@@ -100,16 +98,20 @@ export default function DashboardPage() {
 
         {/* Features Grid */}
         <section className="mt-12">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-8">
+          <div className="grid grid-cols-3 gap-4">
             {features.map((feature) => (
-              <a href={feature.href} key={feature.name} className="group flex cursor-pointer flex-col items-center justify-center gap-3 transition-transform duration-300 hover:-translate-y-1">
-                <div className="relative flex h-24 w-24 items-center justify-center rounded-full">
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-75" aria-hidden="true" />
+              <a
+                href={feature.href}
+                key={feature.name}
+                className="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl bg-[#0A0A0F] p-3 border border-white/10 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50"
+              >
+                <div className="relative flex h-20 w-20 items-center justify-center rounded-full">
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-0 blur-lg transition-opacity duration-300 group-hover:opacity-60" aria-hidden="true" />
                   <div className="relative flex h-full w-full items-center justify-center rounded-full bg-[#0A0A0F] ring-1 ring-white/10">
-                    <feature.icon className="h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF0080]" />
+                    <feature.icon className="h-8 w-8 text-[#FF0080] drop-shadow-[0_0_8px_#FF0080]" />
                   </div>
                 </div>
-                <span className="text-center text-sm font-medium text-white/90">{feature.name}</span>
+                <span className="text-center text-xs font-medium text-white/90">{feature.name}</span>
               </a>
             ))}
           </div>
