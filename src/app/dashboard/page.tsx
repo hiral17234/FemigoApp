@@ -12,7 +12,6 @@ import {
   BarChartBig,
 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type Feature = {
@@ -26,7 +25,7 @@ const features: Feature[] = [
   { name: "SOS", icon: RadioTower, href: "#" },
   { name: "Check Safe", icon: ShieldCheck, href: "#" },
   { name: "Track Me", icon: Compass, href: "#" },
-  { name: "Women Safety Score", icon: BarChartBig, href: "#" },
+  { name: "Safety Score", icon: BarChartBig, href: "#" },
   { name: "Safe Mode", icon: ShieldCheck, href: "#" },
 ]
 
@@ -34,7 +33,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [userName, setUserName] = useState("")
   const [userInitial, setUserInitial] = useState("U")
-  const userProfileImage = "https://i.imgur.com/DFegeIc.jpeg";
+  const userProfileImage = "https://i.imgur.com/DFegeIc.jpeg"
 
   useEffect(() => {
     const storedName = localStorage.getItem("userName")
@@ -50,63 +49,55 @@ export default function DashboardPage() {
   }, [router])
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center bg-black p-6 font-body text-gray-100">
-      <div className="w-full max-w-md space-y-8">
+    <div className="relative min-h-screen w-full overflow-hidden bg-black font-body text-gray-200">
+      {/* Background Glows */}
+      <div className="absolute -left-80 -top-80 z-0 h-[40rem] w-[40rem] rounded-full bg-primary/20 blur-[150px]" />
+      <div className="absolute -right-80 -bottom-60 z-0 h-[40rem] w-[40rem] rounded-full bg-purple-500/20 blur-[150px]" />
+
+      <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
         {/* Header */}
-        <header className="flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-white" style={{ textShadow: '0 0 15px hsl(var(--primary)/0.8)' }}>
+        <header className="flex items-center justify-between py-4">
+          <h1 className="text-3xl font-bold text-white" style={{ textShadow: '0 0 15px hsl(var(--primary)/0.6)' }}>
             Femigo
           </h1>
-          <Avatar className="h-12 w-12 border-2 border-primary/50 ring-2 ring-primary/30">
+          <Avatar className="h-12 w-12 border-2 border-primary/30">
             <AvatarImage src={userProfileImage} alt={userName} />
-            <AvatarFallback>{userInitial}</AvatarFallback>
+            <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
           </Avatar>
         </header>
 
-        {/* Daily Empowerment Thoughts */}
-        <p className="text-lg text-gray-400">Daily Empowerment Thoughts</p>
+        {/* Welcome Message */}
+        <section className="my-8">
+          <h2 className="text-4xl font-bold tracking-tight text-white">
+            Welcome, <span className="text-primary/90">{userName}!</span>
+          </h2>
+          <p className="mt-2 text-base text-gray-400">
+            Your safety is our priority.
+          </p>
+        </section>
 
         {/* Emergency Button */}
-        <div className="group relative">
-          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-purple-600 opacity-75 blur-lg transition-opacity duration-300 group-hover:opacity-100"></div>
-          <button className="relative flex h-24 w-full items-center justify-center gap-4 rounded-2xl bg-gray-900 text-2xl font-bold text-white transition-transform duration-200 active:scale-95">
+        <div className="group relative my-4">
+          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-purple-600 opacity-60 blur-lg transition-all duration-300 group-hover:opacity-100 group-hover:duration-200"></div>
+          <button className="relative flex h-24 w-full items-center justify-center gap-4 rounded-2xl bg-card text-2xl font-bold text-white transition-transform duration-200 active:scale-95">
             <Siren className="h-8 w-8 text-primary" />
             <span>Emergency</span>
           </button>
         </div>
 
         {/* Features Grid */}
-        <section className="grid grid-cols-3 gap-x-4 gap-y-8 text-center">
-          {features.map((feature) => (
-            <div key={feature.name} className="group flex cursor-pointer flex-col items-center gap-3">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-gray-800/80 to-gray-900/60 shadow-inner ring-1 ring-white/10 backdrop-blur-sm transition-all duration-300 group-hover:bg-primary/20 group-hover:shadow-[0_0_20px_0_hsl(var(--primary)/0.5)]">
-                <feature.icon className="h-9 w-9 text-primary transition-transform group-hover:scale-110" />
+        <section className="mt-8">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
+            {features.map((feature) => (
+              <div key={feature.name} className="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl bg-card/80 p-4 transition-all duration-300 hover:-translate-y-1 hover:bg-card hover:shadow-2xl hover:shadow-primary/20 aspect-square">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/30 ring-1 ring-primary/20 transition-all duration-300 group-hover:bg-primary/10 group-hover:ring-primary/50 group-hover:shadow-[0_0_20px_0_hsl(var(--primary)/0.4)]">
+                  <feature.icon className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+                </div>
+                <span className="text-sm font-medium text-gray-300">{feature.name}</span>
               </div>
-              <span className="text-sm font-medium text-gray-300">{feature.name}</span>
-            </div>
-          ))}
-        </section>
-
-        {/* Community Card */}
-        <div className="relative mt-4">
-          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-purple-600 opacity-50 blur-lg"></div>
-          <div className="relative flex flex-col items-center gap-6 rounded-2xl bg-gray-900 p-6 text-center">
-            <Avatar className="h-16 w-16 border-2 border-primary/50">
-              <AvatarImage src={userProfileImage} alt="Community illustration" />
-              <AvatarFallback>C</AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold text-white">Empowerment Through Connection</h3>
-              <p className="text-sm text-gray-400">
-                Femigo is more than just an app, it's a movement. Join the community and be a part of change.
-              </p>
-            </div>
-            <Button className="w-full rounded-lg bg-primary py-3 text-base font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-105">
-              Join the Community
-            </Button>
+            ))}
           </div>
-        </div>
-
+        </section>
       </div>
     </div>
   )
