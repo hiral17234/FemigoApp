@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
 import {
   Siren,
   MapPin,
@@ -29,13 +28,14 @@ const features: Feature[] = [
   { name: "SOS", icon: RadioTower, href: "#" },
   { name: "Check Safe", icon: Shield, href: "#" },
   { name: "Track Me", icon: Compass, href: "#" },
-  { name: "Women Safety Score", icon: BarChart, href: "#" },
+  { name: "Safety Score", icon: BarChart, href: "#" },
   { name: "Safe Mode", icon: ShieldCheck, href: "#" },
 ]
 
 export default function DashboardPage() {
   const router = useRouter()
   const [userName, setUserName] = useState("")
+  const [userInitial, setUserInitial] = useState("U")
 
   useEffect(() => {
     // Check if user is "logged in" by checking localStorage
@@ -45,6 +45,7 @@ export default function DashboardPage() {
 
     if (storedPhone || storedEmail) {
       setUserName(storedName || "User")
+      setUserInitial(storedName ? storedName.charAt(0).toUpperCase() : "U")
     } else {
       router.push("/")
     }
@@ -52,11 +53,11 @@ export default function DashboardPage() {
 
   // A component for the feature grid items
   const FeatureButton = ({ feature }: { feature: Feature }) => (
-    <button className="flex flex-col items-center justify-start gap-2 text-center transition-transform hover:scale-105">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-black shadow-md">
-        <feature.icon className="h-8 w-8 text-primary" />
+    <button className="group flex flex-col items-center justify-start gap-3 text-center transition-transform duration-300 hover:scale-110">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-card ring-1 ring-primary/20 transition-all duration-300 group-hover:shadow-[0_0_20px_2px_hsl(var(--primary)/0.5)] group-hover:ring-2 group-hover:ring-primary/80">
+        <feature.icon className="h-9 w-9 text-primary transition-colors duration-300" />
       </div>
-      <span className="text-xs font-medium text-foreground">{feature.name}</span>
+      <span className="text-sm font-medium text-foreground/90">{feature.name}</span>
     </button>
   )
   
@@ -65,47 +66,31 @@ export default function DashboardPage() {
   return (
     <div className="flex min-h-screen w-full flex-col bg-black text-foreground">
       {/* Header */}
-      <header className="flex items-center justify-between p-4">
-        <div className="text-2xl font-bold">
+      <header className="flex items-center justify-between p-6">
+        <h1 className="text-3xl font-bold text-primary" style={{ textShadow: '0 0 10px hsl(var(--primary)/0.7)' }}>
           Femigo
-        </div>
-        <Avatar>
-          <AvatarImage src={userProfileImage} alt="User" />
-          <AvatarFallback>{userName ? userName.charAt(0).toUpperCase() : "U"}</AvatarFallback>
+        </h1>
+        <Avatar className="h-12 w-12 border-2 border-primary/50">
+          <AvatarImage src={userProfileImage} alt={userName} />
+          <AvatarFallback>{userInitial}</AvatarFallback>
         </Avatar>
       </header>
 
       {/* Main Content */}
-      <main className="flex flex-1 flex-col">
-        {/* Profile Section */}
-        <section className="flex flex-col items-center py-6">
-          <div className="relative">
-            <div className="rounded-full bg-white/30 p-2 shadow-md dark:bg-card/30">
-              <Avatar className="h-32 w-32 border-4 border-white dark:border-card">
-                <AvatarImage src={userProfileImage} alt="Profile" />
-                <AvatarFallback className="text-4xl">
-                  {userName ? userName.charAt(0).toUpperCase() : "U"}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-          </div>
-        </section>
-
+      <main className="flex flex-1 flex-col items-center justify-center gap-12 px-4 py-8 md:px-6">
         {/* Emergency Button */}
-        <section className="px-6">
-          <Button className="h-20 w-full justify-start rounded-2xl bg-gray-900 p-4 shadow-lg hover:bg-gray-800/90">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-black">
-                <Siren className="h-8 w-8 text-primary" />
-              </div>
-              <span className="text-xl font-semibold text-card-foreground">Emergency</span>
+        <div className="w-full max-w-md">
+           <Button className="h-24 w-full rounded-2xl border-2 border-primary/70 bg-transparent p-4 text-2xl font-bold text-primary shadow-[0_0_20px_rgba(255,45,117,0.4)] transition-all duration-300 hover:scale-105 hover:border-primary hover:bg-primary/10 hover:text-white hover:shadow-[0_0_30px_rgba(255,45,117,0.8)]">
+            <div className="flex items-center justify-center gap-4">
+              <Siren className="h-10 w-10" />
+              <span>EMERGENCY</span>
             </div>
           </Button>
-        </section>
+        </div>
 
         {/* Features Grid */}
-        <section className="mt-8 flex-1 rounded-t-3xl bg-gradient-to-r from-gray-900 to-gray-800 p-6 shadow-2xl">
-          <div className="grid grid-cols-3 gap-y-6">
+        <section className="w-full max-w-lg rounded-t-3xl bg-card/50 p-6 shadow-2xl backdrop-blur-sm">
+          <div className="grid grid-cols-3 gap-x-4 gap-y-8 md:gap-x-8">
             {features.map((feature) => (
               <FeatureButton key={feature.name} feature={feature} />
             ))}
