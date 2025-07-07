@@ -49,10 +49,10 @@ export default function DashboardPage() {
   }, [router])
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black font-body text-gray-200">
+    <div className="relative min-h-screen w-full overflow-hidden bg-background font-body text-foreground">
       {/* Background Glows */}
-      <div className="absolute -left-80 -top-80 z-0 h-[40rem] w-[40rem] rounded-full bg-primary/20 blur-[150px]" />
-      <div className="absolute -right-80 -bottom-60 z-0 h-[40rem] w-[40rem] rounded-full bg-purple-500/20 blur-[150px]" />
+      <div className="absolute -left-80 -top-80 z-0 h-[40rem] w-[40rem] rounded-full bg-primary/10 blur-[150px]" />
+      <div className="absolute -right-80 -bottom-60 z-0 h-[40rem] w-[40rem] rounded-full bg-secondary/10 blur-[150px]" />
 
       <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
         {/* Header */}
@@ -71,14 +71,14 @@ export default function DashboardPage() {
           <h2 className="text-4xl font-bold tracking-tight text-white">
             Welcome, <span className="text-primary/90">{userName}!</span>
           </h2>
-          <p className="mt-2 text-base text-gray-400">
+          <p className="mt-2 text-base text-muted-foreground">
             Your safety is our priority.
           </p>
         </section>
 
         {/* Emergency Button */}
         <div className="group relative my-4">
-          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-purple-600 opacity-60 blur-lg transition-all duration-300 group-hover:opacity-100 group-hover:duration-200"></div>
+          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary to-secondary opacity-60 blur-lg transition-all duration-300 group-hover:opacity-100 group-hover:duration-200"></div>
           <button className="relative flex h-24 w-full items-center justify-center gap-4 rounded-2xl bg-card text-2xl font-bold text-white transition-transform duration-200 active:scale-95">
             <Siren className="h-8 w-8 text-primary" />
             <span>Emergency</span>
@@ -89,11 +89,11 @@ export default function DashboardPage() {
         <section className="mt-8">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
             {features.map((feature) => (
-              <div key={feature.name} className="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl bg-card/80 p-4 transition-all duration-300 hover:-translate-y-1 hover:bg-card hover:shadow-2xl hover:shadow-primary/20 aspect-square">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-black/30 ring-1 ring-primary/20 transition-all duration-300 group-hover:bg-primary/10 group-hover:ring-primary/50 group-hover:shadow-[0_0_20px_0_hsl(var(--primary)/0.4)]">
+              <div key={feature.name} className="group flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl bg-card p-4 transition-all duration-300 hover:-translate-y-1 hover:bg-accent hover:shadow-2xl hover:shadow-primary/20 aspect-square">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-background/50 ring-1 ring-primary/30 transition-all duration-300 group-hover:bg-primary/10 group-hover:ring-primary/50 group-hover:shadow-[0_0_20px_0_hsl(var(--primary)/0.4)]">
                   <feature.icon className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
                 </div>
-                <span className="text-sm font-medium text-gray-300">{feature.name}</span>
+                <span className="text-sm font-medium text-muted-foreground">{feature.name}</span>
               </div>
             ))}
           </div>
