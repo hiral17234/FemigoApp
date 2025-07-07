@@ -80,9 +80,9 @@ export default function DashboardPage() {
 
         {/* Emergency Button */}
         <div className="group relative my-4">
-          <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-[#FF007A] to-[#9C00FF] opacity-75 blur-xl transition duration-300 group-hover:opacity-100" />
-          <button className="relative flex h-20 w-full items-center justify-center gap-4 rounded-2xl bg-[#06010F] text-xl font-bold text-white transition-transform duration-200 active:scale-95">
-            <Siren className="h-7 w-7 text-[#FF007A]" />
+          <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#FF007A] to-[#9C00FF] opacity-60 blur-2xl transition duration-300 group-hover:opacity-100" />
+          <button className="relative flex h-24 w-full items-center justify-center gap-4 rounded-3xl bg-[#06010F] text-2xl font-bold text-white ring-1 ring-inset ring-white/10 transition-transform duration-200 active:scale-95">
+            <Siren className="h-8 w-8 text-[#FF007A]" />
             <span>Emergency</span>
           </button>
         </div>
