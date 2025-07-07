@@ -85,16 +85,14 @@ export default function DashboardPage() {
         </section>
 
         <div className="group relative my-8">
-          <div
-            className="absolute -inset-0.5 rounded-3xl bg-gradient-to-l from-[#FF0080] to-[#5D26C1] opacity-60 blur-lg transition duration-500 group-hover:opacity-100"
-            aria-hidden="true"
-          />
-          <button className="relative w-full rounded-3xl p-1">
-            <div className="flex h-[100px] w-full items-center justify-center gap-4 rounded-[22px] bg-[#06010F]">
-              <Siren className="h-8 w-8 text-[#FF0080]" />
-              <span className="text-2xl font-bold text-white">Emergency</span>
-            </div>
-          </button>
+            <div
+                className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-75 blur transition-all duration-300 group-hover:opacity-100 group-hover:blur-lg"
+                aria-hidden="true"
+            />
+            <button className="relative flex w-full items-center justify-center gap-4 rounded-3xl bg-[#06010F] px-7 py-4 text-white">
+                <Siren className="h-8 w-8 text-[#FF0080]" />
+                <span className="text-2xl font-bold">Emergency</span>
+            </button>
         </div>
         
         <section className="mt-12">
