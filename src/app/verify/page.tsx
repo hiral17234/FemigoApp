@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { genderCheck } from "@/ai/flows/gender-check-flow"
 
 export default function VerifyIdentityPage() {
   const router = useRouter()
@@ -22,6 +23,13 @@ export default function VerifyIdentityPage() {
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [apiKeyMissing, setApiKeyMissing] = useState(false);
+
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_GOOGLE_AI_KEY) {
+      setApiKeyMissing(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (capturedImage || hasCameraPermission === false) {
@@ -92,26 +100,40 @@ export default function VerifyIdentityPage() {
     setIsProcessing(true);
 
     try {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('userLivePhoto', capturedImage);
-        }
-        toast({
-            title: 'Photo Saved!',
-            description: "Next, let's verify your identity document.",
-        });
-        
-        const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
-        if (country === 'india') {
-            router.push('/verify-aadhaar');
+        const result = await genderCheck({ photoDataUri: capturedImage });
+        if (result.isFemale) {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('userLivePhoto', capturedImage);
+            }
+            toast({
+                title: 'Photo Verified!',
+                description: "Next, let's verify your identity document.",
+                className: "bg-green-500 text-white",
+            });
+            
+            const country = typeof window !== 'undefined' ? localStorage.getItem('userCountry') : null;
+            if (country === 'india') {
+                router.push('/verify-aadhaar');
+            } else {
+                router.push('/verify-phone');
+            }
         } else {
-            router.push('/verify-phone');
+            toast({
+                variant: "destructive",
+                title: "Verification Failed",
+                description: result.reason,
+            });
         }
     } catch (error) {
         console.error('Verification failed:', error);
+        let reason = 'An unexpected error occurred. Please try again.';
+        if (error instanceof Error) {
+            reason = error.message;
+        }
         toast({
             variant: "destructive",
-            title: "Verification Failed",
-            description: "An unexpected error occurred. Please try again."
+            title: "Verification Error",
+            description: reason
         });
     } finally {
         setIsProcessing(false);
@@ -131,13 +153,22 @@ export default function VerifyIdentityPage() {
         <Card className="w-full rounded-2xl p-6 shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="flex items-center justify-center gap-2 text-3xl font-bold tracking-tight text-foreground">
-              <UserCheck /> Step 2: Live Photo Capture
+              <UserCheck /> Step 2: Live Photo & Gender Check
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
-               Please take a clear, live photo of your face. This helps us ensure our community is safe and authentic.
+               Please take a clear, live photo. We'll verify you're female to ensure our community is safe and authentic.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+             {apiKeyMissing && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Configuration Error</AlertTitle>
+                  <AlertDescription>
+                    The Google AI API key is missing. Please add <code className="font-mono bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_AI_KEY</code> to your <code className="font-mono bg-muted px-1 py-0.5 rounded">.env</code> file. The AI verification will not work without it.
+                  </AlertDescription>
+                </Alert>
+              )}
             <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
               {capturedImage ? (
                 <Image
@@ -194,13 +225,13 @@ export default function VerifyIdentityPage() {
                 </Button>
                 <Button
                   onClick={handleContinue}
-                  disabled={isProcessing}
+                  disabled={isProcessing || apiKeyMissing}
                   className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105"
                 >
                   {isProcessing && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  Save & Continue
+                  Verify & Continue
                   <CheckCircle className="ml-2 h-4 w-4" />
                 </Button>
               </div>
