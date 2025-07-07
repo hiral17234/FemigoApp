@@ -219,7 +219,7 @@ export default function VerifyAadhaarPage() {
                                 </Alert>
                               )}
                           </div>
-                          <Button onClick={capturePhoto} disabled={hasCameraPermission !== true} className="w-full">
+                          <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || apiKeyMissing} className="w-full">
                               <Camera className="mr-2 h-4 w-4" /> Capture & Verify
                           </Button>
                       </div>
@@ -230,7 +230,7 @@ export default function VerifyAadhaarPage() {
                           <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
                           <p className="text-xs text-muted-foreground">PNG, JPG (MAX. 5MB)</p>
                       </div>
-                      <Input id="aadhaar-upload" type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png" />
+                      <Input id="aadhaar-upload" type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png" disabled={apiKeyMissing} />
                   </TabsContent>
                 </Tabs>
               )}
