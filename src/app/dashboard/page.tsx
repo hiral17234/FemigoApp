@@ -5,8 +5,6 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import {
-  Menu,
-  Heart,
   Siren,
   MapPin,
   RadioTower,
@@ -55,7 +53,7 @@ export default function DashboardPage() {
   // A component for the feature grid items
   const FeatureButton = ({ feature }: { feature: Feature }) => (
     <button className="flex flex-col items-center justify-start gap-2 text-center transition-transform hover:scale-105">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-background shadow-md">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white dark:bg-black shadow-md">
         <feature.icon className="h-8 w-8 text-primary" />
       </div>
       <span className="text-xs font-medium text-foreground">{feature.name}</span>
@@ -65,15 +63,11 @@ export default function DashboardPage() {
   const userProfileImage = "https://i.imgur.com/DFegeIc.jpeg";
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-accent text-foreground">
+    <div className="flex min-h-screen w-full flex-col bg-black text-foreground">
       {/* Header */}
       <header className="flex items-center justify-between p-4">
-        <Button variant="ghost" size="icon">
-          <Menu className="h-6 w-6" />
-        </Button>
-        <div className="flex items-center gap-1 text-2xl font-bold">
+        <div className="text-2xl font-bold">
           Femigo
-          <Heart className="h-6 w-6 text-green-500" fill="currentColor" />
         </div>
         <Avatar>
           <AvatarImage src={userProfileImage} alt="User" />
@@ -99,9 +93,9 @@ export default function DashboardPage() {
 
         {/* Emergency Button */}
         <section className="px-6">
-          <Button className="h-20 w-full justify-start rounded-2xl bg-card p-4 shadow-lg hover:bg-card/90">
+          <Button className="h-20 w-full justify-start rounded-2xl bg-gray-900 p-4 shadow-lg hover:bg-gray-800/90">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-accent">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-black">
                 <Siren className="h-8 w-8 text-primary" />
               </div>
               <span className="text-xl font-semibold text-card-foreground">Emergency</span>
@@ -110,7 +104,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Features Grid */}
-        <section className="mt-8 flex-1 rounded-t-3xl bg-card p-6 shadow-2xl">
+        <section className="mt-8 flex-1 rounded-t-3xl bg-gradient-to-r from-gray-900 to-gray-800 p-6 shadow-2xl">
           <div className="grid grid-cols-3 gap-y-6">
             {features.map((feature) => (
               <FeatureButton key={feature.name} feature={feature} />
