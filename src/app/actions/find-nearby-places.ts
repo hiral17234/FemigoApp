@@ -18,7 +18,7 @@ const FindNearbyPlacesInputSchema = z.object({
 });
 export type FindNearbyPlacesInput = z.infer<typeof FindNearbyPlacesInputSchema>;
 
-export const PlaceSchema = z.object({
+const PlaceSchema = z.object({
     name: z.string(),
     vicinity: z.string().optional(),
     location: PointSchema,
