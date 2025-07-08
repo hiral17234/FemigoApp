@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin, Wind, Milestone, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import dynamic from 'next/dynamic';
-import type { Map as LeafletMap, DivIcon } from 'leaflet';
+import type { DivIcon } from 'leaflet';
+import { useMap } from 'react-leaflet/hooks';
 
 // Use dynamic import for all react-leaflet components to prevent SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { 
@@ -23,6 +24,15 @@ const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline)
 
 type LatLngTuple = [number, number];
 
+// A helper component to programmatically update the map's view
+function MapUpdater({ center, zoom }: { center: LatLngTuple; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  return null;
+}
+
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of the earth in km
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -37,8 +47,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function LocationPage() {
-  const [center, setCenter] = useState<LatLngTuple>([20.5937, 78.9629]); // India center
-  const [zoom, setZoom] = useState(5);
+  const [view, setView] = useState<{center: LatLngTuple, zoom: number}>({ center: [20.5937, 78.9629], zoom: 5 });
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
   const [route, setRoute] = useState<LatLngTuple[]>([]);
   const [distance, setDistance] = useState(0);
@@ -46,12 +55,9 @@ export default function LocationPage() {
   const [pulsingIcon, setPulsingIcon] = useState<DivIcon | null>(null);
   const [startIcon, setStartIcon] = useState<DivIcon | null>(null);
 
-  const mapRef = useRef<LeafletMap | null>(null);
   const watchId = useRef<number | null>(null);
 
-  // This effect runs once on the client to set up icons and geolocation
   useEffect(() => {
-    // Dynamically import Leaflet to ensure it's client-side only
     import('leaflet').then(L => {
       setPulsingIcon(new L.DivIcon({
         className: 'pulsing-marker-container',
@@ -97,12 +103,7 @@ export default function LocationPage() {
         });
 
         if (isFirstUpdate) {
-            if (mapRef.current) {
-                mapRef.current.setView(newPoint, 16);
-            } else {
-                setCenter(newPoint);
-                setZoom(16);
-            }
+            setView({ center: newPoint, zoom: 16 });
             isFirstUpdate = false;
         }
       },
@@ -113,18 +114,17 @@ export default function LocationPage() {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 
-    // Cleanup function to clear the watch
     return () => {
       if (watchId.current) {
         navigator.geolocation.clearWatch(watchId.current);
       }
     };
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
   const recenterMap = () => {
-    if (currentLocation && mapRef.current) {
+    if (currentLocation) {
       const { latitude, longitude } = currentLocation;
-      mapRef.current.setView([latitude, longitude], 16);
+      setView({ center: [latitude, longitude], zoom: 16 });
     }
   };
 
@@ -143,16 +143,16 @@ export default function LocationPage() {
         </header>
 
         <MapContainer 
-            center={center} 
-            zoom={zoom} 
+            center={view.center} 
+            zoom={view.zoom} 
             style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
-            whenCreated={mapInstance => { mapRef.current = mapInstance; }}
             zoomControl={false}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
+            <MapUpdater center={view.center} zoom={view.zoom} />
             
             {currentLocation && pulsingIcon && (
                 <Marker position={[currentLocation.latitude, currentLocation.longitude]} icon={pulsingIcon} />
