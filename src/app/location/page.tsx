@@ -100,8 +100,8 @@ const RoutePolylines = ({ routes, selectedRouteIndex, onRouteClick }: { routes: 
                 path: route.overview_path,
                 geodesic: true,
                 strokeColor: isSelected ? '#FF0000' : '#808080', // Red for selected, Grey for others
-                strokeOpacity: isSelected ? 0.8 : 0, // Solid for selected, transparent for others (icons make it dashed)
-                strokeWeight: isSelected ? 8 : 5,
+                strokeOpacity: isSelected ? 0.8 : 0.6,
+                strokeWeight: isSelected ? 8 : 6,
                 zIndex: isSelected ? 2 : 1,
                 icons: isSelected ? undefined : [{
                     icon: lineSymbol,
@@ -227,7 +227,7 @@ function LocationPlanner() {
           setStartPoint({ address: startInputText, location: dmsCoords });
       } else if (startPoint.address !== startInputText) {
           setStartPoint({ address: startInputText, location: null });
-          setDirections(null);
+          if(directions) setDirections(null);
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startInputText]);
@@ -239,7 +239,7 @@ function LocationPlanner() {
           setDestinationPoint({ address: destInputText, location: dmsCoords });
       } else if (destinationPoint.address !== destInputText) {
           setDestinationPoint({ address: destInputText, location: null });
-          setDirections(null);
+          if(directions) setDirections(null);
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destInputText]);
@@ -319,6 +319,7 @@ function LocationPlanner() {
     const directionsService = new routesLibrary.DirectionsService();
     setIsCalculating(true);
     setDirections(null);
+    
     directionsService.route({
         origin: startPoint.location,
         destination: destinationPoint.location,
@@ -328,10 +329,11 @@ function LocationPlanner() {
         setDirections(response);
         setSelectedRouteIndex(0);
         if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
+            const bounds = response.routes[0].bounds;
             const map = new window.google.maps.Map(document.createElement('div')); // Dummy map
-            map.fitBounds(response.routes[0].bounds);
+            map.fitBounds(bounds);
             setMapZoom(map.getZoom() ?? 12);
-            setMapCenter(response.routes[0].bounds.getCenter().toJSON());
+            setMapCenter(bounds.getCenter().toJSON());
         }
     }).catch(e => {
         console.error("Directions request failed", e);
