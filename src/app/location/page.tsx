@@ -206,9 +206,50 @@ function LocationPlanner() {
   const routesLibrary = useMapsLibrary('routes');
   const geometryLibrary = useMapsLibrary('geometry');
 
-  // Effect to get user's location once and set the initial map state.
+  // Effect to save state to localStorage if the user is "logged in"
   useEffect(() => {
-    if (initialLocationSet || !navigator.geolocation) return;
+    if (typeof window !== 'undefined' && localStorage.getItem('userName')) {
+      const stateToSave = {
+        startPoint,
+        destinationPoint,
+        startInputText,
+        destInputText,
+        travelMode,
+      };
+      localStorage.setItem('femigo-location-planner', JSON.stringify(stateToSave));
+    }
+  }, [startPoint, destinationPoint, startInputText, destInputText, travelMode]);
+
+  // Effect to get user's location once, or load from storage.
+  useEffect(() => {
+    if (initialLocationSet) return; // Prevent re-running
+
+    // Try to load from localStorage first if user is "logged in"
+    if (typeof window !== 'undefined' && localStorage.getItem('userName')) {
+      try {
+        const savedStateJSON = localStorage.getItem('femigo-location-planner');
+        if (savedStateJSON) {
+          const savedState = JSON.parse(savedStateJSON);
+          if (savedState.startPoint?.location || savedState.destinationPoint?.location) {
+            if (savedState.startPoint) setStartPoint(savedState.startPoint);
+            if (savedState.destinationPoint) setDestinationPoint(savedState.destinationPoint);
+            if (savedState.startInputText) setStartInputText(savedState.startInputText);
+            if (savedState.destInputText) setDestInputText(savedState.destInputText);
+            if (savedState.travelMode) setTravelMode(savedState.travelMode);
+            setInitialLocationSet(true);
+            return; // Exit if we successfully loaded data
+          }
+        }
+      } catch (e) {
+        console.error("Could not parse saved location data", e);
+      }
+    }
+
+    // If no saved data, get current location
+    if (!navigator.geolocation) {
+      setInitialLocationSet(true); // Prevent re-run
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -216,15 +257,13 @@ function LocationPlanner() {
         setUserLocation(newLocation);
         setStartPoint({ address: "Your Location", location: newLocation });
         setStartInputText("Your Location");
-        if (!initialLocationSet) {
-          setMapCenter(newLocation);
-          setMapZoom(15);
-          setInitialLocationSet(true);
-        }
+        setMapCenter(newLocation);
+        setMapZoom(15);
+        setInitialLocationSet(true);
       },
       () => {
-        setInitialLocationSet(true); // Prevent this from running again
-      }, 
+        setInitialLocationSet(true); // Prevent this from running again on error
+      },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   }, [initialLocationSet]);
