@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, LocateFixed } from 'lucide-react';
-import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -21,9 +21,46 @@ const UserMarker = () => (
     </div>
 );
 
+// A component to render the polyline, since useMap must be used inside <Map>
+const RoutePolyline = ({ path }: { path: { lat: number; lng: number }[] }) => {
+    const map = useMap();
+    const [polyline, setPolyline] = useState<any>(null); // Use any to avoid TS errors without types package
+
+    useEffect(() => {
+        if (!map) {
+            return;
+        }
+        
+        if (polyline) {
+            polyline.setPath(path);
+        } else if (window.google?.maps?.Polyline) {
+            const newPolyline = new window.google.maps.Polyline({
+                path: path,
+                strokeColor: "hsl(var(--primary))",
+                strokeOpacity: 0.8,
+                strokeWeight: 6,
+            });
+            newPolyline.setMap(map);
+            setPolyline(newPolyline);
+        }
+    }, [map, path, polyline]);
+
+    useEffect(() => {
+        // Cleanup on unmount
+        return () => {
+            if (polyline) {
+                polyline.setMap(null);
+            }
+        };
+    }, [polyline]);
+
+    return null;
+};
+
 
 export default function LocationPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationHistory, setLocationHistory] = useState<{ lat: number; lng: number }[]>([]);
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({ lat: 20.5937, lng: 78.9629 });
   const [mapZoom, setMapZoom] = useState(4);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +73,7 @@ export default function LocationPage() {
           const { latitude, longitude } = position.coords;
           const newLocation = { lat: latitude, lng: longitude };
           setUserLocation(newLocation); // This keeps marker updated
+          setLocationHistory(prevHistory => [...prevHistory, newLocation]);
           
           if (!initialLocationSet) {
              setMapCenter(newLocation);
@@ -159,6 +197,10 @@ export default function LocationPage() {
             <AdvancedMarker position={userLocation}>
                <UserMarker />
             </AdvancedMarker>
+          )}
+
+          {locationHistory.length > 1 && (
+            <RoutePolyline path={locationHistory} />
           )}
         </Map>
       </APIProvider>
