@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import dynamic from 'next/dynamic';
 import type { DivIcon, Map as LeafletMap } from 'leaflet';
 
-// Use dynamic import for all react-leaflet components to prevent SSR issues
+// Dynamically import react-leaflet components. This is crucial for Next.js.
+// The loading component provides immediate feedback to the user.
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { 
     ssr: false,
     loading: () => (
@@ -24,6 +25,7 @@ const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline)
 
 type LatLngTuple = [number, number];
 
+// Haversine formula to calculate distance between two lat/lng points in km.
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of the earth in km
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -39,22 +41,20 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 export default function LocationPage() {
   const mapRef = useRef<LeafletMap | null>(null);
-  const watchId = useRef<number | null>(null);
-  const isFirstUpdate = useRef(true);
+  
+  // This key is the definitive solution. It's generated once when the component mounts
+  // and forces React to create a new, clean DOM element for the map, preventing the error.
+  const [mapKey, setMapKey] = useState(Date.now());
   
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
   const [route, setRoute] = useState<LatLngTuple[]>([]);
   const [distance, setDistance] = useState(0);
-  const [mapKey, setMapKey] = useState(0);
 
   const [pulsingIcon, setPulsingIcon] = useState<DivIcon | null>(null);
   const [startIcon, setStartIcon] = useState<DivIcon | null>(null);
 
   useEffect(() => {
-    // Generate a unique key on the client side after the initial render.
-    // This forces a re-mount with a new DOM element on navigation, preventing the initialization error.
-    setMapKey(Date.now());
-
+    // Dynamically import Leaflet to create custom icons only on the client-side.
     import('leaflet').then(L => {
       setPulsingIcon(new L.DivIcon({
         className: 'pulsing-marker-container',
@@ -81,7 +81,8 @@ export default function LocationPage() {
         return;
     }
 
-    watchId.current = navigator.geolocation.watchPosition(
+    // Start watching the user's position.
+    const watchId = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         const newPoint: LatLngTuple = [latitude, longitude];
@@ -96,11 +97,6 @@ export default function LocationPage() {
           }
           return [...prevRoute, newPoint];
         });
-
-        if (isFirstUpdate.current && mapRef.current) {
-            mapRef.current.setView(newPoint, 16);
-            isFirstUpdate.current = false;
-        }
       },
       (error) => {
         console.error("Error getting location", error);
@@ -110,11 +106,20 @@ export default function LocationPage() {
     );
 
     return () => {
-      if (watchId.current) {
-        navigator.geolocation.clearWatch(watchId.current);
-      }
+      navigator.geolocation.clearWatch(watchId);
     };
   }, []);
+
+  // Effect to pan the map to the current location when it updates.
+  // This runs separately to avoid conflicts.
+  useEffect(() => {
+    if (mapRef.current && currentLocation) {
+      if (route.length === 1) { // Only pan automatically on the very first location fix.
+        mapRef.current.setView([currentLocation.latitude, currentLocation.longitude], 16);
+      }
+    }
+  }, [currentLocation, route.length]);
+
 
   const recenterMap = () => {
     if (currentLocation && mapRef.current) {
@@ -125,14 +130,6 @@ export default function LocationPage() {
 
   const speed = currentLocation?.speed ? (currentLocation.speed * 3.6).toFixed(1) : '0.0';
   
-  if (!mapKey) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center bg-[#06010F]">
-            <Loader2 className="h-10 w-10 animate-spin text-white/50" />
-        </div>
-    );
-  }
-
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#06010F]">
         <header className="absolute top-0 left-0 right-0 z-[1000] flex items-center justify-between p-4 bg-gradient-to-b from-[#06010F] to-transparent">
