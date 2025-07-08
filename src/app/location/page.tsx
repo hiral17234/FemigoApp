@@ -42,33 +42,34 @@ function LocationPlanner() {
   
   const places = useMapsLibrary('places');
 
+  // Effect to get user's location and set the initial map state.
   useEffect(() => {
     let watchId: number;
     if (navigator.geolocation) {
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
-          const newLocation: Point = { lat: latitude, lng: longitude };
-          
+          const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
           setUserLocation(newLocation);
           
           if (!initialLocationSet) {
              setMapCenter(newLocation);
              setMapZoom(15);
              setInitialLocationSet(true);
-             if (startPoint.address === "") {
+             // Set start point to user's location only if it hasn't been set.
+             if (!startPoint.location) {
                 setStartPoint({ address: "Your Location", location: newLocation });
              }
           }
         },
-        () => {},
+        () => {}, // Handle geolocation error
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
       
       return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [initialLocationSet, startPoint.address]);
+  }, [initialLocationSet, startPoint.location]);
 
+  // Effect to initialize the Google Places Autocomplete functionality on the input fields.
   useEffect(() => {
     if (!places || !startInputRef.current || !destinationInputRef.current) return;
 
@@ -80,7 +81,7 @@ function LocationPlanner() {
         fields: ['geometry.location', 'formatted_address', 'name'],
     });
 
-    const startListener = startAutocomplete.addListener('place_changed', () => {
+    startAutocomplete.addListener('place_changed', () => {
         const place = startAutocomplete.getPlace();
         if (place.geometry?.location) {
             const newLocation: Point = {
@@ -93,7 +94,7 @@ function LocationPlanner() {
         }
     });
 
-    const destListener = destinationAutocomplete.addListener('place_changed', () => {
+    destinationAutocomplete.addListener('place_changed', () => {
         const place = destinationAutocomplete.getPlace();
         if (place.geometry?.location) {
             const newLocation: Point = {
@@ -104,9 +105,12 @@ function LocationPlanner() {
         }
     });
 
+    // Clean up the listeners when the component unmounts.
     return () => {
-      startListener.remove();
-      destListener.remove();
+        if (window.google) {
+            google.maps.event.clearInstanceListeners(startAutocomplete);
+            google.maps.event.clearInstanceListeners(destinationAutocomplete);
+        }
     }
   }, [places]);
 
