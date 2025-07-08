@@ -180,8 +180,6 @@ function LocationPlanner() {
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [isCalculating, setIsCalculating] =useState(false);
-  const [searchedLocation, setSearchedLocation] = useState<Point | null>(null);
-
 
   const [isTracking, setIsTracking] = useState(false);
   const [livePath, setLivePath] = useState<Point[]>([]);
@@ -228,7 +226,6 @@ function LocationPlanner() {
 
     const startListener = startAutocomplete.addListener('place_changed', () => {
       const place = startAutocomplete.getPlace();
-      setSearchedLocation(null);
       if (place.geometry?.location) {
           setStartPoint({ 
               address: place.formatted_address || place.name || '', 
@@ -239,7 +236,6 @@ function LocationPlanner() {
     
     const destListener = destinationAutocomplete.addListener('place_changed', () => {
       const place = destinationAutocomplete.getPlace();
-      setSearchedLocation(null);
       if (place.geometry?.location) {
           setDestinationPoint({ 
               address: place.formatted_address || place.name || '',
@@ -268,7 +264,7 @@ function LocationPlanner() {
   // Effect to fetch directions when route parameters change.
   useEffect(() => {
     if (!routesLibrary || !startPoint.location || !destinationPoint.location) {
-      setDirections(null);
+      if (directions) setDirections(null);
       return;
     }
     const directionsService = new routesLibrary.DirectionsService();
@@ -293,7 +289,8 @@ function LocationPlanner() {
         setIsCalculating(false);
         setTimeout(() => { isRecalculatingRef.current = false; }, 2000);
     });
-  }, [routesLibrary, startPoint.location, destinationPoint.location, travelMode, toast]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routesLibrary, startPoint.location, destinationPoint.location, travelMode]);
   
   // Effect to manage live location tracking
   useEffect(() => {
@@ -372,11 +369,9 @@ function LocationPlanner() {
   
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const address = e.target.value;
-      setSearchedLocation(null);
       const dmsCoords = parseDMSToLatLng(address);
       if (dmsCoords) {
           setStartPoint({ address, location: dmsCoords });
-          setSearchedLocation(dmsCoords);
       } else {
           setStartPoint({ address: address, location: null });
           if (address === "") setDirections(null);
@@ -385,11 +380,9 @@ function LocationPlanner() {
   
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const address = e.target.value;
-      setSearchedLocation(null);
       const dmsCoords = parseDMSToLatLng(address);
       if (dmsCoords) {
           setDestinationPoint({ address, location: dmsCoords });
-          setSearchedLocation(dmsCoords);
       } else {
           setDestinationPoint({ address: address, location: null });
           if (address === "") setDirections(null);
@@ -471,7 +464,16 @@ function LocationPlanner() {
             <div className="relative flex-1 w-full overflow-hidden min-h-[200px] md:min-h-0">
                 <Map center={mapCenter} zoom={mapZoom} gestureHandling={'greedy'} disableDefaultUI={true} mapId="a2b4a5d6e7f8g9h0" onCenterChanged={(e) => setMapCenter(e.detail.center)}>
                     {userLocation && <AdvancedMarker position={userLocation}><UserMarker /></AdvancedMarker>}
-                    {searchedLocation && !directions && <AdvancedMarker position={searchedLocation}><SearchedLocationMarker /></AdvancedMarker>}
+                    {!directions && startPoint.location && (
+                        <AdvancedMarker position={startPoint.location}>
+                            <SearchedLocationMarker />
+                        </AdvancedMarker>
+                    )}
+                    {!directions && destinationPoint.location && (
+                        <AdvancedMarker position={destinationPoint.location}>
+                            <SearchedLocationMarker />
+                        </AdvancedMarker>
+                    )}
                     {directions && <RoutePolylines routes={directions.routes} selectedRouteIndex={selectedRouteIndex} onRouteClick={onRouteClick} />}
                     {isTracking && <LiveTrackingPolyline path={livePath} />}
                 </Map>
