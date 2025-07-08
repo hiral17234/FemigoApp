@@ -194,7 +194,6 @@ function LocationPlanner() {
   const routesLibrary = useMapsLibrary('routes');
   const geometryLibrary = useMapsLibrary('geometry');
 
-
   // Effect to get user's location once and set the initial map state.
   useEffect(() => {
     if (initialLocationSet || !navigator.geolocation) return;
@@ -250,16 +249,22 @@ function LocationPlanner() {
     }
   }, [placesLibrary]);
 
-  // Effect to re-center the map when the start or destination point changes.
+  // Effect to re-center the map when a single point is entered.
   useEffect(() => {
-    if (startPoint.location && startPoint.address !== "Your Location") {
-      setMapCenter(startPoint.location);
-      setMapZoom(15);
-    } else if (destinationPoint.location) {
-        setMapCenter(destinationPoint.location);
+    let pointToCenter: Point | null = null;
+    if (startPoint.location && !destinationPoint.location) {
+        pointToCenter = startPoint.location;
+    } else if (!startPoint.location && destinationPoint.location) {
+        pointToCenter = destinationPoint.location;
+    } else if (startPoint.location && destinationPoint.location && !directions) {
+        pointToCenter = destinationPoint.location;
+    }
+
+    if (pointToCenter) {
+        setMapCenter(pointToCenter);
         setMapZoom(15);
     }
-  }, [startPoint.location, destinationPoint.location]);
+  }, [startPoint.location, destinationPoint.location, directions]);
 
   // Effect to fetch directions when route parameters change.
   useEffect(() => {
@@ -278,9 +283,11 @@ function LocationPlanner() {
     }).then(response => {
         setDirections(response);
         setSelectedRouteIndex(0);
-        if(response.routes.length > 0 && response.routes[0].bounds) {
-            setMapCenter(destinationPoint.location!);
-            setMapZoom(12);
+        if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
+            const map = new window.google.maps.Map(document.createElement('div')); // Dummy map
+            map.fitBounds(response.routes[0].bounds);
+            setMapZoom(map.getZoom() ?? 12);
+            setMapCenter(response.routes[0].bounds.getCenter().toJSON());
         }
     }).catch(e => {
         console.error("Directions request failed", e);
@@ -368,32 +375,23 @@ function LocationPlanner() {
   };
   
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const address = e.target.value;
-      const dmsCoords = parseDMSToLatLng(address);
-
-      if (dmsCoords) {
-          setStartPoint({ address, location: dmsCoords });
-      } else {
-          setStartPoint(prev => ({...prev, address }));
-          if (address === "") {
-              setStartPoint({ address: "", location: null });
-              setDirections(null);
-          }
-      }
+    const newAddress = e.target.value;
+    const dmsCoords = parseDMSToLatLng(newAddress);
+    if (dmsCoords) {
+        setStartPoint({ address: newAddress, location: dmsCoords });
+    } else {
+        setStartPoint({ address: newAddress, location: null });
+    }
   }
   
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const address = e.target.value;
-      const dmsCoords = parseDMSToLatLng(address);
-      if (dmsCoords) {
-          setDestinationPoint({ address, location: dmsCoords });
-      } else {
-          setDestinationPoint(prev => ({...prev, address }));
-          if (address === "") {
-              setDestinationPoint({ address: "", location: null });
-              setDirections(null);
-          }
-      }
+    const newAddress = e.target.value;
+    const dmsCoords = parseDMSToLatLng(newAddress);
+    if (dmsCoords) {
+        setDestinationPoint({ address: newAddress, location: dmsCoords });
+    } else {
+        setDestinationPoint({ address: newAddress, location: null });
+    }
   }
 
   const handleStartFocus = () => startPoint?.address === "Your Location" && setStartPoint({ address: "", location: null });
@@ -471,8 +469,8 @@ function LocationPlanner() {
             <div className="relative flex-1 w-full overflow-hidden min-h-[200px] md:min-h-0">
                 <Map center={mapCenter} zoom={mapZoom} gestureHandling={'greedy'} disableDefaultUI={true} mapId="a2b4a5d6e7f8g9h0" onCenterChanged={(e) => setMapCenter(e.detail.center)}>
                     {userLocation && <AdvancedMarker position={userLocation}><UserMarker /></AdvancedMarker>}
-                    {startPoint.location && !directions && <AdvancedMarker position={startPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
-                    {destinationPoint.location && !directions && <AdvancedMarker position={destinationPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
+                    {!directions && startPoint.location && <AdvancedMarker position={startPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
+                    {!directions && destinationPoint.location && <AdvancedMarker position={destinationPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
                     {directions && <RoutePolylines routes={directions.routes} selectedRouteIndex={selectedRouteIndex} onRouteClick={onRouteClick} />}
                     {isTracking && <LiveTrackingPolyline path={livePath} />}
                 </Map>
