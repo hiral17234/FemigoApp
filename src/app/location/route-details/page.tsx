@@ -4,7 +4,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Route, AlertTriangle, MessageSquare, Lamp, Users, ShieldCheck, MapPin, Cloudy, Building, BadgePercent } from 'lucide-react';
+import { ArrowLeft, Route, AlertTriangle, MessageSquare, Lamp, Users, ShieldCheck, MapPin, Cloudy, Building, BadgePercent, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -98,6 +98,11 @@ function RouteDetailsContent() {
                             icon={ShieldCheck}
                             title="Area Crime Reports"
                             text={details.crimeSummary}
+                        />
+                        <PlaceholderSection 
+                            icon={ShieldAlert}
+                            title="User-Submitted Alerts"
+                            text="No recent user-submitted alerts for this route."
                         />
                         <PlaceholderSection 
                             icon={Building}

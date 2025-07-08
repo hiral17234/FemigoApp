@@ -627,7 +627,7 @@ function LocationPlanner() {
                                       </div>
                                       <Link href={routeHref} passHref>
                                         <Button asChild variant="secondary" size="sm" className="shrink-0">
-                                            <a>View Details</a>
+                                            <a>More Info</a>
                                         </Button>
                                       </Link>
                                     </div>
