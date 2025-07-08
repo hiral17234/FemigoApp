@@ -121,6 +121,7 @@ export default function LocationPage() {
           if (!initialLocationSet) {
              setMapCenter(newLocation);
              setMapZoom(15);
+             setSnappedPath([newLocation]);
              setInitialLocationSet(true);
           }
           setError(null);
@@ -190,134 +191,134 @@ export default function LocationPage() {
   ]
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-0 sm:p-4 text-white">
-      <Card className="w-full h-screen sm:h-auto sm:max-w-md overflow-hidden rounded-none sm:rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50 flex flex-col">
-        <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4 border-b border-purple-900/50">
-          <div className='flex items-center gap-4'>
-            <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
-                  <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-             <div className="flex items-center gap-1 text-2xl font-bold text-white">
-                Femigo
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
-                    <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
-                </svg>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 flex-grow flex flex-col gap-4">
-            <div className="relative flex flex-col gap-2">
-                <div className="relative">
-                    <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose start location" />
-                </div>
-                <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                    <Input className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose destination" />
-                </div>
-                <Button variant="outline" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
-                    <ArrowRightLeft className="h-4 w-4"/>
+    <main className="h-screen w-full flex flex-col bg-[#06010F]">
+      <div className="w-full max-w-md mx-auto flex flex-col flex-1">
+        <Card className="w-full flex-1 flex flex-col rounded-none sm:rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50 overflow-hidden my-0 sm:my-4">
+          <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4 border-b border-purple-900/50 shrink-0">
+            <div className='flex items-center gap-4'>
+              <Link href="/dashboard">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
+                    <ArrowLeft className="h-5 w-5" />
                 </Button>
-            </div>
-            
-            <div className="flex items-center justify-around bg-gray-900/70 p-1 rounded-full">
-                {travelModes.map((mode) => (
-                    <Button 
-                        key={mode.name}
-                        variant="ghost" 
-                        className={cn(
-                            "flex-1 rounded-full text-white/70 hover:text-white",
-                            travelMode === mode.name && "bg-primary/80 text-white hover:bg-primary/90"
-                        )}
-                        onClick={() => setTravelMode(mode.name as TravelMode)}
-                    >
-                       <mode.icon className="h-5 w-5" />
-                    </Button>
-                ))}
-            </div>
-
-            <div className="relative flex-grow w-full rounded-lg overflow-hidden">
-                <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places']}>
-                  <Map
-                  center={mapCenter}
-                  zoom={mapZoom}
-                  onCameraChanged={handleCameraChange}
-                  gestureHandling={'greedy'}
-                  disableDefaultUI={true}
-                  mapId="a2b4a5d6e7f8g9h0"
-                  >
-                  {userLocation && (
-                      <AdvancedMarker position={userLocation}>
-                        <UserMarker />
-                      </AdvancedMarker>
-                  )}
-                  <RoutePolyline path={snappedPath} />
-                  </Map>
-                </APIProvider>
-                 <div className="absolute top-2 right-2 z-10">
-                  <TooltipProvider>
-                      <Tooltip>
-                          <TooltipTrigger asChild>
-                              <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={handleRecenter}
-                                  disabled={!userLocation}
-                                  className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full"
-                                  >
-                                  <LocateFixed className="h-5 w-5" />
-                                  <span className="sr-only">Re-center on me</span>
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                              <p>Re-center on me</p>
-                          </TooltipContent>
-                      </Tooltip>
-                  </TooltipProvider>
+              </Link>
+              <div className="flex items-center gap-1 text-2xl font-bold text-white">
+                  Femigo
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
+                      <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
+                  </svg>
               </div>
-               {error && (
-                  <div className="absolute top-4 left-1/2 z-10 w-full max-w-md -translate-x-1/2 p-4">
-                  <Alert variant="destructive">
-                      <AlertTitle>Location Error</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                  </div>
-              )}
-               {!userLocation && !error && (
-                  <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-                      <div className="text-center space-y-4 text-foreground">
-                          <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
-                              <div className="absolute h-full w-full animate-ping rounded-full bg-primary/50" />
-                              <Skeleton className="h-full w-full rounded-full" />
-                          </div>
-                          <h2 className="text-2xl font-bold">Finding your location...</h2>
-                          <p className="text-muted-foreground">Please allow location access if prompted.</p>
-                      </div>
-                  </div>
-              )}
             </div>
+          </CardHeader>
+          <CardContent className="p-4 flex-1 flex flex-col gap-4 min-h-0">
+              <div className="relative flex flex-col gap-2 shrink-0">
+                  <div className="relative">
+                      <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose start location" />
+                  </div>
+                  <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                      <Input className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose destination" />
+                  </div>
+                  <Button variant="outline" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
+                      <ArrowRightLeft className="h-4 w-4"/>
+                  </Button>
+              </div>
+              
+              <div className="flex items-center justify-around bg-gray-900/70 p-1 rounded-full shrink-0">
+                  {travelModes.map((mode) => (
+                      <Button 
+                          key={mode.name}
+                          variant="ghost" 
+                          className={cn(
+                              "flex-1 rounded-full text-white/70 hover:text-white",
+                              travelMode === mode.name && "bg-primary/80 text-white hover:bg-primary/90"
+                          )}
+                          onClick={() => setTravelMode(mode.name as TravelMode)}
+                      >
+                        <mode.icon className="h-5 w-5" />
+                      </Button>
+                  ))}
+              </div>
 
-            <div className="flex flex-col gap-4">
-                <Button className="w-full py-6 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90">
-                    START
-                </Button>
-                <div className="flex justify-around items-center bg-gray-900/50 p-2 rounded-2xl">
-                    <Button variant="ghost" className="text-white font-semibold">
-                        <Share2 className="mr-2 h-5 w-5 text-primary" />
-                        Share Live Location
-                    </Button>
-                     <Button variant="ghost" className="text-white font-semibold">
-                        <Footprints className="mr-2 h-5 w-5 text-primary" />
-                        Track Me
-                    </Button>
+              <div className="relative flex-1 w-full rounded-lg overflow-hidden min-h-0">
+                  <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places']}>
+                    <Map
+                    center={mapCenter}
+                    zoom={mapZoom}
+                    onCameraChanged={handleCameraChange}
+                    gestureHandling={'greedy'}
+                    disableDefaultUI={true}
+                    mapId="a2b4a5d6e7f8g9h0"
+                    >
+                    {userLocation && (
+                        <AdvancedMarker position={userLocation}>
+                          <UserMarker />
+                        </AdvancedMarker>
+                    )}
+                    <RoutePolyline path={snappedPath} />
+                    </Map>
+                  </APIProvider>
+                  <div className="absolute top-2 right-2 z-10">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleRecenter}
+                                    disabled={!userLocation}
+                                    className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full"
+                                    >
+                                    <LocateFixed className="h-5 w-5" />
+                                    <span className="sr-only">Re-center on me</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Re-center on me</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
-            </div>
-        </CardContent>
-      </Card>
+                {error && (
+                    <div className="absolute top-4 left-1/2 z-10 w-full max-w-md -translate-x-1/2 p-4">
+                    <Alert variant="destructive">
+                        <AlertTitle>Location Error</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                    </div>
+                )}
+                {!userLocation && !error && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+                        <div className="text-center space-y-4 text-foreground">
+                            <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
+                                <div className="absolute h-full w-full animate-ping rounded-full bg-primary/50" />
+                                <Skeleton className="h-full w-full rounded-full" />
+                            </div>
+                            <h2 className="text-2xl font-bold">Finding your location...</h2>
+                            <p className="text-muted-foreground">Please allow location access if prompted.</p>
+                        </div>
+                    </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4 shrink-0">
+                  <Button className="w-full py-6 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90">
+                      START
+                  </Button>
+                  <div className="flex justify-around items-center bg-gray-900/50 p-2 rounded-2xl">
+                      <Button variant="ghost" className="text-white font-semibold">
+                          <Share2 className="mr-2 h-5 w-5 text-primary" />
+                          Share Live Location
+                      </Button>
+                      <Button variant="ghost" className="text-white font-semibold">
+                          <Footprints className="mr-2 h-5 w-5 text-primary" />
+                          Track Me
+                      </Button>
+                  </div>
+              </div>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   );
 }
-
-    
