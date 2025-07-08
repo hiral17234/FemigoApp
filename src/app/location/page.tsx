@@ -252,6 +252,17 @@ function LocationPlanner() {
 
 
 export default function LocationPage() {
+  if (!GOOGLE_MAPS_API_KEY) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
+            <div className="rounded-lg bg-card p-8 text-card-foreground">
+                <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
+                <p className="mt-2 text-muted-foreground">Google Maps API Key is missing. Please add <code className="font-mono bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables.</p>
+            </div>
+        </div>
+    );
+  }
+
   return (
     <main className="h-screen w-full flex flex-col bg-[#06010F]">
        <APIProvider apiKey={GOOGLE_MAPS_API_KEY as string} libraries={['marker', 'places']}>
