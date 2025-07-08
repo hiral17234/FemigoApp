@@ -51,8 +51,7 @@
     "genkit": "^1.0.0",
     "@genkit-ai/googleai": "^1.0.0",
     "firebase": "^10.12.2",
-    "react-map-gl": "^7.1.7",
-    "mapbox-gl": "^3.5.1"
+    "@vis.gl/react-google-maps": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",
