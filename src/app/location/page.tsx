@@ -39,6 +39,8 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 export default function LocationPage() {
   const mapRef = useRef<LeafletMap | null>(null);
+  const watchId = useRef<number | null>(null);
+  const isFirstUpdate = useRef(true);
   
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
   const [route, setRoute] = useState<LatLngTuple[]>([]);
@@ -46,8 +48,6 @@ export default function LocationPage() {
 
   const [pulsingIcon, setPulsingIcon] = useState<DivIcon | null>(null);
   const [startIcon, setStartIcon] = useState<DivIcon | null>(null);
-
-  const watchId = useRef<number | null>(null);
 
   useEffect(() => {
     import('leaflet').then(L => {
@@ -76,8 +76,6 @@ export default function LocationPage() {
         return;
     }
 
-    let isFirstUpdate = true;
-
     watchId.current = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -94,9 +92,9 @@ export default function LocationPage() {
           return [...prevRoute, newPoint];
         });
 
-        if (isFirstUpdate && mapRef.current) {
+        if (isFirstUpdate.current && mapRef.current) {
             mapRef.current.setView(newPoint, 16);
-            isFirstUpdate = false;
+            isFirstUpdate.current = false;
         }
       },
       (error) => {
