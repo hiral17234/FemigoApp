@@ -7,8 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin, Wind, Milestone } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import dynamic from 'next/dynamic';
-import type { Map as LeafletMap } from 'leaflet';
-import L from 'leaflet';
+import type { Map as LeafletMap, DivIcon } from 'leaflet';
 
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
@@ -30,26 +29,6 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return d;
 }
 
-const pulsingIcon = new L.DivIcon({
-  className: 'pulsing-marker-container',
-  html: '<div class="relative flex h-4 w-4"><div class="absolute h-full w-full rounded-full bg-blue-400 border-2 border-white pulse-marker"></div></div>',
-  iconSize: [16, 16],
-  iconAnchor: [8, 8]
-});
-
-const startIcon = new L.DivIcon({
-    className: 'start-marker-container',
-    html: `
-        <div class="flex flex-col items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#FF0080" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            <span class="text-xs font-bold text-white bg-black/50 px-1 rounded -mt-2">Start</span>
-        </div>
-    `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32]
-});
-
-
 export default function LocationPage() {
   const [center, setCenter] = useState<LatLngTuple>([20.5937, 78.9629]); // India center
   const [zoom, setZoom] = useState(5);
@@ -57,8 +36,35 @@ export default function LocationPage() {
   const [route, setRoute] = useState<LatLngTuple[]>([]);
   const [distance, setDistance] = useState(0);
 
+  const [pulsingIcon, setPulsingIcon] = useState<DivIcon | null>(null);
+  const [startIcon, setStartIcon] = useState<DivIcon | null>(null);
+
   const mapRef = useRef<LeafletMap | null>(null);
   const watchId = useRef<number | null>(null);
+
+  useEffect(() => {
+    // Dynamically import Leaflet on the client side and create icons
+    import('leaflet').then(L => {
+      setPulsingIcon(new L.DivIcon({
+        className: 'pulsing-marker-container',
+        html: '<div class="relative flex h-4 w-4"><div class="absolute h-full w-full rounded-full bg-blue-400 border-2 border-white pulse-marker"></div></div>',
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      }));
+
+      setStartIcon(new L.DivIcon({
+          className: 'start-marker-container',
+          html: `
+              <div class="flex flex-col items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#FF0080" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span class="text-xs font-bold text-white bg-black/50 px-1 rounded -mt-2">Start</span>
+              </div>
+          `,
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+      }));
+    });
+  }, []);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -137,11 +143,11 @@ export default function LocationPage() {
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
             
-            {currentLocation && (
+            {currentLocation && pulsingIcon && (
                 <Marker position={[currentLocation.latitude, currentLocation.longitude]} icon={pulsingIcon} />
             )}
 
-            {route.length > 0 && (
+            {route.length > 0 && startIcon && (
                  <Marker position={route[0]} icon={startIcon} />
             )}
 
