@@ -4,7 +4,7 @@
 import 'leaflet/dist/leaflet.css';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Wind, Milestone } from 'lucide-react';
+import { ArrowLeft, MapPin, Wind, Milestone, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import dynamic from 'next/dynamic';
 import type { Map as LeafletMap, DivIcon } from 'leaflet';
@@ -30,6 +30,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function LocationPage() {
+  const [isClient, setIsClient] = useState(false);
   const [center, setCenter] = useState<LatLngTuple>([20.5937, 78.9629]); // India center
   const [zoom, setZoom] = useState(5);
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
@@ -41,6 +42,10 @@ export default function LocationPage() {
 
   const mapRef = useRef<LeafletMap | null>(null);
   const watchId = useRef<number | null>(null);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   useEffect(() => {
     // Dynamically import Leaflet on the client side and create icons
@@ -118,6 +123,14 @@ export default function LocationPage() {
   };
 
   const speed = currentLocation?.speed ? (currentLocation.speed * 3.6).toFixed(1) : '0.0';
+  
+  if (!isClient) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-[#06010F] text-white/50">
+            <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+    );
+  }
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#06010F]">
