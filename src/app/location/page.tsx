@@ -55,10 +55,7 @@ function LocationPlanner() {
              setMapCenter(newLocation);
              setMapZoom(15);
              setInitialLocationSet(true);
-             // Set start point to user's location only if it hasn't been set.
-             if (!startPoint.location) {
-                setStartPoint({ address: "Your Location", location: newLocation });
-             }
+             setStartPoint({ address: "Your Location", location: newLocation });
           }
         },
         () => {}, // Handle geolocation error
@@ -67,7 +64,7 @@ function LocationPlanner() {
       
       return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [initialLocationSet, startPoint.location]);
+  }, [initialLocationSet]);
 
   // Effect to initialize the Google Places Autocomplete functionality on the input fields.
   useEffect(() => {
@@ -81,51 +78,49 @@ function LocationPlanner() {
         fields: ['geometry.location', 'formatted_address', 'name'],
     });
 
-    startAutocomplete.addListener('place_changed', () => {
-        const place = startAutocomplete.getPlace();
-        if (place.geometry?.location) {
+    const onPlaceChanged = (setter: React.Dispatch<React.SetStateAction<Place>>, mapSetter: (loc:Point) => void) => () => {
+        const place = (setter === setStartPoint ? startAutocomplete : destinationAutocomplete).getPlace();
+         if (place.geometry?.location) {
             const newLocation: Point = {
                 lat: place.geometry.location.lat(),
                 lng: place.geometry.location.lng(),
             };
-            setStartPoint({ address: place.formatted_address || place.name || '', location: newLocation });
-            setMapCenter(newLocation);
-            setMapZoom(15);
+            setter({ address: place.formatted_address || place.name || '', location: newLocation });
+            if (setter === setStartPoint) {
+                mapSetter(newLocation);
+            }
         }
-    });
-
-    destinationAutocomplete.addListener('place_changed', () => {
-        const place = destinationAutocomplete.getPlace();
-        if (place.geometry?.location) {
-            const newLocation: Point = {
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng(),
-            };
-            setDestinationPoint({ address: place.formatted_address || place.name || '', location: newLocation });
-        }
-    });
+    }
+    
+    const startListener = startAutocomplete.addListener('place_changed', onPlaceChanged(setStartPoint, setMapCenter));
+    const destListener = destinationAutocomplete.addListener('place_changed', onPlaceChanged(setDestinationPoint, () => {}));
 
     // Clean up the listeners when the component unmounts.
     return () => {
         if (window.google) {
-            google.maps.event.clearInstanceListeners(startAutocomplete);
-            google.maps.event.clearInstanceListeners(destinationAutocomplete);
+            startListener.remove();
+            destListener.remove();
         }
     }
   }, [places]);
 
   const handleSwapLocations = () => {
-      const tempStart = startPoint;
       setStartPoint(destinationPoint);
-      setDestinationPoint(tempStart);
+      setDestinationPoint(startPoint);
   };
 
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setStartPoint({ ...startPoint, address: e.target.value });
+    if(e.target.value === "") {
+        setStartPoint({ address: "", location: null });
+    }
   };
   
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDestinationPoint({ ...destinationPoint, address: e.target.value });
+    if(e.target.value === "") {
+        setDestinationPoint({ address: "", location: null });
+    }
   };
 
   const handleStartFocus = () => {
