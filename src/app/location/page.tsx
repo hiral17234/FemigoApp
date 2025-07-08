@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Road, AlertTriangle, MessageSquare, Lamp, Users, Info } from 'lucide-react';
+import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Route, AlertTriangle, MessageSquare, Lamp, Users, Info } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -231,30 +231,34 @@ function LocationPlanner() {
   
   // Effect to handle coordinate input for start point
   useEffect(() => {
-      const dmsCoords = parseDMSToLatLng(startInputText);
-      if (dmsCoords) {
-          setStartPoint({ address: startInputText, location: dmsCoords });
-          if (directions) {
-            setDirections(null);
-            setRouteDetails([]);
-          }
-      } else if (startInputText.toLowerCase() === 'your location' && userLocation) {
-          setStartPoint({ address: "Your Location", location: userLocation });
-      }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startInputText, userLocation]);
+    const handleCoordinateInput = (text: string, setPoint: (place: Place) => void) => {
+        const dmsCoords = parseDMSToLatLng(text);
+        if (dmsCoords) {
+            setPoint({ address: text, location: dmsCoords });
+            if (directions) {
+                setDirections(null);
+                setRouteDetails([]);
+            }
+        }
+    };
+    handleCoordinateInput(startInputText, setStartPoint);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startInputText]);
 
   // Effect to handle coordinate input for destination point
   useEffect(() => {
-      const dmsCoords = parseDMSToLatLng(destInputText);
-      if (dmsCoords) {
-          setDestinationPoint({ address: destInputText, location: dmsCoords });
-           if (directions) {
-            setDirections(null);
-            setRouteDetails([]);
-          }
-      }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+     const handleCoordinateInput = (text: string, setPoint: (place: Place) => void) => {
+        const dmsCoords = parseDMSToLatLng(text);
+        if (dmsCoords) {
+            setPoint({ address: text, location: dmsCoords });
+            if (directions) {
+                setDirections(null);
+                setRouteDetails([]);
+            }
+        }
+    };
+    handleCoordinateInput(destInputText, setDestinationPoint);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destInputText]);
 
 
@@ -502,13 +506,7 @@ function LocationPlanner() {
                     <Input 
                       ref={startInputRef} 
                       value={startInputText} 
-                      onChange={(e) => {
-                        setStartInputText(e.target.value);
-                        if (startPoint.location && e.target.value !== startPoint.address) {
-                            setStartPoint({ address: e.target.value, location: null });
-                            setDirections(null); setRouteDetails([]);
-                        }
-                      }} 
+                      onChange={(e) => setStartInputText(e.target.value)} 
                       onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
                       className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
                 </div>
@@ -517,13 +515,7 @@ function LocationPlanner() {
                     <Input 
                         ref={destinationInputRef} 
                         value={destInputText} 
-                        onChange={(e) => {
-                            setDestInputText(e.target.value);
-                            if (destinationPoint.location && e.target.value !== destinationPoint.address) {
-                                setDestinationPoint({ address: e.target.value, location: null });
-                                setDirections(null); setRouteDetails([]);
-                            }
-                        }} 
+                        onChange={(e) => setDestInputText(e.target.value)} 
                         className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
                 </div>
                 <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
@@ -590,7 +582,7 @@ function LocationPlanner() {
                                       </Button>
                                     </div>
                                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
-                                      <div className="flex items-center gap-2" title="Road Quality"><Road className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
+                                      <div className="flex items-center gap-2" title="Road Quality"><Route className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
                                       <div className="flex items-center gap-2" title="Historical Incidents"><AlertTriangle className="h-4 w-4 text-primary/80" /><span>{details.incidents} Incidents</span></div>
                                       <div className="flex items-center gap-2" title="User Reviews"><MessageSquare className="h-4 w-4 text-primary/80" /><span>{details.reviewsCount} Reviews</span></div>
                                       <div className="flex items-center gap-2" title="Lighting Condition"><Lamp className="h-4 w-4 text-primary/80" /><span>{details.lighting}</span></div>
@@ -645,4 +637,3 @@ export default function LocationPage() {
     </main>
   );
 }
-
