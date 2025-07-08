@@ -174,6 +174,9 @@ function LocationPlanner() {
   const [initialLocationSet, setInitialLocationSet] = useState(false);
   const [travelMode, setTravelMode] = useState<TravelMode>('WALKING');
 
+  const [startInputText, setStartInputText] = useState('');
+  const [destInputText, setDestInputText] = useState('');
+
   const [startPoint, setStartPoint] = useState<Place>({ address: "", location: null });
   const [destinationPoint, setDestinationPoint] = useState<Place>({ address: "", location: null });
   
@@ -203,6 +206,7 @@ function LocationPlanner() {
         const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
         setUserLocation(newLocation);
         setStartPoint({ address: "Your Location", location: newLocation });
+        setStartInputText("Your Location");
         if (!initialLocationSet) {
           setMapCenter(newLocation);
           setMapZoom(15);
@@ -215,6 +219,30 @@ function LocationPlanner() {
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   }, [initialLocationSet]);
+  
+  // Effect to handle start point logic from text input
+  useEffect(() => {
+      const dmsCoords = parseDMSToLatLng(startInputText);
+      if (dmsCoords) {
+          setStartPoint({ address: startInputText, location: dmsCoords });
+      } else if (startPoint.address !== startInputText) {
+          setStartPoint({ address: startInputText, location: null });
+          setDirections(null);
+      }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startInputText]);
+
+  // Effect to handle destination point logic from text input
+  useEffect(() => {
+      const dmsCoords = parseDMSToLatLng(destInputText);
+      if (dmsCoords) {
+          setDestinationPoint({ address: destInputText, location: dmsCoords });
+      } else if (destinationPoint.address !== destInputText) {
+          setDestinationPoint({ address: destInputText, location: null });
+          setDirections(null);
+      }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destInputText]);
 
   // Effect to initialize Google Places Autocomplete.
   useEffect(() => {
@@ -226,20 +254,20 @@ function LocationPlanner() {
     const startListener = startAutocomplete.addListener('place_changed', () => {
       const place = startAutocomplete.getPlace();
       if (place.geometry?.location) {
-          setStartPoint({ 
-              address: place.formatted_address || place.name || '', 
-              location: { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() }
-          });
+          const newLocation = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+          const newAddress = place.formatted_address || place.name || '';
+          setStartPoint({ address: newAddress, location: newLocation });
+          setStartInputText(newAddress);
       }
     });
     
     const destListener = destinationAutocomplete.addListener('place_changed', () => {
       const place = destinationAutocomplete.getPlace();
       if (place.geometry?.location) {
-          setDestinationPoint({ 
-              address: place.formatted_address || place.name || '',
-              location: { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() }
-          });
+          const newLocation = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+          const newAddress = place.formatted_address || place.name || '';
+          setDestinationPoint({ address: newAddress, location: newLocation });
+          setDestInputText(newAddress);
       }
     });
 
@@ -258,13 +286,16 @@ function LocationPlanner() {
 
       if (startPoint.location && destinationPoint.location) {
           // If we have both, fit them in the view.
-          const bounds = new window.google.maps.LatLngBounds();
-          bounds.extend(startPoint.location);
-          bounds.extend(destinationPoint.location);
-          // We can't use fitBounds directly, but we can get the center.
-          pointToCenter = bounds.getCenter().toJSON();
-          // A proper zoom calculation is complex, so we'll just use a wider default.
-          zoomLevel = 12;
+          if (window.google?.maps?.LatLngBounds) {
+            const bounds = new window.google.maps.LatLngBounds();
+            bounds.extend(startPoint.location);
+            bounds.extend(destinationPoint.location);
+            pointToCenter = bounds.getCenter().toJSON();
+            // This is a rough approximation for zoom level
+             const map = new window.google.maps.Map(document.createElement('div'));
+             map.fitBounds(bounds);
+             zoomLevel = map.getZoom() ?? 12;
+          }
 
       } else if (startPoint.location) {
           pointToCenter = startPoint.location;
@@ -363,6 +394,7 @@ function LocationPlanner() {
                     isRecalculatingRef.current = true;
                     toast({ variant: "destructive", title: "You are off-route!", description: "Recalculating..." });
                     setStartPoint({ address: "Your Location", location: newLocation });
+                    setStartInputText("Your Location");
                 }
             }
         },
@@ -385,21 +417,10 @@ function LocationPlanner() {
   const handleSwapLocations = () => {
     setStartPoint(destinationPoint);
     setDestinationPoint(startPoint);
+    setStartInputText(destInputText);
+    setDestInputText(startInputText);
   };
   
-  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newAddress = e.target.value;
-    const dmsCoords = parseDMSToLatLng(newAddress);
-    setStartPoint({ address: newAddress, location: dmsCoords });
-  }
-  
-  const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newAddress = e.target.value;
-    const dmsCoords = parseDMSToLatLng(newAddress);
-    setDestinationPoint({ address: newAddress, location: dmsCoords });
-  }
-
-  const handleStartFocus = () => startPoint?.address === "Your Location" && setStartPoint({ address: "", location: null });
   const handleStartTracking = () => {
       if (isTracking) {
         setIsTracking(false);
@@ -447,11 +468,11 @@ function LocationPlanner() {
             <div className="relative flex flex-col gap-2 shrink-0 p-4">
                 <div className="relative">
                     <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input ref={startInputRef} value={startPoint?.address || ''} onChange={handleStartChange} onFocus={handleStartFocus} className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
+                    <Input ref={startInputRef} value={startInputText} onChange={(e) => setStartInputText(e.target.value)} onFocus={() => startInputText === 'Your Location' && setStartInputText('')} className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
                 </div>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                    <Input ref={destinationInputRef} value={destinationPoint?.address || ''} onChange={handleDestinationChange} className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
+                    <Input ref={destinationInputRef} value={destInputText} onChange={(e) => setDestInputText(e.target.value)} className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
                 </div>
                 <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
                     <ArrowRightLeft className="h-4 w-4"/>
