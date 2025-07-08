@@ -42,28 +42,22 @@ function LocationPlanner() {
   
   const places = useMapsLibrary('places');
 
-  // Effect to get user's location and set the initial map state.
+  // Effect to get user's location once and set the initial map state.
   useEffect(() => {
-    let watchId: number;
-    if (navigator.geolocation) {
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
-          setUserLocation(newLocation);
-          
-          if (!initialLocationSet) {
-             setMapCenter(newLocation);
-             setMapZoom(15);
-             setInitialLocationSet(true);
-             setStartPoint({ address: "Your Location", location: newLocation });
-          }
-        },
-        () => {}, // Handle geolocation error
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-      );
-      
-      return () => navigator.geolocation.clearWatch(watchId);
-    }
+    if (initialLocationSet || !navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setUserLocation(newLocation);
+        setMapCenter(newLocation);
+        setMapZoom(15);
+        setStartPoint({ address: "Your Location", location: newLocation });
+        setInitialLocationSet(true);
+      },
+      () => {}, // Handle geolocation error
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
   }, [initialLocationSet]);
 
   // Effect to initialize the Google Places Autocomplete functionality on the input fields.
@@ -79,7 +73,9 @@ function LocationPlanner() {
     });
 
     const onPlaceChanged = (setter: React.Dispatch<React.SetStateAction<Place>>, mapSetter: (loc:Point) => void) => () => {
-        const place = (setter === setStartPoint ? startAutocomplete : destinationAutocomplete).getPlace();
+        const autocomplete = (setter === setStartPoint) ? startAutocomplete : destinationAutocomplete;
+        const place = autocomplete.getPlace();
+
          if (place.geometry?.location) {
             const newLocation: Point = {
                 lat: place.geometry.location.lat(),
@@ -102,7 +98,7 @@ function LocationPlanner() {
             destListener.remove();
         }
     }
-  }, [places]);
+  }, [places, setStartPoint, setDestinationPoint, setMapCenter]);
 
   const handleSwapLocations = () => {
       setStartPoint(destinationPoint);
@@ -198,7 +194,7 @@ function LocationPlanner() {
                 ))}
             </div>
 
-            <div className="relative flex-1 w-full rounded-lg overflow-hidden min-h-0">
+            <div className="relative flex-1 w-full rounded-lg overflow-hidden min-h-[200px] md:min-h-0">
               <Link href="/location/fullscreen" className="block w-full h-full">
                 <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
                   <p className="text-white font-bold text-lg bg-black/50 p-2 rounded-md">Click to expand map</p>
@@ -209,6 +205,7 @@ function LocationPlanner() {
                   gestureHandling={'none'}
                   disableDefaultUI={true}
                   mapId="a2b4a5d6e7f8g9h0"
+                  onCenterChanged={(e) => setMapCenter(e.detail.center)}
                 >
                 {userLocation ? (
                     <AdvancedMarker position={userLocation}>
