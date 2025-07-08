@@ -625,46 +625,48 @@ function LocationPlanner() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0 flex-1 flex flex-col gap-4 min-h-0">
-            <div className="relative flex flex-col gap-2 shrink-0 p-4">
-                <div className="relative">
-                    <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input 
-                      ref={startInputRef} 
-                      value={startInputText} 
-                      onChange={(e) => setStartInputText(e.target.value)} 
-                      onBlur={() => handleGeocodeInput('start')}
-                      onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
-                      className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
-                </div>
-                <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                    <Input 
-                        ref={destinationInputRef} 
-                        value={destInputText} 
-                        onChange={(e) => setDestInputText(e.target.value)}
-                        onBlur={() => handleGeocodeInput('destination')}
-                        className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
-                </div>
-                <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
-                    <ArrowRightLeft className="h-4 w-4"/>
-                </Button>
-            </div>
-            
-            <div className="flex items-center justify-around bg-gray-900/70 p-1 rounded-full shrink-0 mx-4">
-                {travelModes.map((mode) => (
-                    <Button 
-                        key={mode.name}
-                        variant="ghost" 
-                        className={cn("flex-1 rounded-full text-white/70 hover:text-white capitalize", travelMode === mode.name && "bg-primary/80 text-white hover:bg-primary/90")}
-                        onClick={() => setTravelMode(mode.name as TravelMode)}
-                    >
-                      <mode.icon className="h-5 w-5" />
-                    </Button>
-                ))}
+        <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+            <div className="shrink-0 p-4 space-y-4">
+              <div className="relative flex flex-col gap-2">
+                  <div className="relative">
+                      <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        ref={startInputRef} 
+                        value={startInputText} 
+                        onChange={(e) => setStartInputText(e.target.value)} 
+                        onBlur={() => handleGeocodeInput('start')}
+                        onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
+                        className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
+                  </div>
+                  <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                      <Input 
+                          ref={destinationInputRef} 
+                          value={destInputText} 
+                          onChange={(e) => setDestInputText(e.target.value)}
+                          onBlur={() => handleGeocodeInput('destination')}
+                          className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
+                  </div>
+                  <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
+                      <ArrowRightLeft className="h-4 w-4"/>
+                  </Button>
+              </div>
+              
+              <div className="flex items-center justify-around bg-gray-900/70 p-1 rounded-full">
+                  {travelModes.map((mode) => (
+                      <Button 
+                          key={mode.name}
+                          variant="ghost" 
+                          className={cn("flex-1 rounded-full text-white/70 hover:text-white capitalize", travelMode === mode.name && "bg-primary/80 text-white hover:bg-primary/90")}
+                          onClick={() => setTravelMode(mode.name as TravelMode)}
+                      >
+                        <mode.icon className="h-5 w-5" />
+                      </Button>
+                  ))}
+              </div>
             </div>
 
-            <div className="relative flex-1 w-full overflow-hidden min-h-[200px] md:min-h-0">
+            <div className="relative flex-1 w-full overflow-hidden min-h-0">
                 <Map center={mapCenter} zoom={mapZoom} gestureHandling={'greedy'} disableDefaultUI={true} mapId="a2b4a5d6e7f8g9h0" onCenterChanged={(e) => setMapCenter(e.detail.center)}>
                     {userLocation && <AdvancedMarker position={userLocation} zIndex={5}><UserMarker /></AdvancedMarker>}
                     {startPoint.location && <AdvancedMarker position={startPoint.location} zIndex={4}><StartPointMarker /></AdvancedMarker>}
@@ -687,73 +689,75 @@ function LocationPlanner() {
                 )}
             </div>
             
-            {directions && directions.routes.length > 0 && routeDetails.length > 0 && (
-                <div className="flex flex-col gap-3 shrink-0 p-4 border-t border-purple-900/50">
-                    <h3 className="font-bold text-lg text-white">Select a Route</h3>
-                    {recommendation && (
-                        <div className="p-3 rounded-lg bg-green-900/50 border border-green-500/50 text-sm">
-                            <p className="font-bold text-green-300">AI Recommendation</p>
-                            <p className="text-white/80">{recommendation.reason}</p>
-                        </div>
-                    )}
-                    <div className="flex flex-col gap-3 max-h-48 overflow-y-auto pr-2">
-                        {directions.routes.map((route, index) => {
-                            const details = routeDetails[index];
-                            if (!details) return null;
-                            const isRecommended = recommendation && index === recommendation.index;
-                            return (
-                                <div key={index} onClick={() => onRouteClick(index)} className={cn(
-                                    "p-4 rounded-xl cursor-pointer border-2 transition-all relative",
-                                    selectedRouteIndex === index ? "bg-primary/20 border-primary shadow-lg shadow-primary/20" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800/90"
-                                )}>
-                                    {isRecommended && (
-                                        <Badge className="absolute -top-2 -right-2 bg-green-500 text-white border-none">Recommended</Badge>
-                                    )}
-                                    <div className="flex justify-between items-start gap-4">
-                                      <div>
-                                        <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
-                                        <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
+            <div className="flex flex-col min-h-0">
+              {directions && directions.routes.length > 0 && routeDetails.length > 0 && (
+                  <div className="flex flex-col gap-3 shrink-0 p-4 border-t border-purple-900/50 overflow-y-auto max-h-64">
+                      <h3 className="font-bold text-lg text-white">Select a Route</h3>
+                      {recommendation && (
+                          <div className="p-3 rounded-lg bg-green-900/50 border border-green-500/50 text-sm">
+                              <p className="font-bold text-green-300">AI Recommendation</p>
+                              <p className="text-white/80">{recommendation.reason}</p>
+                          </div>
+                      )}
+                      <div className="flex flex-col gap-3 pr-2">
+                          {directions.routes.map((route, index) => {
+                              const details = routeDetails[index];
+                              if (!details) return null;
+                              const isRecommended = recommendation && index === recommendation.index;
+                              return (
+                                  <div key={index} onClick={() => onRouteClick(index)} className={cn(
+                                      "p-4 rounded-xl cursor-pointer border-2 transition-all relative",
+                                      selectedRouteIndex === index ? "bg-primary/20 border-primary shadow-lg shadow-primary/20" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800/90"
+                                  )}>
+                                      {isRecommended && (
+                                          <Badge className="absolute -top-2 -right-2 bg-green-500 text-white border-none">Recommended</Badge>
+                                      )}
+                                      <div className="flex justify-between items-start gap-4">
+                                        <div>
+                                          <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
+                                          <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
+                                        </div>
+                                          <Button 
+                                              variant="secondary" 
+                                              size="sm" 
+                                              className="shrink-0"
+                                              onClick={(e) => {
+                                                  e.stopPropagation(); // Prevent route selection
+                                                  handleViewDetails(route, details);
+                                              }}
+                                          >
+                                              More Info
+                                          </Button>
                                       </div>
-                                        <Button 
-                                            variant="secondary" 
-                                            size="sm" 
-                                            className="shrink-0"
-                                            onClick={(e) => {
-                                                e.stopPropagation(); // Prevent route selection
-                                                handleViewDetails(route, details);
-                                            }}
-                                        >
-                                            More Info
-                                        </Button>
-                                    </div>
-                                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
-                                      <div className="flex items-center gap-2" title="Road Quality"><Route className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
-                                      <div className="flex items-center gap-2" title="Historical Incidents"><AlertTriangle className="h-4 w-4 text-primary/80" /><span>{details.incidents}</span></div>
-                                      <div className="flex items-center gap-2" title="User Reviews"><MessageSquare className="h-4 w-4 text-primary/80" /><span>{details.reviewsCount} Reviews</span></div>
-                                      <div className="flex items-center gap-2" title="Lighting Condition"><Lamp className="h-4 w-4 text-primary/80" /><span>{details.lighting}</span></div>
-                                      <div className="flex items-center gap-2" title="Crowdedness"><Users className="h-4 w-4 text-primary/80" /><span>{details.crowdedness} Traffic</span></div>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
+                                      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
+                                        <div className="flex items-center gap-2" title="Road Quality"><Route className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
+                                        <div className="flex items-center gap-2" title="Historical Incidents"><AlertTriangle className="h-4 w-4 text-primary/80" /><span>{details.incidents}</span></div>
+                                        <div className="flex items-center gap-2" title="User Reviews"><MessageSquare className="h-4 w-4 text-primary/80" /><span>{details.reviewsCount} Reviews</span></div>
+                                        <div className="flex items-center gap-2" title="Lighting Condition"><Lamp className="h-4 w-4 text-primary/80" /><span>{details.lighting}</span></div>
+                                        <div className="flex items-center gap-2" title="Crowdedness"><Users className="h-4 w-4 text-primary/80" /><span>{details.crowdedness} Traffic</span></div>
+                                      </div>
+                                  </div>
+                              )
+                          })}
+                      </div>
+                  </div>
+              )}
 
-            <div className="flex flex-col gap-4 shrink-0 p-4 pt-0">
-                <Button onClick={handleStartTracking} className="w-full py-6 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50" disabled={!directions || isCalculating}>
-                    {isTracking ? "STOP" : "START"}
-                </Button>
-                <div className="flex justify-around items-center bg-gray-900/50 p-2 rounded-2xl">
-                    <Button variant="ghost" className="text-white font-semibold disabled:opacity-50" disabled={isTracking}>
-                        <Share2 className="mr-2 h-5 w-5 text-primary" />
-                        Share Live Location
-                    </Button>
-                    <Button variant="ghost" className="text-white font-semibold disabled:opacity-50" disabled={isTracking}>
-                        <Footprints className="mr-2 h-5 w-5 text-primary" />
-                        Track Me
-                    </Button>
-                </div>
+              <div className="flex flex-col gap-4 shrink-0 p-4 pt-4 mt-auto">
+                  <Button onClick={handleStartTracking} className="w-full py-6 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50" disabled={!directions || isCalculating}>
+                      {isTracking ? "STOP" : "START"}
+                  </Button>
+                  <div className="flex justify-around items-center bg-gray-900/50 p-2 rounded-2xl">
+                      <Button variant="ghost" className="text-white font-semibold disabled:opacity-50" disabled={isTracking}>
+                          <Share2 className="mr-2 h-5 w-5 text-primary" />
+                          Share Live Location
+                      </Button>
+                      <Button variant="ghost" className="text-white font-semibold disabled:opacity-50" disabled={isTracking}>
+                          <Footprints className="mr-2 h-5 w-5 text-primary" />
+                          Track Me
+                      </Button>
+                  </div>
+              </div>
             </div>
         </CardContent>
       </Card>
