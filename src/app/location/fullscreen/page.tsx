@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -12,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { snapToRoad } from '@/app/actions/snap-to-road';
 import { findNearbyPlaces } from '@/app/actions/find-nearby-places';
-import { geocodeAddress } from '@/app/actions/geocode-address';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 
@@ -184,16 +182,27 @@ export default function FullscreenMapPage() {
         setPlaceType(null);
     };
 
-    const handleSearch = async (e: React.FormEvent) => {
+    const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!searchQuery) return;
-        const result = await geocodeAddress(searchQuery);
-        if (result) {
-            setMapCenter(result);
-            setMapZoom(15);
-        } else {
-            toast({ variant: 'destructive', title: 'Location not found', description: `Could not find a location for "${searchQuery}".` });
+        if (!searchQuery || !window.google?.maps?.Geocoder) {
+            console.error("Search query or Geocoder not available.");
+            return;
         }
+
+        const geocoder = new window.google.maps.Geocoder();
+        geocoder.geocode({ address: searchQuery }, (results, status) => {
+            if (status === 'OK' && results && results[0]) {
+                const location = results[0].geometry.location;
+                setMapCenter({ lat: location.lat(), lng: location.lng() });
+                setMapZoom(15);
+            } else {
+                toast({ 
+                    variant: 'destructive', 
+                    title: 'Location not found', 
+                    description: `Could not find a location for "${searchQuery}".` 
+                });
+            }
+        });
     };
 
     if (!GOOGLE_MAPS_API_KEY) {
@@ -202,7 +211,7 @@ export default function FullscreenMapPage() {
 
     return (
         <main className="h-screen w-screen flex flex-col bg-[#06010F]">
-            <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places']}>
+            <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places', 'geocoding']}>
                 <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-start gap-4">
                     <Link href="/location">
                         <Button variant="outline" size="icon" className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full shrink-0">
