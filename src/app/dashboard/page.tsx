@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -64,7 +65,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="relative">
-             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-600 to-purple-700 opacity-75 blur-md"></div>
+             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-700 to-purple-900 opacity-75 blur-md"></div>
             <Avatar className="relative h-12 w-12 border-2 border-slate-900">
               <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
               <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
@@ -74,7 +75,7 @@ export default function DashboardPage() {
 
         <section className="my-8 text-center">
           <h2 className="text-4xl font-bold tracking-tight text-white">
-            Welcome, <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">{userName}!</span>
+            Welcome, <span className="bg-gradient-to-r from-pink-700 to-purple-800 bg-clip-text text-transparent">{userName}!</span>
           </h2>
           <p className="mt-2 text-base text-white/80">
             Your safety is our priority.
@@ -82,9 +83,9 @@ export default function DashboardPage() {
         </section>
 
         <Link href="/emergency" className="relative my-8 block group">
-          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-pink-600 to-purple-700 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
+          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-pink-700 to-purple-900 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
           
-          <div className="relative rounded-3xl bg-gradient-to-r from-pink-600 to-purple-700 p-1 transition-transform duration-150 active:scale-95">
+          <div className="relative rounded-3xl bg-gradient-to-r from-pink-700 to-purple-900 p-1 transition-transform duration-150 active:scale-95">
             <div className="flex h-24 w-full items-center justify-center rounded-[20px] bg-[#0A0A0F] px-7 py-4">
               <div className="flex items-center justify-center gap-4">
                 <Siren className="h-8 w-8 text-pink-500 drop-shadow-[0_0_8px_theme(colors.pink.500)]" />
