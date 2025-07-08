@@ -66,7 +66,13 @@ const UserMarker = () => (
     </div>
 );
 
-const SearchedLocationMarker = () => (
+const StartPointMarker = () => (
+    <div className="text-green-500">
+        <MapPin className="h-8 w-8 drop-shadow-lg" fill="currentColor" stroke="white" strokeWidth={1.5} />
+    </div>
+);
+
+const DestinationPointMarker = () => (
     <div className="text-red-500">
         <MapPin className="h-8 w-8 drop-shadow-lg" fill="currentColor" stroke="white" strokeWidth={1.5} />
     </div>
@@ -612,9 +618,9 @@ function LocationPlanner() {
 
             <div className="relative flex-1 w-full overflow-hidden min-h-[200px] md:min-h-0">
                 <Map center={mapCenter} zoom={mapZoom} gestureHandling={'greedy'} disableDefaultUI={true} mapId="a2b4a5d6e7f8g9h0" onCenterChanged={(e) => setMapCenter(e.detail.center)}>
-                    {userLocation && <AdvancedMarker position={userLocation}><UserMarker /></AdvancedMarker>}
-                    {!directions && startPoint.location && <AdvancedMarker position={startPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
-                    {!directions && destinationPoint.location && <AdvancedMarker position={destinationPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
+                    {userLocation && <AdvancedMarker position={userLocation} zIndex={5}><UserMarker /></AdvancedMarker>}
+                    {startPoint.location && <AdvancedMarker position={startPoint.location} zIndex={4}><StartPointMarker /></AdvancedMarker>}
+                    {destinationPoint.location && <AdvancedMarker position={destinationPoint.location} zIndex={4}><DestinationPointMarker /></AdvancedMarker>}
                     {directions && <RoutePolylines routes={directions.routes} selectedRouteIndex={selectedRouteIndex} onRouteClick={onRouteClick} />}
                     {isTracking && <LiveTrackingPolyline path={livePath} />}
                 </Map>
