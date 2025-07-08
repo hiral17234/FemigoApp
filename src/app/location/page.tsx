@@ -119,10 +119,9 @@ export default function LocationPage() {
           </AlertDescription>
         </Alert>
          <div className="absolute top-4 left-4">
-          <Link href="/dashboard">
-            <Button variant="ghost">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
+           <Link href="/dashboard">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
+                <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
         </div>
@@ -133,14 +132,13 @@ export default function LocationPage() {
   return (
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-4 text-white sm:p-6 md:p-8">
       <div className="w-full max-w-6xl">
-        <div className="mb-4 flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Live Location</h1>
+        <div className="mb-4 flex items-center gap-4">
             <Link href="/dashboard">
-                <Button variant="ghost" className="text-white hover:bg-white/10">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
+                    <ArrowLeft className="h-5 w-5" />
                 </Button>
             </Link>
+            <h1 className="text-2xl font-bold">Live Location</h1>
         </div>
         <Card className="w-full overflow-hidden rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50">
             <div className="relative h-[75vh] w-full">
