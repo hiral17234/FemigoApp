@@ -34,8 +34,8 @@ function LocationPlanner() {
   const [initialLocationSet, setInitialLocationSet] = useState(false);
   const [travelMode, setTravelMode] = useState<TravelMode>('walk');
 
-  const [startPoint, setStartPoint] = useState<Place | null>(null);
-  const [destinationPoint, setDestinationPoint] = useState<Place | null>(null);
+  const [startPoint, setStartPoint] = useState<Place>({ address: "", location: null });
+  const [destinationPoint, setDestinationPoint] = useState<Place>({ address: "", location: null });
   
   const startInputRef = useRef<HTMLInputElement>(null);
   const destinationInputRef = useRef<HTMLInputElement>(null);
@@ -56,7 +56,7 @@ function LocationPlanner() {
              setMapCenter(newLocation);
              setMapZoom(15);
              setInitialLocationSet(true);
-             if (!startPoint) {
+             if (startPoint.address === "") {
                 setStartPoint({ address: "Your Location", location: newLocation });
              }
           }
@@ -67,7 +67,7 @@ function LocationPlanner() {
       
       return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [initialLocationSet, startPoint]);
+  }, [initialLocationSet, startPoint.address]);
 
   useEffect(() => {
     if (!places || !startInputRef.current || !destinationInputRef.current) return;
@@ -111,16 +111,17 @@ function LocationPlanner() {
   }, [places]);
 
   const handleSwapLocations = () => {
+      const tempStart = startPoint;
       setStartPoint(destinationPoint);
-      setDestinationPoint(startPoint);
+      setDestinationPoint(tempStart);
   };
 
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartPoint({ address: e.target.value, location: startPoint?.location ?? null });
+    setStartPoint({ ...startPoint, address: e.target.value });
   };
   
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDestinationPoint({ address: e.target.value, location: destinationPoint?.location ?? null });
+    setDestinationPoint({ ...destinationPoint, address: e.target.value });
   };
 
   const handleStartFocus = () => {
