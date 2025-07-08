@@ -65,7 +65,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="relative">
-             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-rose-700 to-purple-900 opacity-75 blur-md"></div>
+             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF0080] to-purple-900 opacity-75 blur-md"></div>
             <Avatar className="relative h-12 w-12 border-2 border-slate-900">
               <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
               <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
@@ -75,7 +75,7 @@ export default function DashboardPage() {
 
         <section className="my-8 text-center">
           <h2 className="text-4xl font-bold tracking-tight text-white">
-            Welcome, <span className="bg-gradient-to-r from-rose-600 to-purple-800 bg-clip-text text-transparent">{userName}!</span>
+            Welcome, <span className="bg-gradient-to-r from-[#FF0080] to-purple-800 bg-clip-text text-transparent">{userName}!</span>
           </h2>
           <p className="mt-2 text-base text-white/80">
             Your safety is our priority.
@@ -83,12 +83,12 @@ export default function DashboardPage() {
         </section>
 
         <Link href="/emergency" className="relative my-8 block group">
-          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-rose-600 to-purple-900 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
+          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-purple-900 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
           
-          <div className="relative rounded-3xl bg-gradient-to-r from-rose-600 to-purple-900 p-1 transition-transform duration-150 active:scale-95">
+          <div className="relative rounded-3xl bg-gradient-to-r from-[#FF0080] to-purple-900 p-1 transition-transform duration-150 active:scale-95">
             <div className="flex h-24 w-full items-center justify-center rounded-[20px] bg-[#0A0A0F] px-7 py-4">
               <div className="flex items-center justify-center gap-4">
-                <Siren className="h-8 w-8 text-rose-500 drop-shadow-[0_0_8px_theme(colors.rose.500)]" />
+                <Siren className="h-8 w-8 text-[#FF0080] drop-shadow-[0_0_8px_#FF0080]" />
                 <span className="text-2xl font-bold text-white">Emergency</span>
               </div>
             </div>
@@ -104,8 +104,8 @@ export default function DashboardPage() {
                 className="group flex cursor-pointer flex-col items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-1"
               >
                 <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-black/30">
-                  <div className="absolute inset-0 rounded-full border-2 border-rose-500/50 transition-all duration-300 group-hover:border-rose-500/80 group-hover:shadow-[0_0_15px_rgba(244,63,94,0.4)]" />
-                  <feature.icon className="relative z-10 h-10 w-10 text-rose-500 drop-shadow-[0_0_8px_theme(colors.rose.500)] transition-all duration-300 group-hover:text-rose-400 group-hover:scale-110" />
+                  <div className="absolute inset-0 rounded-full border-2 border-[#FF0080]/50 transition-all duration-300 group-hover:border-[#FF0080]/80 group-hover:shadow-[0_0_15px_#FF008066]" />
+                  <feature.icon className="relative z-10 h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF0080] transition-all duration-300 group-hover:text-[#FF0080] group-hover:scale-110" />
                 </div>
                 <span className="text-center text-sm font-medium text-white">
                   {feature.name}
