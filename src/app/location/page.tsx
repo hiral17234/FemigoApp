@@ -85,7 +85,6 @@ export default function LocationPage() {
         const { latitude, longitude } = position.coords;
         const newPoint: LatLngTuple = [latitude, longitude];
         
-        // This is a state update, but it's self-contained.
         setCurrentLocation(position.coords);
         
         setRoute(prevRoute => {
@@ -146,7 +145,7 @@ export default function LocationPage() {
             zoom={5} 
             style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
             zoomControl={false}
-            whenCreated={mapInstance => { mapRef.current = mapInstance }}
+            whenCreated={mapInstance => { mapRef.current = mapInstance; }}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
