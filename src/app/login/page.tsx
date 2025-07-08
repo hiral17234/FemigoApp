@@ -47,8 +47,8 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
 
-    // Simulate network delay. For prototyping, we will bypass the password check
-    // to make testing easier. A real app would have a proper database check here.
+    // Simulate network delay and always log in successfully for easier prototyping.
+    // This no longer modifies the user's name.
     setTimeout(() => {
       toast({
         title: "Logged In!",
