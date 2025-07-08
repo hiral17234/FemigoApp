@@ -53,15 +53,20 @@ export default function DashboardPage() {
       <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
         <header className="flex items-center justify-between py-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">
-              Femigo
-            </h1>
-            <p className="text-sm font-medium text-white/80">
+            <div className="flex items-center gap-2">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="#EC008C"/>
+              </svg>
+              <h1 className="text-3xl font-bold text-white">
+                Femigo
+              </h1>
+            </div>
+            <p className="mt-1 text-sm font-medium text-white/80">
               Safety. Strength. Solidarity.
             </p>
           </div>
           <div className="relative">
-             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 opacity-75 blur-md"></div>
+             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-600 to-purple-700 opacity-75 blur-md"></div>
             <Avatar className="relative h-12 w-12 border-2 border-slate-900">
               <AvatarImage data-ai-hint="woman avatar" src="https://i.imgur.com/x0Lh0uF.png" alt={userName} />
               <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
@@ -71,7 +76,7 @@ export default function DashboardPage() {
 
         <section className="my-8 text-center">
           <h2 className="text-4xl font-bold tracking-tight text-white">
-            Welcome, <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">{userName}!</span>
+            Welcome, <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">{userName}!</span>
           </h2>
           <p className="mt-2 text-base text-white/80">
             Your safety is our priority.
@@ -79,15 +84,12 @@ export default function DashboardPage() {
         </section>
 
         <Link href="/emergency" className="relative my-8 block group">
-          {/* The soft outer glow */}
-          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-pink-500 to-purple-600 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
+          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-pink-600 to-purple-700 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
           
-          {/* The hard gradient border */}
-          <div className="relative rounded-3xl bg-gradient-to-r from-pink-500 to-purple-600 p-1 transition-transform duration-150 active:scale-95">
-            {/* The button's inner content */}
+          <div className="relative rounded-3xl bg-gradient-to-r from-pink-600 to-purple-700 p-1 transition-transform duration-150 active:scale-95">
             <div className="flex h-24 w-full items-center justify-center rounded-[20px] bg-[#0A0A0F] px-7 py-4">
               <div className="flex items-center justify-center gap-4">
-                <Siren className="h-8 w-8 text-pink-500 drop-shadow-[0_0_8px_theme(colors.pink.400)]" />
+                <Siren className="h-8 w-8 text-pink-500 drop-shadow-[0_0_8px_theme(colors.pink.500)]" />
                 <span className="text-2xl font-bold text-white">Emergency</span>
               </div>
             </div>
@@ -104,7 +106,7 @@ export default function DashboardPage() {
               >
                 <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-black/30">
                   <div className="absolute inset-0 rounded-full border-2 border-pink-500/50 transition-all duration-300 group-hover:border-pink-500/80 group-hover:shadow-[0_0_15px_rgba(236,72,153,0.4)]" />
-                  <feature.icon className="relative z-10 h-10 w-10 text-pink-500 drop-shadow-[0_0_8px_theme(colors.pink.400)] transition-all duration-300 group-hover:text-pink-400 group-hover:scale-110" />
+                  <feature.icon className="relative z-10 h-10 w-10 text-pink-500 drop-shadow-[0_0_8px_theme(colors.pink.500)] transition-all duration-300 group-hover:text-pink-400 group-hover:scale-110" />
                 </div>
                 <span className="text-center text-sm font-medium text-white">
                   {feature.name}
