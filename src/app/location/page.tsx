@@ -16,6 +16,7 @@ import { snapToRoad } from '@/app/actions/snap-to-road';
 import { getRouteSafetyDetails, type RouteSafetyOutput } from '@/ai/flows/route-safety-flow';
 import { recommendSafestRoute } from '@/ai/flows/recommend-safest-route-flow';
 import { Badge } from '@/components/ui/badge';
+import { geocodeAddress } from '../actions/geocode-address';
 
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -284,6 +285,8 @@ function LocationPlanner() {
             setRouteDetails([]);
             setRecommendation(null);
         }
+    } else if (startInputText.trim() === '') {
+        setStartPoint({ address: '', location: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startInputText]);
@@ -298,6 +301,8 @@ function LocationPlanner() {
             setRouteDetails([]);
             setRecommendation(null);
         }
+    } else if (destInputText.trim() === '') {
+        setDestinationPoint({ address: '', location: null });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destInputText]);
@@ -559,6 +564,38 @@ function LocationPlanner() {
     }
   };
 
+  const handleGeocodeInput = async (which: 'start' | 'destination') => {
+    const text = which === 'start' ? startInputText : destInputText;
+    const point = which === 'start' ? startPoint : destinationPoint;
+    const setPoint = which === 'start' ? setStartPoint : setDestinationPoint;
+
+    // Don't geocode if we already have a location for this exact text,
+    // or if it's "Your Location", or if it's a valid coordinate string, or empty.
+    if ((point.location && point.address === text) || text === 'Your Location' || parseDMSToLatLng(text) || text.trim() === '') {
+        return;
+    }
+    
+    try {
+        const location = await geocodeAddress(text);
+        if (location) {
+            setPoint({ address: text, location });
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Location not found',
+                description: `Could not find a location for "${text}".`,
+            });
+        }
+    } catch (error) {
+         toast({
+            variant: 'destructive',
+            title: 'Geocoding Error',
+            description: 'Could not look up the address.',
+        });
+    }
+  };
+
+
   const travelModes = [
       { name: 'DRIVING', icon: Car },
       { name: 'BICYCLING', icon: Bike },
@@ -596,6 +633,7 @@ function LocationPlanner() {
                       ref={startInputRef} 
                       value={startInputText} 
                       onChange={(e) => setStartInputText(e.target.value)} 
+                      onBlur={() => handleGeocodeInput('start')}
                       onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
                       className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
                 </div>
@@ -604,7 +642,8 @@ function LocationPlanner() {
                     <Input 
                         ref={destinationInputRef} 
                         value={destInputText} 
-                        onChange={(e) => setDestInputText(e.target.value)} 
+                        onChange={(e) => setDestInputText(e.target.value)}
+                        onBlur={() => handleGeocodeInput('destination')}
                         className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
                 </div>
                 <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
