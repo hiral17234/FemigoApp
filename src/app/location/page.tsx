@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -291,17 +291,18 @@ function LocationPlanner() {
                 const routePath = new window.google.maps.Polyline({
                     path: directions.routes[selectedRouteIndex].overview_path,
                 });
-                
-                const onRoute = window.google.maps.geometry.poly.isLocationOnEdge(
-                    new window.google.maps.LatLng(newLocation.lat, newLocation.lng),
-                    routePath,
-                    0.001 // ~111 meters tolerance
-                );
-
-                if (!onRoute && !isRecalculating) {
-                    setIsRecalculating(true); // Prevent further triggers until this one is done
-                    toast({ variant: "destructive", title: "You are off-route!", description: "Recalculating..." });
-                    setStartPoint({ address: "Your Location", location: newLocation });
+                if (!isRecalculating) {
+                    const onRoute = window.google.maps.geometry.poly.isLocationOnEdge(
+                        new window.google.maps.LatLng(newLocation.lat, newLocation.lng),
+                        routePath,
+                        0.001 // ~111 meters tolerance
+                    );
+    
+                    if (!onRoute) {
+                        setIsRecalculating(true); // Prevent further triggers until this one is done
+                        toast({ variant: "destructive", title: "You are off-route!", description: "Recalculating..." });
+                        setStartPoint({ address: "Your Location", location: newLocation });
+                    }
                 }
             }
         },
@@ -357,6 +358,10 @@ function LocationPlanner() {
       { name: 'WALKING', icon: Footprints },
   ]
 
+  const onRouteClick = (index: number) => {
+    setSelectedRouteIndex(index);
+  }
+
   return (
     <div className="w-full max-w-md mx-auto flex flex-col flex-1">
       <Card className="w-full flex-1 flex flex-col rounded-none sm:rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50 overflow-hidden my-0 sm:my-4">
@@ -406,9 +411,14 @@ function LocationPlanner() {
             <div className="relative flex-1 w-full overflow-hidden min-h-[200px] md:min-h-0">
                 <Map center={mapCenter} zoom={mapZoom} gestureHandling={'greedy'} disableDefaultUI={true} mapId="a2b4a5d6e7f8g9h0" onCenterChanged={(e) => setMapCenter(e.detail.center)}>
                     {userLocation && <AdvancedMarker position={userLocation}><UserMarker /></AdvancedMarker>}
-                    {directions && <RoutePolylines routes={directions.routes} selectedRouteIndex={selectedRouteIndex} onRouteClick={setSelectedRouteIndex} />}
+                    {directions && <RoutePolylines routes={directions.routes} selectedRouteIndex={selectedRouteIndex} onRouteClick={onRouteClick} />}
                     {isTracking && <LiveTrackingPolyline path={livePath} />}
                 </Map>
+                <Link href="/location/fullscreen" className="absolute top-2 right-2 z-10">
+                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full bg-black/30 backdrop-blur-sm">
+                        <Maximize className="h-5 w-5" />
+                    </Button>
+                </Link>
                  {isCalculating && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
                       <div className="text-center space-y-4 text-foreground">
@@ -424,7 +434,7 @@ function LocationPlanner() {
                     <h3 className="font-bold text-lg text-white">Select a Route</h3>
                     <div className="flex flex-col gap-2 max-h-32 overflow-y-auto">
                         {directions.routes.map((route, index) => (
-                            <div key={index} onClick={() => setSelectedRouteIndex(index)} className={cn(
+                            <div key={index} onClick={() => onRouteClick(index)} className={cn(
                                 "p-3 rounded-md cursor-pointer border-2 transition-colors",
                                 selectedRouteIndex === index ? "bg-primary/20 border-primary" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800"
                             )}>
@@ -478,5 +488,3 @@ export default function LocationPage() {
     </main>
   );
 }
-
-    
