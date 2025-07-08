@@ -1,33 +1,21 @@
 
 'use client'
 
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import 'leaflet/dist/leaflet.css';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Wind, Milestone, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, MapPin, Wind, Milestone } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import dynamic from 'next/dynamic';
+import type { Map as LeafletMap } from 'leaflet';
+import L from 'leaflet';
 
-const Map = dynamic(() => import('react-map-gl').then(mod => mod.Map), { ssr: false });
-const Marker = dynamic(() => import('react-map-gl').then(mod => mod.Marker), { ssr: false });
-const Source = dynamic(() => import('react-map-gl').then(mod => mod.Source), { ssr: false });
-const Layer = dynamic(() => import('react-map-gl').then(mod => mod.Layer), { ssr: false });
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
+const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
+const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline), { ssr: false });
 
-type Viewport = {
-  longitude: number;
-  latitude: number;
-  zoom: number;
-};
-
-type GeoJsonSource = {
-  type: 'Feature';
-  geometry: {
-    type: 'LineString';
-    coordinates: number[][];
-  };
-  properties: {};
-};
+type LatLngTuple = [number, number];
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of the earth in km
@@ -42,19 +30,34 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return d;
 }
 
-export default function LocationPage() {
-  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-  
-  const [viewport, setViewport] = useState<Viewport>({
-    longitude: 78.9629, // Centered on India
-    latitude: 20.5937,
-    zoom: 4,
-  });
+const pulsingIcon = new L.DivIcon({
+  className: 'pulsing-marker-container',
+  html: '<div class="relative flex h-4 w-4"><div class="absolute h-full w-full rounded-full bg-blue-400 border-2 border-white pulse-marker"></div></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8]
+});
 
+const startIcon = new L.DivIcon({
+    className: 'start-marker-container',
+    html: `
+        <div class="flex flex-col items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#FF0080" stroke="white" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="text-xs font-bold text-white bg-black/50 px-1 rounded -mt-2">Start</span>
+        </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32]
+});
+
+
+export default function LocationPage() {
+  const [center, setCenter] = useState<LatLngTuple>([20.5937, 78.9629]); // India center
+  const [zoom, setZoom] = useState(5);
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
-  const [route, setRoute] = useState<number[][]>([]);
+  const [route, setRoute] = useState<LatLngTuple[]>([]);
   const [distance, setDistance] = useState(0);
 
+  const mapRef = useRef<LeafletMap | null>(null);
   const watchId = useRef<number | null>(null);
 
   useEffect(() => {
@@ -69,18 +72,22 @@ export default function LocationPage() {
         setCurrentLocation(position.coords);
         
         setRoute(prevRoute => {
-          const newRoute = [...prevRoute, [longitude, latitude]];
+          const newRoute: LatLngTuple[] = [...prevRoute, [latitude, longitude]];
           if (newRoute.length > 1) {
             const lastPoint = newRoute[newRoute.length - 2];
-            const newDistance = calculateDistance(lastPoint[1], lastPoint[0], latitude, longitude);
+            const newDistance = calculateDistance(lastPoint[0], lastPoint[1], latitude, longitude);
             setDistance(prevDistance => prevDistance + newDistance);
           }
           return newRoute;
         });
 
-        // Center map on first location fix
         if (route.length === 0) {
-            setViewport(prev => ({...prev, latitude, longitude, zoom: 15 }));
+            if (mapRef.current) {
+                mapRef.current.setView([latitude, longitude], 16);
+            } else {
+                setCenter([latitude, longitude]);
+                setZoom(16);
+            }
         }
       },
       (error) => {
@@ -97,22 +104,10 @@ export default function LocationPage() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const routeGeoJson: GeoJsonSource = useMemo(() => ({
-    type: 'Feature',
-    geometry: {
-      type: 'LineString',
-      coordinates: route,
-    },
-    properties: {},
-  }), [route]);
-
   const recenterMap = () => {
-    if (currentLocation) {
-      setViewport({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        zoom: 16,
-      });
+    if (currentLocation && mapRef.current) {
+      const { latitude, longitude } = currentLocation;
+      mapRef.current.setView([latitude, longitude], 16);
     }
   };
 
@@ -120,7 +115,7 @@ export default function LocationPage() {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#06010F]">
-        <header className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-[#06010F] to-transparent">
+        <header className="absolute top-0 left-0 right-0 z-[1000] flex items-center justify-between p-4 bg-gradient-to-b from-[#06010F] to-transparent">
             <Link href="/dashboard">
                 <Button variant="ghost" className="text-gray-300 hover:bg-white/10 hover:text-white">
                     <ArrowLeft size={20} className="mr-2" /> Back
@@ -130,64 +125,30 @@ export default function LocationPage() {
             <div className="w-20" />
         </header>
 
-        {!mapboxToken && (
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 w-full max-w-md p-4">
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Map Configuration Error</AlertTitle>
-                  <AlertDescription>
-                    The Mapbox Access Token is missing. Please add <code className="font-mono bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN</code> to your <code className="font-mono bg-muted px-1 py-0.5 rounded">.env</code> file.
-                  </AlertDescription>
-                </Alert>
-            </div>
-        )}
-
-        {mapboxToken && <Map
-            {...viewport}
-            onMove={evt => setViewport(evt.viewState)}
-            mapboxAccessToken={mapboxToken}
-            mapStyle="mapbox://styles/mapbox/dark-v11"
-            style={{ width: '100vw', height: '100vh' }}
+        <MapContainer 
+            center={center} 
+            zoom={zoom} 
+            style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
+            ref={mapRef}
+            zoomControl={false}
         >
-            {/* User's current location marker */}
+            <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            />
+            
             {currentLocation && (
-                <Marker longitude={currentLocation.longitude} latitude={currentLocation.latitude}>
-                    <div className="relative">
-                        <div className="h-4 w-4 rounded-full bg-blue-400 border-2 border-white pulse-marker" />
-                    </div>
-                </Marker>
+                <Marker position={[currentLocation.latitude, currentLocation.longitude]} icon={pulsingIcon} />
             )}
 
-            {/* Start point marker */}
             {route.length > 0 && (
-                <Marker longitude={route[0][0]} latitude={route[0][1]}>
-                    <div className="flex flex-col items-center text-pink-500">
-                        <MapPin size={32} fill="#FF0080" strokeWidth={0} />
-                        <span className="text-xs font-bold text-white bg-black/50 px-1 rounded">Start</span>
-                    </div>
-                </Marker>
+                 <Marker position={route[0]} icon={startIcon} />
             )}
 
-            {/* Route polyline */}
-            <Source id="route-source" type="geojson" data={routeGeoJson}>
-                <Layer
-                    id="route-layer"
-                    type="line"
-                    source="route-source"
-                    layout={{
-                        'line-join': 'round',
-                        'line-cap': 'round'
-                    }}
-                    paint={{
-                        'line-color': '#007BFF',
-                        'line-width': 4,
-                        'line-opacity': 0.8
-                    }}
-                />
-            </Source>
-        </Map>}
+            <Polyline pathOptions={{ color: '#007BFF', weight: 4, opacity: 0.8 }} positions={route} />
+        </MapContainer>
 
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-gradient-to-t from-[#06010F] to-transparent">
+        <div className="absolute bottom-0 left-0 right-0 z-[1000] p-4 bg-gradient-to-t from-[#06010F] to-transparent">
             <div className="mx-auto max-w-lg rounded-2xl border border-white/10 bg-black/20 p-4 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
                  <div className="grid grid-cols-3 gap-4 text-center text-white">
                     <div>
