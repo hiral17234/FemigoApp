@@ -12,10 +12,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type RouteDetail = {
   roadQuality: 'Good' | 'Moderate' | 'Poor';
-  incidents: number;
+  incidents: string;
   reviewsCount: number;
   lighting: 'Well-lit' | 'Partially-lit' | 'Poorly-lit';
   crowdedness: 'Low' | 'Medium' | 'High';
+  safetySummary: string;
+  crimeSummary: string;
+  policeInfo: string;
+  weatherInfo: string;
 }
 
 function RouteDetailsContent() {
@@ -80,7 +84,7 @@ function RouteDetailsContent() {
                     <div className="space-y-1">
                         <InfoRow icon={Route} label="Road Quality" value={details.roadQuality} />
                         <Separator className="bg-white/10" />
-                        <InfoRow icon={AlertTriangle} label="Historical Incidents" value={`${details.incidents} reported`} />
+                        <InfoRow icon={AlertTriangle} label="Historical Incidents" value={details.incidents} />
                         <Separator className="bg-white/10" />
                         <InfoRow icon={MessageSquare} label="User Reviews" value={`${details.reviewsCount} reviews`} />
                          <Separator className="bg-white/10" />
@@ -93,17 +97,17 @@ function RouteDetailsContent() {
                         <PlaceholderSection 
                             icon={ShieldCheck}
                             title="Area Crime Reports"
-                            text="No major incidents reported in the last 72 hours. General caution advised after 10 PM."
+                            text={details.crimeSummary}
                         />
                         <PlaceholderSection 
                             icon={Building}
                             title="Local Police Station"
-                            text=" nearest police station is 2km away from the mid-point of this route. Contact: 100"
+                            text={details.policeInfo}
                         />
                          <PlaceholderSection 
                             icon={Cloudy}
                             title="Weather & Visibility"
-                            text="Currently clear skies. Visibility is excellent at 10km. No weather alerts in effect."
+                            text={details.weatherInfo}
                         />
                     </div>
                 </CardContent>

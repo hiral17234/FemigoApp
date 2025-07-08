@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { snapToRoad } from '@/app/actions/snap-to-road';
+import { getRouteSafetyDetails, type RouteSafetyOutput } from '@/ai/flows/route-safety-flow';
 
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -19,13 +20,7 @@ const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 type Point = { lat: number; lng: number };
 type Place = { address: string; location: Point | null };
 type TravelMode = 'DRIVING' | 'BICYCLING' | 'TRANSIT' | 'WALKING';
-type RouteDetail = {
-  roadQuality: 'Good' | 'Moderate' | 'Poor';
-  incidents: number;
-  reviewsCount: number;
-  lighting: 'Well-lit' | 'Partially-lit' | 'Poorly-lit';
-  crowdedness: 'Low' | 'Medium' | 'High';
-}
+type RouteDetail = RouteSafetyOutput;
 
 // Helper function to parse DMS coordinates
 function parseDMSToLatLng(dmsStr: string): Point | null {
@@ -383,15 +378,6 @@ function LocationPlanner() {
         setDirections(response);
         setSelectedRouteIndex(0);
 
-        const details: RouteDetail[] = response.routes.map(() => ({
-          roadQuality: ['Good', 'Moderate', 'Poor'][Math.floor(Math.random() * 3)] as any,
-          incidents: Math.floor(Math.random() * 6),
-          reviewsCount: Math.floor(Math.random() * 21),
-          lighting: ['Well-lit', 'Partially-lit', 'Poorly-lit'][Math.floor(Math.random() * 3)] as any,
-          crowdedness: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)] as any,
-        }));
-        setRouteDetails(details);
-
         if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
             const bounds = response.routes[0].bounds;
             const tempMapEl = document.createElement('div');
@@ -401,10 +387,39 @@ function LocationPlanner() {
             setMapZoom(newMap.getZoom() ?? 12);
             setMapCenter(bounds.getCenter().toJSON());
         }
+
+        const safetyPromises = response.routes.map(route => 
+            getRouteSafetyDetails({
+                summary: route.summary,
+                distance: route.legs[0].distance?.text || 'N/A',
+                duration: route.legs[0].duration?.text || 'N/A',
+            }).catch(e => {
+                console.error("Safety detail generation failed for a route:", e);
+                // Return a default/error state object so Promise.all doesn't fail
+                return {
+                  roadQuality: 'Moderate',
+                  incidents: 'Data unavailable',
+                  reviewsCount: 0,
+                  lighting: 'Partially-lit',
+                  crowdedness: 'Medium',
+                  safetySummary: 'Could not retrieve safety details for this route.',
+                  crimeSummary: 'Could not retrieve crime details.',
+                  policeInfo: 'Could not retrieve police info.',
+                  weatherInfo: 'Could not retrieve weather info.'
+                };
+            })
+        );
+        
+        Promise.all(safetyPromises).then(details => {
+            setRouteDetails(details as RouteDetail[]);
+        }).finally(() => {
+            setIsCalculating(false);
+            setTimeout(() => { isRecalculatingRef.current = false; }, 2000);
+        });
+
     }).catch(e => {
         console.error("Directions request failed", e);
         toast({ variant: 'destructive', title: 'Could not calculate routes.' });
-    }).finally(() => {
         setIsCalculating(false);
         setTimeout(() => { isRecalculatingRef.current = false; }, 2000);
     });
@@ -592,7 +607,7 @@ function LocationPlanner() {
                 )}
             </div>
             
-            {directions && directions.routes.length > 0 && (
+            {directions && directions.routes.length > 0 && routeDetails.length > 0 && (
                 <div className="flex flex-col gap-3 shrink-0 p-4 border-t border-purple-900/50">
                     <h3 className="font-bold text-lg text-white">Select a Route</h3>
                     <div className="flex flex-col gap-3 max-h-48 overflow-y-auto pr-2">
@@ -621,7 +636,7 @@ function LocationPlanner() {
                                     </div>
                                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
                                       <div className="flex items-center gap-2" title="Road Quality"><Route className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
-                                      <div className="flex items-center gap-2" title="Historical Incidents"><AlertTriangle className="h-4 w-4 text-primary/80" /><span>{details.incidents} Incidents</span></div>
+                                      <div className="flex items-center gap-2" title="Historical Incidents"><AlertTriangle className="h-4 w-4 text-primary/80" /><span>{details.incidents}</span></div>
                                       <div className="flex items-center gap-2" title="User Reviews"><MessageSquare className="h-4 w-4 text-primary/80" /><span>{details.reviewsCount} Reviews</span></div>
                                       <div className="flex items-center gap-2" title="Lighting Condition"><Lamp className="h-4 w-4 text-primary/80" /><span>{details.lighting}</span></div>
                                       <div className="flex items-center gap-2" title="Crowdedness"><Users className="h-4 w-4 text-primary/80" /><span>{details.crowdedness} Traffic</span></div>
