@@ -229,8 +229,12 @@ function LocationPlanner() {
       } else if (startInputText.toLowerCase() === 'your location' && userLocation) {
           setStartPoint({ address: "Your Location", location: userLocation });
       } else if (startPoint.address !== startInputText) {
-          setStartPoint({ address: startInputText, location: null });
-          if(directions) setDirections(null);
+          // This case handles when user types something that is not coordinates
+          // and not "Your Location". We should clear the location.
+          if (startPoint.location && startPoint.address !== 'Your Location') {
+            setStartPoint({ address: startInputText, location: null });
+            if(directions) setDirections(null);
+          }
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startInputText, userLocation]);
@@ -242,8 +246,12 @@ function LocationPlanner() {
           setDestinationPoint({ address: destInputText, location: dmsCoords });
           if (directions) setDirections(null);
       } else if (destinationPoint.address !== destInputText) {
-          setDestinationPoint({ address: destInputText, location: null });
-          if(directions) setDirections(null);
+          // This case handles when user types something that is not coordinates.
+          // We should clear the location.
+          if (destinationPoint.location) {
+             setDestinationPoint({ address: destInputText, location: null });
+             if(directions) setDirections(null);
+          }
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destInputText]);
@@ -294,7 +302,12 @@ function LocationPlanner() {
             const bounds = new window.google.maps.LatLngBounds();
             bounds.extend(startPoint.location);
             bounds.extend(destinationPoint.location);
-            const newMap = new window.google.maps.Map(document.createElement('div'));
+            setMapCenter(bounds.getCenter().toJSON());
+            
+            const tempMapEl = document.createElement('div');
+            tempMapEl.style.width = '100px';
+            tempMapEl.style.height = '100px';
+            const newMap = new window.google.maps.Map(tempMapEl);
             newMap.fitBounds(bounds);
             zoomLevel = newMap.getZoom() ?? 12;
             pointToCenter = bounds.getCenter().toJSON();
@@ -332,7 +345,10 @@ function LocationPlanner() {
         setSelectedRouteIndex(0);
         if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
             const bounds = response.routes[0].bounds;
-            const newMap = new window.google.maps.Map(document.createElement('div'));
+            const tempMapEl = document.createElement('div');
+            tempMapEl.style.width = '100px';
+            tempMapEl.style.height = '100px';
+            const newMap = new window.google.maps.Map(tempMapEl);
             newMap.fitBounds(bounds);
             setMapZoom(newMap.getZoom() ?? 12);
             setMapCenter(bounds.getCenter().toJSON());
