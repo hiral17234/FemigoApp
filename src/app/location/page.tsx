@@ -1,18 +1,14 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, LocateFixed, Car, Bike, BusFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle } from 'lucide-react';
-import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent, useMap } from '@vis.gl/react-google-maps';
+import { ArrowLeft, Car, Bike, BusFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle } from 'lucide-react';
+import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { snapToRoad } from '@/app/actions/snap-to-road';
-import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 
@@ -29,83 +25,13 @@ const UserMarker = () => (
     </div>
 );
 
-// A component to render the polyline, since useMap must be used inside <Map>
-const RoutePolyline = ({ path }: { path: Point[] }) => {
-    const map = useMap();
-    const [polyline, setPolyline] = useState<google.maps.Polyline | null>(null);
-
-    useEffect(() => {
-        if (!map || !window.google?.maps?.Polyline) return;
-        
-        if (polyline) {
-            polyline.setPath(path);
-        } else {
-            const newPolyline = new window.google.maps.Polyline({
-                path: path,
-                strokeColor: "hsl(var(--primary))",
-                strokeOpacity: 0.8,
-                strokeWeight: 6,
-                map: map,
-            });
-            setPolyline(newPolyline);
-        }
-
-        // Clean up polyline on component unmount
-        return () => {
-            if (polyline) {
-                polyline.setMap(null);
-            }
-        };
-    }, [map, path, polyline]);
-
-    return null;
-};
-
 
 export default function LocationPage() {
-  const { toast } = useToast();
   const [userLocation, setUserLocation] = useState<Point | null>(null);
-  
-  const rawPathRef = useRef<Point[]>([]);
-  const [snappedPath, setSnappedPath] = useState<Point[]>([]);
-  
   const [mapCenter, setMapCenter] = useState<Point>({ lat: 20.5937, lng: 78.9629 });
   const [mapZoom, setMapZoom] = useState(4);
-  const [error, setError] = useState<string | null>(null);
   const [initialLocationSet, setInitialLocationSet] = useState(false);
-  const isProcessingRef = useRef(false);
-
   const [travelMode, setTravelMode] = useState<TravelMode>('walk');
-
-  const processPath = useCallback(async () => {
-    if (isProcessingRef.current || rawPathRef.current.length === 0) {
-      return;
-    }
-    isProcessingRef.current = true;
-    
-    const path_to_snap = [...(snappedPath.slice(-1)), ...rawPathRef.current];
-    const currentRawPoints = [...rawPathRef.current];
-    rawPathRef.current = [];
-    
-    try {
-      const newSnappedPoints = await snapToRoad(path_to_snap);
-      
-      if (newSnappedPoints && newSnappedPoints.length > 0) {
-        setSnappedPath(prev => {
-           const prevPath = prev.length > 0 ? prev.slice(0, -1) : [];
-           return [...prevPath, ...newSnappedPoints];
-        });
-      } else {
-         rawPathRef.current = [...currentRawPoints, ...rawPathRef.current]
-      }
-    } catch (e) {
-      console.error("Failed to snap to road:", e);
-      rawPathRef.current = [...currentRawPoints, ...rawPathRef.current]
-    } finally {
-      isProcessingRef.current = false;
-    }
-  }, [snappedPath]);
-
 
   useEffect(() => {
     let watchId: number;
@@ -116,72 +42,22 @@ export default function LocationPage() {
           const newLocation: Point = { lat: latitude, lng: longitude };
           
           setUserLocation(newLocation);
-          rawPathRef.current.push(newLocation);
           
           if (!initialLocationSet) {
              setMapCenter(newLocation);
              setMapZoom(15);
-             setSnappedPath([newLocation]);
              setInitialLocationSet(true);
           }
-          setError(null);
         },
-        (err) => {
-          console.error("Error getting geolocation:", err);
-          setError("Could not get your location. Please enable location services in your browser settings.");
+        () => {
+          // For simplicity, error is handled on the fullscreen map
         },
         { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
       
       return () => navigator.geolocation.clearWatch(watchId);
-    } else {
-      setError("Geolocation is not supported by this browser.");
     }
   }, [initialLocationSet]);
-  
-  useEffect(() => {
-      const intervalId = setInterval(() => {
-          if (rawPathRef.current.length > 0) {
-              processPath();
-          }
-      }, 5000);
-
-      return () => clearInterval(intervalId);
-  }, [processPath]);
-
-
-  const handleRecenter = () => {
-    if (userLocation) {
-        setMapCenter(userLocation);
-        setMapZoom(15);
-    }
-  };
-
-  const handleCameraChange = (e: MapCameraChangedEvent) => {
-      setMapCenter(e.detail.center);
-      setMapZoom(e.detail.zoom);
-  };
-  
-
-  if (!GOOGLE_MAPS_API_KEY) {
-    return (
-      <div className="flex h-screen w-screen flex-col items-center justify-center bg-[#06010F] p-4 text-white">
-        <div className="absolute top-4 left-4">
-           <Link href="/dashboard">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
-                <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-        </div>
-        <Alert variant="destructive" className="max-w-md">
-          <AlertTitle>Configuration Error</AlertTitle>
-          <AlertDescription>
-            Google Maps API Key is missing. Please add <code className="font-mono bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables. The map cannot be displayed without it.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
 
   const travelModes = [
       { name: 'drive', icon: Car },
@@ -241,64 +117,36 @@ export default function LocationPage() {
               </div>
 
               <div className="relative flex-1 w-full rounded-lg overflow-hidden min-h-0">
-                  <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places']}>
+                <Link href="/location/fullscreen" className="block w-full h-full">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity cursor-pointer">
+                    <p className="text-white font-bold text-lg bg-black/50 p-2 rounded-md">Click to expand map</p>
+                  </div>
+                  <APIProvider apiKey={GOOGLE_MAPS_API_KEY as string} libraries={['marker']}>
                     <Map
-                    center={mapCenter}
-                    zoom={mapZoom}
-                    onCameraChanged={handleCameraChange}
-                    gestureHandling={'greedy'}
-                    disableDefaultUI={true}
-                    mapId="a2b4a5d6e7f8g9h0"
+                      center={userLocation || mapCenter}
+                      zoom={userLocation ? 15 : mapZoom}
+                      gestureHandling={'none'}
+                      disableDefaultUI={true}
+                      mapId="a2b4a5d6e7f8g9h0"
                     >
-                    {userLocation && (
+                    {userLocation ? (
                         <AdvancedMarker position={userLocation}>
                           <UserMarker />
                         </AdvancedMarker>
+                    ) : (
+                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+                          <div className="text-center space-y-4 text-foreground">
+                              <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
+                                  <div className="absolute h-full w-full animate-ping rounded-full bg-primary/50" />
+                                  <Skeleton className="h-full w-full rounded-full" />
+                              </div>
+                              <h2 className="text-2xl font-bold">Finding you...</h2>
+                          </div>
+                      </div>
                     )}
-                    <RoutePolyline path={snappedPath} />
                     </Map>
                   </APIProvider>
-                  <div className="absolute top-2 right-2 z-10">
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={handleRecenter}
-                                    disabled={!userLocation}
-                                    className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full"
-                                    >
-                                    <LocateFixed className="h-5 w-5" />
-                                    <span className="sr-only">Re-center on me</span>
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Re-center on me</p>
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </div>
-                {error && (
-                    <div className="absolute top-4 left-1/2 z-10 w-full max-w-md -translate-x-1/2 p-4">
-                    <Alert variant="destructive">
-                        <AlertTitle>Location Error</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                    </div>
-                )}
-                {!userLocation && !error && (
-                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
-                        <div className="text-center space-y-4 text-foreground">
-                            <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
-                                <div className="absolute h-full w-full animate-ping rounded-full bg-primary/50" />
-                                <Skeleton className="h-full w-full rounded-full" />
-                            </div>
-                            <h2 className="text-2xl font-bold">Finding your location...</h2>
-                            <p className="text-muted-foreground">Please allow location access if prompted.</p>
-                        </div>
-                    </div>
-                )}
+                </Link>
               </div>
 
               <div className="flex flex-col gap-4 shrink-0">
