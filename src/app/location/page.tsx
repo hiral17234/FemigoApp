@@ -122,17 +122,13 @@ function LocationPlanner() {
   };
 
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartPoint({ ...startPoint, address: e.target.value });
-    if(e.target.value === "") {
-        setStartPoint({ address: "", location: null });
-    }
+    // When user types, clear the location to force re-selection from autocomplete
+    setStartPoint({ address: e.target.value, location: null });
   };
   
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDestinationPoint({ ...destinationPoint, address: e.target.value });
-    if(e.target.value === "") {
-        setDestinationPoint({ address: "", location: null });
-    }
+    // When user types, clear the location to force re-selection from autocomplete
+    setDestinationPoint({ address: e.target.value, location: null });
   };
 
   const handleStartFocus = () => {
