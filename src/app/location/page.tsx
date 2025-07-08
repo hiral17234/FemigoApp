@@ -48,7 +48,8 @@ export default function LocationPage() {
   }, []);
 
   useEffect(() => {
-    // Dynamically import Leaflet on the client side and create icons
+    if (!isClient) return;
+    
     import('leaflet').then(L => {
       setPulsingIcon(new L.DivIcon({
         className: 'pulsing-marker-container',
@@ -69,36 +70,40 @@ export default function LocationPage() {
           iconAnchor: [16, 32]
       }));
     });
-  }, []);
+  }, [isClient]);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
+    if (!isClient || !navigator.geolocation) {
         alert("Geolocation is not supported by your browser");
         return;
     }
 
+    let isFirstUpdate = true;
+
     watchId.current = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        const newPoint: LatLngTuple = [latitude, longitude];
+        
         setCurrentLocation(position.coords);
         
         setRoute(prevRoute => {
-          const newRoute: LatLngTuple[] = [...prevRoute, [latitude, longitude]];
-          if (newRoute.length > 1) {
-            const lastPoint = newRoute[newRoute.length - 2];
-            const newDistance = calculateDistance(lastPoint[0], lastPoint[1], latitude, longitude);
+          if (prevRoute.length > 0) {
+            const lastPoint = prevRoute[prevRoute.length - 1];
+            const newDistance = calculateDistance(lastPoint[0], lastPoint[1], newPoint[0], newPoint[1]);
             setDistance(prevDistance => prevDistance + newDistance);
           }
-          return newRoute;
+          return [...prevRoute, newPoint];
         });
 
-        if (route.length === 0) {
+        if (isFirstUpdate) {
             if (mapRef.current) {
-                mapRef.current.setView([latitude, longitude], 16);
+                mapRef.current.setView(newPoint, 16);
             } else {
-                setCenter([latitude, longitude]);
+                setCenter(newPoint);
                 setZoom(16);
             }
+            isFirstUpdate = false;
         }
       },
       (error) => {
@@ -113,7 +118,8 @@ export default function LocationPage() {
         navigator.geolocation.clearWatch(watchId.current);
       }
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClient]);
 
   const recenterMap = () => {
     if (currentLocation && mapRef.current) {
