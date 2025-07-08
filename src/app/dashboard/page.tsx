@@ -38,16 +38,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const storedName = localStorage.getItem("userName")
-    const storedPhone = localStorage.getItem("userPhone")
-    const storedEmail = localStorage.getItem("userEmail")
-
-    if (storedPhone || storedEmail) {
-      setUserName(storedName || "User")
-      setUserInitial(storedName ? storedName.charAt(0).toUpperCase() : "U")
-    } else {
-      router.push("/")
+    if (storedName) {
+      setUserName(storedName)
+      setUserInitial(storedName.charAt(0).toUpperCase())
     }
-  }, [router])
+  }, [])
 
   return (
     <div className="min-h-screen w-full overflow-hidden bg-[#06010F] font-sans text-white">
