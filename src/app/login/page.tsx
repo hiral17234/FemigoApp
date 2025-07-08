@@ -50,13 +50,6 @@ export default function LoginPage() {
     // Simulate network delay. For prototyping, we will bypass the password check
     // to make testing easier. A real app would have a proper database check here.
     setTimeout(() => {
-      if (typeof window !== "undefined") {
-        // Use the part of the email before the '@' as the user's name for the dashboard
-        const nameFromEmail = values.email.split('@')[0];
-        const displayName = nameFromEmail.charAt(0).toUpperCase() + nameFromEmail.slice(1);
-        localStorage.setItem("userName", displayName)
-      }
-
       toast({
         title: "Logged In!",
         description: "Welcome back.",
