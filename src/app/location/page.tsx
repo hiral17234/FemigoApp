@@ -1,3 +1,4 @@
+
 'use client'
 
 import 'leaflet/dist/leaflet.css';
@@ -47,7 +48,9 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function LocationPage() {
+  // This state controls the map's view and is passed to MapUpdater
   const [view, setView] = useState<{center: LatLngTuple, zoom: number}>({ center: [20.5937, 78.9629], zoom: 5 });
+  
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
   const [route, setRoute] = useState<LatLngTuple[]>([]);
   const [distance, setDistance] = useState(0);
@@ -143,8 +146,9 @@ export default function LocationPage() {
         </header>
 
         <MapContainer 
-            center={view.center} 
-            zoom={view.zoom} 
+            // These props are for INITIALIZATION ONLY and do not change.
+            center={[20.5937, 78.9629]} 
+            zoom={5} 
             style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
             zoomControl={false}
         >
@@ -152,6 +156,7 @@ export default function LocationPage() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
+            {/* MapUpdater receives the dynamic view state and updates the map imperatively */}
             <MapUpdater center={view.center} zoom={view.zoom} />
             
             {currentLocation && pulsingIcon && (
