@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -77,11 +78,16 @@ export default function DashboardPage() {
           </p>
         </section>
 
-        <Link href="/emergency" className="my-8 block">
-          <div className="group rounded-3xl bg-gradient-to-r from-pink-500 to-purple-600 p-0.5 transition-transform duration-150 active:scale-95">
-            <div className="flex h-24 w-full items-center justify-center rounded-[22px] bg-[#0A0A0F] px-7 py-4">
+        <Link href="/emergency" className="relative my-8 block group">
+          {/* The soft outer glow */}
+          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-pink-500 to-purple-600 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
+          
+          {/* The hard gradient border */}
+          <div className="relative rounded-3xl bg-gradient-to-r from-pink-500 to-purple-600 p-1 transition-transform duration-150 active:scale-95">
+            {/* The button's inner content */}
+            <div className="flex h-24 w-full items-center justify-center rounded-[20px] bg-[#0A0A0F] px-7 py-4">
               <div className="flex items-center justify-center gap-4">
-                <Siren className="h-8 w-8 text-pink-500" />
+                <Siren className="h-8 w-8 text-pink-500 drop-shadow-[0_0_8px_theme(colors.pink.400)]" />
                 <span className="text-2xl font-bold text-white">Emergency</span>
               </div>
             </div>
