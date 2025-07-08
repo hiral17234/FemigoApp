@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Card } from '@/components/ui/card';
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -130,82 +131,88 @@ export default function LocationPage() {
   }
 
   return (
-    <div className="relative h-screen w-screen bg-[#06010F]">
-       <div className="absolute top-4 left-4 z-10">
-          <Link href="/dashboard">
-            <Button variant="ghost" className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </Link>
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-4 text-white sm:p-6 md:p-8">
+      <div className="w-full max-w-6xl">
+        <div className="mb-4 flex items-center justify-between">
+            <h1 className="text-2xl font-bold">Live Location</h1>
+            <Link href="/dashboard">
+                <Button variant="ghost" className="text-white hover:bg-white/10">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+                </Button>
+            </Link>
         </div>
-
-        <div className="absolute top-4 right-4 z-10">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleRecenter}
-                            disabled={!userLocation}
-                            className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full"
-                            >
-                            <LocateFixed className="h-5 w-5" />
-                            <span className="sr-only">Re-center on me</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Re-center on me</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-       </div>
-
-      {error && (
-        <div className="absolute top-20 left-1/2 z-10 w-full max-w-md -translate-x-1/2 p-4">
-          <Alert variant="destructive">
-            <AlertTitle>Location Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        </div>
-      )}
-
-      {!userLocation && !error && (
-         <div className="absolute inset-0 flex items-center justify-center bg-background/50 z-20 backdrop-blur-sm">
-            <div className="text-center space-y-4">
-                <div className="relative flex h-16 w-16 items-center justify-center mx-auto">
-                    <div className="absolute h-full w-full animate-ping rounded-full bg-primary/50" />
-                    <Skeleton className="h-full w-full rounded-full" />
+        <Card className="w-full overflow-hidden rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50">
+            <div className="relative h-[75vh] w-full">
+                <div className="absolute top-4 right-4 z-10">
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleRecenter}
+                                    disabled={!userLocation}
+                                    className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full"
+                                    >
+                                    <LocateFixed className="h-5 w-5" />
+                                    <span className="sr-only">Re-center on me</span>
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Re-center on me</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 </div>
-                <h2 className="text-2xl font-bold">Finding your location...</h2>
-                <p className="text-muted-foreground">Please allow location access if prompted.</p>
-            </div>
-         </div>
-      )}
-      
-      <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps']}>
-        <Map
-          center={mapCenter}
-          zoom={mapZoom}
-          onCameraChanged={handleCameraChange}
-          gestureHandling={'greedy'}
-          disableDefaultUI={false}
-          mapId="a2b4a5d6e7f8g9h0"
-          streetViewControl={true}
-          zoomControl={true}
-        >
-          {userLocation && (
-            <AdvancedMarker position={userLocation}>
-               <UserMarker />
-            </AdvancedMarker>
-          )}
 
-          {locationHistory.length > 1 && (
-            <RoutePolyline path={locationHistory} />
-          )}
-        </Map>
-      </APIProvider>
-    </div>
+                {error && (
+                    <div className="absolute top-4 left-1/2 z-10 w-full max-w-md -translate-x-1/2 p-4">
+                    <Alert variant="destructive">
+                        <AlertTitle>Location Error</AlertTitle>
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                    </div>
+                )}
+
+                {!userLocation && !error && (
+                    <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
+                        <div className="text-center space-y-4 text-foreground">
+                            <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
+                                <div className="absolute h-full w-full animate-ping rounded-full bg-primary/50" />
+                                <Skeleton className="h-full w-full rounded-full" />
+                            </div>
+                            <h2 className="text-2xl font-bold">Finding your location...</h2>
+                            <p className="text-muted-foreground">Please allow location access if prompted.</p>
+                        </div>
+                    </div>
+                )}
+                
+                <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps']}>
+                    <Map
+                    center={mapCenter}
+                    zoom={mapZoom}
+                    onCameraChanged={handleCameraChange}
+                    gestureHandling={'greedy'}
+                    disableDefaultUI={false}
+                    mapId="a2b4a5d6e7f8g9h0"
+                    streetViewControl={true}
+                    zoomControl={true}
+                    >
+                    {userLocation && (
+                        <AdvancedMarker position={userLocation}>
+                        <UserMarker />
+                        </AdvancedMarker>
+                    )}
+
+                    {locationHistory.length > 1 && (
+                        <RoutePolyline path={locationHistory} />
+                    )}
+                    </Map>
+                </APIProvider>
+            </div>
+        </Card>
+      </div>
+    </main>
   );
 }
