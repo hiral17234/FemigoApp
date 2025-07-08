@@ -50,12 +50,17 @@ function LocationPlanner() {
       (position) => {
         const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
         setUserLocation(newLocation);
-        setMapCenter(newLocation);
-        setMapZoom(15);
         setStartPoint({ address: "Your Location", location: newLocation });
-        setInitialLocationSet(true);
+        if (!initialLocationSet) {
+          setMapCenter(newLocation);
+          setMapZoom(15);
+          setInitialLocationSet(true);
+        }
       },
-      () => {}, // Handle geolocation error
+      () => {
+        // Handle error or if user denies location
+        setInitialLocationSet(true); // Prevent this from running again
+      }, 
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
   }, [initialLocationSet]);
@@ -72,33 +77,44 @@ function LocationPlanner() {
         fields: ['geometry.location', 'formatted_address', 'name'],
     });
 
-    const onPlaceChanged = (setter: React.Dispatch<React.SetStateAction<Place>>, mapSetter: (loc:Point) => void) => () => {
-        const autocomplete = (setter === setStartPoint) ? startAutocomplete : destinationAutocomplete;
-        const place = autocomplete.getPlace();
-
-         if (place.geometry?.location) {
-            const newLocation: Point = {
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng(),
-            };
-            setter({ address: place.formatted_address || place.name || '', location: newLocation });
-            if (setter === setStartPoint) {
-                mapSetter(newLocation);
-            }
-        }
-    }
+    const startListener = startAutocomplete.addListener('place_changed', () => {
+      const place = startAutocomplete.getPlace();
+      if (place.geometry?.location) {
+          const newLocation: Point = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+          };
+          setStartPoint({ address: place.formatted_address || place.name || '', location: newLocation });
+      }
+    });
     
-    const startListener = startAutocomplete.addListener('place_changed', onPlaceChanged(setStartPoint, setMapCenter));
-    const destListener = destinationAutocomplete.addListener('place_changed', onPlaceChanged(setDestinationPoint, () => {}));
+    const destListener = destinationAutocomplete.addListener('place_changed', () => {
+      const place = destinationAutocomplete.getPlace();
+      if (place.geometry?.location) {
+          const newLocation: Point = {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+          };
+          setDestinationPoint({ address: place.formatted_address || place.name || '', location: newLocation });
+      }
+    });
 
     // Clean up the listeners when the component unmounts.
     return () => {
-        if (window.google) {
-            startListener.remove();
-            destListener.remove();
-        }
+      if (window.google) {
+          startListener.remove();
+          destListener.remove();
+      }
     }
-  }, [places, setStartPoint, setDestinationPoint, setMapCenter]);
+  }, [places]);
+
+  // Effect to re-center the map when the start point is selected via autocomplete.
+  useEffect(() => {
+    if (startPoint.location && startPoint.address !== "Your Location") {
+      setMapCenter(startPoint.location);
+      setMapZoom(15);
+    }
+  }, [startPoint]);
 
   const handleSwapLocations = () => {
       setStartPoint(destinationPoint);
@@ -207,11 +223,12 @@ function LocationPlanner() {
                   mapId="a2b4a5d6e7f8g9h0"
                   onCenterChanged={(e) => setMapCenter(e.detail.center)}
                 >
-                {userLocation ? (
+                {userLocation && (
                     <AdvancedMarker position={userLocation}>
                       <UserMarker />
                     </AdvancedMarker>
-                ) : (
+                )}
+                {!initialLocationSet && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
                       <div className="text-center space-y-4 text-foreground">
                           <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
