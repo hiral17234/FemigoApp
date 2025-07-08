@@ -42,8 +42,8 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 export default function LocationPage() {
   const mapRef = useRef<LeafletMap | null>(null);
   
-  // This key is the definitive solution. It's generated once when the component mounts
-  // and forces React to create a new, clean DOM element for the map, preventing the error.
+  // This key is the definitive safeguard. It's generated once when the component mounts
+  // and forces React to create a new, clean DOM element for the map, preventing initialization errors.
   const [mapKey, setMapKey] = useState(Date.now());
   
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
@@ -54,6 +54,8 @@ export default function LocationPage() {
   const [startIcon, setStartIcon] = useState<DivIcon | null>(null);
 
   useEffect(() => {
+    // This effect runs only once on mount to set up everything.
+    
     // Dynamically import Leaflet to create custom icons only on the client-side.
     import('leaflet').then(L => {
       setPulsingIcon(new L.DivIcon({
@@ -87,15 +89,26 @@ export default function LocationPage() {
         const { latitude, longitude } = position.coords;
         const newPoint: LatLngTuple = [latitude, longitude];
         
+        // This is a state update, but it's self-contained.
         setCurrentLocation(position.coords);
         
+        // The key change is here: we update the route state and Imperatively pan the map
+        // in the SAME callback. This avoids the unstable re-render -> useEffect cycle.
         setRoute(prevRoute => {
+          const newRoute = [...prevRoute, newPoint];
+          
           if (prevRoute.length > 0) {
             const lastPoint = prevRoute[prevRoute.length - 1];
             const newDistance = calculateDistance(lastPoint[0], lastPoint[1], newPoint[0], newPoint[1]);
             setDistance(prevDistance => prevDistance + newDistance);
           }
-          return [...prevRoute, newPoint];
+          
+          // Only pan the map on the very first location fix.
+          if (newRoute.length === 1 && mapRef.current) {
+            mapRef.current.setView(newPoint, 16);
+          }
+
+          return newRoute;
         });
       },
       (error) => {
@@ -105,20 +118,11 @@ export default function LocationPage() {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 
+    // The cleanup function runs only when the component unmounts.
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
-  }, []);
-
-  // Effect to pan the map to the current location when it updates.
-  // This runs separately to avoid conflicts.
-  useEffect(() => {
-    if (mapRef.current && currentLocation) {
-      if (route.length === 1) { // Only pan automatically on the very first location fix.
-        mapRef.current.setView([currentLocation.latitude, currentLocation.longitude], 16);
-      }
-    }
-  }, [currentLocation, route.length]);
+  }, []); // The empty dependency array is crucial. This effect runs only ONCE.
 
 
   const recenterMap = () => {
