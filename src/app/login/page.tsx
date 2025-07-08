@@ -50,9 +50,9 @@ export default function LoginPage() {
     setTimeout(() => {
       if (typeof window !== "undefined") {
         const storedEmail = localStorage.getItem("userEmail")
+        const storedPassword = localStorage.getItem("userPassword")
 
-        // Since password isn't stored, we'll only check for the email for this demo.
-        if (storedEmail && storedEmail === values.email) {
+        if (storedEmail === values.email && storedPassword === values.password) {
           toast({
             title: "Logged In!",
             description: "Welcome back.",
@@ -63,7 +63,7 @@ export default function LoginPage() {
           toast({
             variant: "destructive",
             title: "Login Failed",
-            description: "No account found, please make a account.",
+            description: "Invalid email or password. Please try again.",
           })
         }
       }
