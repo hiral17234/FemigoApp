@@ -145,7 +145,7 @@ function LocationPlanner() {
   const [livePath, setLivePath] = useState<Point[]>([]);
   const rawPathRef = useRef<Point[]>([]);
   const watchIdRef = useRef<number | null>(null);
-  const [isRecalculating, setIsRecalculating] = useState(false); // Flag to prevent rapid recalculations
+  const isRecalculatingRef = useRef(false);
 
   const startInputRef = useRef<HTMLInputElement>(null);
   const destinationInputRef = useRef<HTMLInputElement>(null);
@@ -247,7 +247,7 @@ function LocationPlanner() {
         toast({ variant: 'destructive', title: 'Could not calculate routes.' });
     }).finally(() => {
         setIsCalculating(false);
-        setIsRecalculating(false); // Allow recalculation after the current one is finished
+        isRecalculatingRef.current = false;
     });
   }, [routesLibrary, startPoint.location, destinationPoint.location, travelMode, toast]);
   
@@ -291,7 +291,7 @@ function LocationPlanner() {
                 const routePath = new window.google.maps.Polyline({
                     path: directions.routes[selectedRouteIndex].overview_path,
                 });
-                if (!isRecalculating) {
+                if (!isRecalculatingRef.current) {
                     const onRoute = window.google.maps.geometry.poly.isLocationOnEdge(
                         new window.google.maps.LatLng(newLocation.lat, newLocation.lng),
                         routePath,
@@ -299,7 +299,7 @@ function LocationPlanner() {
                     );
     
                     if (!onRoute) {
-                        setIsRecalculating(true); // Prevent further triggers until this one is done
+                        isRecalculatingRef.current = true;
                         toast({ variant: "destructive", title: "You are off-route!", description: "Recalculating..." });
                         setStartPoint({ address: "Your Location", location: newLocation });
                     }
@@ -319,7 +319,7 @@ function LocationPlanner() {
             navigator.geolocation.clearWatch(watchIdRef.current);
         }
     };
-  }, [isTracking, livePath, directions, selectedRouteIndex, geometryLibrary, toast, isRecalculating]);
+  }, [isTracking, directions, selectedRouteIndex, geometryLibrary, toast]);
 
 
   const handleSwapLocations = () => {
