@@ -22,7 +22,7 @@ type Feature = {
 }
 
 const features: Feature[] = [
-  { name: "Location", icon: MapPin, href: "#" },
+  { name: "Location", icon: MapPin, href: "/location" },
   { name: "SOS", icon: RadioTower, href: "#" },
   { name: "Check Safe", icon: ShieldCheck, href: "#" },
   { name: "Track Me", icon: Compass, href: "#" },
@@ -51,7 +51,6 @@ export default function DashboardPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#06010F] font-body text-[#F5F5F5]">
-
       <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
         <header className="flex items-center justify-between py-4">
           <div>
@@ -84,20 +83,15 @@ export default function DashboardPage() {
         </section>
 
         <Link href="/emergency">
-          <div className="group relative my-8 transition-transform duration-150 active:scale-95">
-            {/* Outer Glow */}
-            <div
-              className="absolute -inset-2.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-30 blur-xl transition-all duration-300 group-hover:opacity-50"
-              aria-hidden="true"
-            />
-            {/* Gradient Border */}
-            <div className="relative h-24 w-full rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-1">
-              <div className="flex h-full w-full items-center justify-center gap-4 rounded-[22px] bg-[#0A0A0F]">
-                <Siren className="h-8 w-8 text-[#FF0080]" />
-                <span className="text-2xl font-bold text-white">Emergency</span>
-              </div>
+           <div className="group relative my-8 transition-transform duration-150 active:scale-95">
+                <div className="absolute -inset-0.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] opacity-75 blur transition-all duration-300 group-hover:opacity-100" />
+                <div className="relative h-24 w-full rounded-3xl bg-[#0A0A0F] px-7 py-4">
+                    <div className="flex h-full items-center justify-center gap-4">
+                         <Siren className="h-8 w-8 text-[#FF0080]" />
+                         <span className="text-2xl font-bold text-white">Emergency</span>
+                    </div>
+                </div>
             </div>
-          </div>
         </Link>
         
         <section className="mt-12">
@@ -109,9 +103,12 @@ export default function DashboardPage() {
                 className="group flex cursor-pointer flex-col items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-1"
               >
                 <div className="relative h-24 w-24">
-                  <div className="absolute inset-0 rounded-full bg-gradient-radial from-pink-500/10 via-purple-500/5 to-transparent blur-lg transition-all duration-300 group-hover:from-pink-500/20" />
-                  <div className="relative z-10 flex h-full w-full items-center justify-center rounded-full border border-white/10 bg-gray-900/50 backdrop-blur-sm">
-                    <feature.icon className="h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF007A] transition-transform duration-300 group-hover:scale-110" />
+                  <div
+                    className="absolute inset-0.5 animate-pulse rounded-full bg-gradient-to-br from-pink-500/80 via-purple-500/50 to-blue-500/80 opacity-60 blur-lg transition-all duration-300 group-hover:opacity-80"
+                    style={{ animationDuration: "3s" }}
+                  />
+                  <div className="relative z-10 flex h-full w-full items-center justify-center rounded-full border border-white/10 bg-gray-900/80 backdrop-blur-sm">
+                    <feature.icon className="h-10 w-10 text-white drop-shadow-[0_0_8px_#FF007A] transition-transform duration-300 group-hover:scale-110" />
                   </div>
                 </div>
                 <span className="text-center text-sm font-medium text-white/80">
