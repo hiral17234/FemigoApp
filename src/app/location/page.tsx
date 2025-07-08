@@ -225,24 +225,29 @@ function LocationPlanner() {
       const dmsCoords = parseDMSToLatLng(startInputText);
       if (dmsCoords) {
           setStartPoint({ address: startInputText, location: dmsCoords });
+          if (directions) setDirections(null);
+      } else if (startInputText.toLowerCase() === 'your location' && userLocation) {
+          setStartPoint({ address: "Your Location", location: userLocation });
       } else if (startPoint.address !== startInputText) {
           setStartPoint({ address: startInputText, location: null });
           if(directions) setDirections(null);
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startInputText]);
+  }, [startInputText, userLocation]);
 
   // Effect to handle destination point logic from text input
   useEffect(() => {
       const dmsCoords = parseDMSToLatLng(destInputText);
       if (dmsCoords) {
           setDestinationPoint({ address: destInputText, location: dmsCoords });
+          if (directions) setDirections(null);
       } else if (destinationPoint.address !== destInputText) {
           setDestinationPoint({ address: destInputText, location: null });
           if(directions) setDirections(null);
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destInputText]);
+
 
   // Effect to initialize Google Places Autocomplete.
   useEffect(() => {
@@ -285,18 +290,15 @@ function LocationPlanner() {
       let zoomLevel = 15;
 
       if (startPoint.location && destinationPoint.location) {
-          // If we have both, fit them in the view.
           if (window.google?.maps?.LatLngBounds) {
             const bounds = new window.google.maps.LatLngBounds();
             bounds.extend(startPoint.location);
             bounds.extend(destinationPoint.location);
+            const newMap = new window.google.maps.Map(document.createElement('div'));
+            newMap.fitBounds(bounds);
+            zoomLevel = newMap.getZoom() ?? 12;
             pointToCenter = bounds.getCenter().toJSON();
-            // This is a rough approximation for zoom level
-             const map = new window.google.maps.Map(document.createElement('div'));
-             map.fitBounds(bounds);
-             zoomLevel = map.getZoom() ?? 12;
           }
-
       } else if (startPoint.location) {
           pointToCenter = startPoint.location;
       } else if (destinationPoint.location) {
@@ -330,9 +332,9 @@ function LocationPlanner() {
         setSelectedRouteIndex(0);
         if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
             const bounds = response.routes[0].bounds;
-            const map = new window.google.maps.Map(document.createElement('div')); // Dummy map
-            map.fitBounds(bounds);
-            setMapZoom(map.getZoom() ?? 12);
+            const newMap = new window.google.maps.Map(document.createElement('div'));
+            newMap.fitBounds(bounds);
+            setMapZoom(newMap.getZoom() ?? 12);
             setMapCenter(bounds.getCenter().toJSON());
         }
     }).catch(e => {
