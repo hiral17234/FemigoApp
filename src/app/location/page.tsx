@@ -3,22 +3,23 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, LocateFixed, Shield, Hospital, X, Loader2 } from 'lucide-react';
-import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent, useMap, Pin } from '@vis.gl/react-google-maps';
+import { ArrowLeft, LocateFixed, Car, Bike, BusFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle } from 'lucide-react';
+import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { snapToRoad } from '@/app/actions/snap-to-road';
-import { findNearbyPlaces, type Place } from '@/app/actions/find-nearby-places';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 type Point = { lat: number; lng: number };
+type TravelMode = 'drive' | 'bike' | 'bus' | 'walk';
 
 // A custom marker component that pulses
 const UserMarker = () => (
@@ -60,35 +61,6 @@ const RoutePolyline = ({ path }: { path: Point[] }) => {
     return null;
 };
 
-// Component to render nearby place markers
-const PlaceMarkers = ({ places, type }: { places: Place[], type: 'police' | 'hospital' | null }) => {
-    if (!type) return null;
-
-    const iconColor = type === 'police' ? '#3b82f6' : '#10b981';
-    const borderColor = type === 'police' ? '#1d4ed8' : '#047857';
-
-    return (
-        <>
-            {places.map((place) => (
-                <AdvancedMarker key={place.place_id} position={place.location} title={place.name}>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <Pin background={iconColor} borderColor={borderColor} glyphColor={'#ffffff'}>
-                                    {type === 'police' ? <Shield size={20} /> : <Hospital size={20} />}
-                                </Pin>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p className="font-bold">{place.name}</p>
-                                {place.vicinity && <p className="text-muted-foreground">{place.vicinity}</p>}
-                            </TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                </AdvancedMarker>
-            ))}
-        </>
-    )
-}
 
 export default function LocationPage() {
   const { toast } = useToast();
@@ -103,9 +75,7 @@ export default function LocationPage() {
   const [initialLocationSet, setInitialLocationSet] = useState(false);
   const isProcessingRef = useRef(false);
 
-  const [nearbyPlaces, setNearbyPlaces] = useState<Place[]>([]);
-  const [placeType, setPlaceType] = useState<'police' | 'hospital' | null>(null);
-  const [isFindingPlaces, setIsFindingPlaces] = useState(false);
+  const [travelMode, setTravelMode] = useState<TravelMode>('walk');
 
   const processPath = useCallback(async () => {
     if (isProcessingRef.current || rawPathRef.current.length === 0) {
@@ -191,44 +161,6 @@ export default function LocationPage() {
       setMapZoom(e.detail.zoom);
   };
   
-  const handleFindNearby = async (type: 'police' | 'hospital') => {
-    if (!userLocation) {
-        toast({
-            variant: "destructive",
-            title: "Location not available",
-            description: "We need your location to find nearby places."
-        });
-        return;
-    }
-
-    setIsFindingPlaces(true);
-    setPlaceType(type);
-    setNearbyPlaces([]);
-
-    try {
-        const places = await findNearbyPlaces({ location: userLocation, placeType: type });
-        setNearbyPlaces(places);
-        if (places.length === 0) {
-            toast({
-                title: `No ${type === 'police' ? 'police stations' : 'hospitals'} found nearby.`,
-                description: "Try moving to a different area."
-            });
-        }
-    } catch (e: any) {
-        toast({
-            variant: "destructive",
-            title: "Error finding places",
-            description: e.message || "An unexpected error occurred."
-        });
-    } finally {
-        setIsFindingPlaces(false);
-    }
-  }
-
-  const clearNearbyPlaces = () => {
-    setNearbyPlaces([]);
-    setPlaceType(null);
-  }
 
   if (!GOOGLE_MAPS_API_KEY) {
     return (
@@ -250,9 +182,16 @@ export default function LocationPage() {
     );
   }
 
+  const travelModes = [
+      { name: 'drive', icon: Car },
+      { name: 'bike', icon: Bike },
+      { name: 'bus', icon: BusFront },
+      { name: 'walk', icon: Footprints },
+  ]
+
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-4 text-white sm:p-6 md:p-8">
-      <Card className="w-full max-w-6xl overflow-hidden rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-0 sm:p-4 text-white">
+      <Card className="w-full h-screen sm:h-auto sm:max-w-md overflow-hidden rounded-none sm:rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50 flex flex-col">
         <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4 border-b border-purple-900/50">
           <div className='flex items-center gap-4'>
             <Link href="/dashboard">
@@ -260,78 +199,64 @@ export default function LocationPage() {
                   <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <CardTitle>Live Location</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {isFindingPlaces && (
-              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                <Loader2 className='h-4 w-4 animate-spin' />
-                <span>Finding...</span>
-              </div>
-            )}
-            {nearbyPlaces.length > 0 && placeType && (
-              <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="destructive"
-                            size="icon"
-                            onClick={clearNearbyPlaces}
-                            className="bg-red-900/50 hover:bg-red-900/80 text-white rounded-full h-8 w-8"
-                            >
-                            <X className="h-4 w-4" />
-                            <span className="sr-only">Clear places</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Clear markers</p>
-                    </TooltipContent>
-                </Tooltip>
-             </TooltipProvider>
-            )}
-             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleFindNearby('police')}
-                            disabled={!userLocation || isFindingPlaces}
-                            className={cn("rounded-full h-9 w-9 border-blue-500/50 text-blue-500 hover:bg-blue-900/20 hover:text-blue-400", placeType === 'police' && 'bg-blue-900/20')}
-                            >
-                            <Shield className="h-5 w-5" />
-                            <span className="sr-only">Find Police Stations</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Find Police Stations</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
-             <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleFindNearby('hospital')}
-                            disabled={!userLocation || isFindingPlaces}
-                            className={cn("rounded-full h-9 w-9 border-green-500/50 text-green-500 hover:bg-green-900/20 hover:text-green-400", placeType === 'hospital' && 'bg-green-900/20')}
-                            >
-                            <Hospital className="h-5 w-5" />
-                            <span className="sr-only">Find Hospitals</span>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Find Hospitals</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+             <div className="flex items-center gap-1 text-2xl font-bold text-white">
+                Femigo
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-green-400">
+                    <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
+                </svg>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="relative h-[75vh] w-full">
-              <div className="absolute top-4 right-4 z-10">
+        <CardContent className="p-4 flex-grow flex flex-col gap-4">
+            <div className="relative flex flex-col gap-2">
+                <div className="relative">
+                    <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose start location" />
+                </div>
+                <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+                    <Input className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose destination" />
+                </div>
+                <Button variant="outline" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
+                    <ArrowRightLeft className="h-4 w-4"/>
+                </Button>
+            </div>
+            
+            <div className="flex items-center justify-around bg-gray-900/70 p-1 rounded-full">
+                {travelModes.map((mode) => (
+                    <Button 
+                        key={mode.name}
+                        variant="ghost" 
+                        className={cn(
+                            "flex-1 rounded-full text-white/70 hover:text-white",
+                            travelMode === mode.name && "bg-green-500/80 text-white hover:bg-green-500/90"
+                        )}
+                        onClick={() => setTravelMode(mode.name as TravelMode)}
+                    >
+                       <mode.icon className="h-5 w-5" />
+                    </Button>
+                ))}
+            </div>
+
+            <div className="relative flex-grow w-full rounded-lg overflow-hidden">
+                <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places']}>
+                  <Map
+                  center={mapCenter}
+                  zoom={mapZoom}
+                  onCameraChanged={handleCameraChange}
+                  gestureHandling={'greedy'}
+                  disableDefaultUI={true}
+                  mapId="a2b4a5d6e7f8g9h0"
+                  >
+                  {userLocation && (
+                      <AdvancedMarker position={userLocation}>
+                        <UserMarker />
+                      </AdvancedMarker>
+                  )}
+                  <RoutePolyline path={snappedPath} />
+                  </Map>
+                </APIProvider>
+                 <div className="absolute top-2 right-2 z-10">
                   <TooltipProvider>
                       <Tooltip>
                           <TooltipTrigger asChild>
@@ -352,8 +277,7 @@ export default function LocationPage() {
                       </Tooltip>
                   </TooltipProvider>
               </div>
-
-              {error && (
+               {error && (
                   <div className="absolute top-4 left-1/2 z-10 w-full max-w-md -translate-x-1/2 p-4">
                   <Alert variant="destructive">
                       <AlertTitle>Location Error</AlertTitle>
@@ -361,8 +285,7 @@ export default function LocationPage() {
                   </Alert>
                   </div>
               )}
-
-              {!userLocation && !error && (
+               {!userLocation && !error && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm">
                       <div className="text-center space-y-4 text-foreground">
                           <div className="relative mx-auto flex h-16 w-16 items-center justify-center">
@@ -374,28 +297,23 @@ export default function LocationPage() {
                       </div>
                   </div>
               )}
-              
-              <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places']}>
-                  <Map
-                  center={mapCenter}
-                  zoom={mapZoom}
-                  onCameraChanged={handleCameraChange}
-                  gestureHandling={'greedy'}
-                  disableDefaultUI={false}
-                  mapId="a2b4a5d6e7f8g9h0"
-                  streetViewControl={true}
-                  zoomControl={true}
-                  >
-                  {userLocation && (
-                      <AdvancedMarker position={userLocation}>
-                      <UserMarker />
-                      </AdvancedMarker>
-                  )}
-                  <RoutePolyline path={snappedPath} />
-                  <PlaceMarkers places={nearbyPlaces} type={placeType} />
-                  </Map>
-              </APIProvider>
-          </div>
+            </div>
+
+            <div className="flex flex-col gap-4">
+                <Button className="w-full py-6 text-lg font-bold rounded-xl bg-green-500 hover:bg-green-600 text-black">
+                    START
+                </Button>
+                <div className="flex justify-around items-center bg-gray-900/50 p-2 rounded-2xl">
+                    <Button variant="ghost" className="text-white font-semibold">
+                        <Share2 className="mr-2 h-5 w-5 text-green-400" />
+                        Share Live Location
+                    </Button>
+                     <Button variant="ghost" className="text-white font-semibold">
+                        <Footprints className="mr-2 h-5 w-5 text-green-400" />
+                        Track Me
+                    </Button>
+                </div>
+            </div>
         </CardContent>
       </Card>
     </main>
