@@ -24,23 +24,23 @@ const UserMarker = () => (
 // A component to render the polyline, since useMap must be used inside <Map>
 const RoutePolyline = ({ path }: { path: { lat: number; lng: number }[] }) => {
     const map = useMap();
-    const [polyline, setPolyline] = useState<any>(null); // Use any to avoid TS errors without types package
+    const [polyline, setPolyline] = useState<google.maps.Polyline | null>(null);
 
     useEffect(() => {
-        if (!map) {
+        if (!map || !window.google?.maps?.Polyline) {
             return;
         }
         
         if (polyline) {
             polyline.setPath(path);
-        } else if (window.google?.maps?.Polyline) {
+        } else {
             const newPolyline = new window.google.maps.Polyline({
                 path: path,
                 strokeColor: "hsl(var(--primary))",
                 strokeOpacity: 0.8,
                 strokeWeight: 6,
+                map: map,
             });
-            newPolyline.setMap(map);
             setPolyline(newPolyline);
         }
     }, [map, path, polyline]);
@@ -184,7 +184,7 @@ export default function LocationPage() {
          </div>
       )}
       
-      <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+      <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps']}>
         <Map
           center={mapCenter}
           zoom={mapZoom}
@@ -192,6 +192,8 @@ export default function LocationPage() {
           gestureHandling={'greedy'}
           disableDefaultUI={false}
           mapId="a2b4a5d6e7f8g9h0"
+          streetViewControl={true}
+          zoomControl={true}
         >
           {userLocation && (
             <AdvancedMarker position={userLocation}>
