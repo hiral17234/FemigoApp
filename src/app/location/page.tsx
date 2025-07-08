@@ -1,4 +1,3 @@
-
 'use client'
 
 import 'leaflet/dist/leaflet.css';
@@ -9,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import dynamic from 'next/dynamic';
 import type { Map as LeafletMap, DivIcon } from 'leaflet';
 
-const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { ssr: false });
+// Use dynamic import for all react-leaflet components to prevent SSR issues
+const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { 
+    ssr: false,
+    loading: () => (
+        <div className="flex h-full w-full items-center justify-center bg-[#06010F]">
+            <Loader2 className="h-10 w-10 animate-spin text-white/50" />
+        </div>
+    ),
+});
 const TileLayer = dynamic(() => import('react-leaflet').then(mod => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import('react-leaflet').then(mod => mod.Marker), { ssr: false });
 const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline), { ssr: false });
@@ -30,7 +37,6 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function LocationPage() {
-  const [isClient, setIsClient] = useState(false);
   const [center, setCenter] = useState<LatLngTuple>([20.5937, 78.9629]); // India center
   const [zoom, setZoom] = useState(5);
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
@@ -43,13 +49,9 @@ export default function LocationPage() {
   const mapRef = useRef<LeafletMap | null>(null);
   const watchId = useRef<number | null>(null);
 
+  // This effect runs once on the client to set up icons and geolocation
   useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isClient) return;
-    
+    // Dynamically import Leaflet to ensure it's client-side only
     import('leaflet').then(L => {
       setPulsingIcon(new L.DivIcon({
         className: 'pulsing-marker-container',
@@ -70,10 +72,8 @@ export default function LocationPage() {
           iconAnchor: [16, 32]
       }));
     });
-  }, [isClient]);
 
-  useEffect(() => {
-    if (!isClient || !navigator.geolocation) {
+    if (!navigator.geolocation) {
         alert("Geolocation is not supported by your browser");
         return;
     }
@@ -113,13 +113,13 @@ export default function LocationPage() {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 
+    // Cleanup function to clear the watch
     return () => {
       if (watchId.current) {
         navigator.geolocation.clearWatch(watchId.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isClient]);
+  }, []); // Empty dependency array ensures this runs only once
 
   const recenterMap = () => {
     if (currentLocation && mapRef.current) {
@@ -130,14 +130,6 @@ export default function LocationPage() {
 
   const speed = currentLocation?.speed ? (currentLocation.speed * 3.6).toFixed(1) : '0.0';
   
-  if (!isClient) {
-    return (
-        <div className="flex h-screen w-full items-center justify-center bg-[#06010F] text-white/50">
-            <Loader2 className="h-10 w-10 animate-spin" />
-        </div>
-    );
-  }
-
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#06010F]">
         <header className="absolute top-0 left-0 right-0 z-[1000] flex items-center justify-between p-4 bg-gradient-to-b from-[#06010F] to-transparent">
@@ -154,7 +146,7 @@ export default function LocationPage() {
             center={center} 
             zoom={zoom} 
             style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
-            ref={mapRef}
+            whenCreated={mapInstance => { mapRef.current = mapInstance; }}
             zoomControl={false}
         >
             <TileLayer
