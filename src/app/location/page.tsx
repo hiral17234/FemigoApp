@@ -231,33 +231,27 @@ function LocationPlanner() {
   
   // Effect to handle coordinate input for start point
   useEffect(() => {
-    const handleCoordinateInput = (text: string, setPoint: (place: Place) => void) => {
-        const dmsCoords = parseDMSToLatLng(text);
-        if (dmsCoords) {
-            setPoint({ address: text, location: dmsCoords });
-            if (directions) {
-                setDirections(null);
-                setRouteDetails([]);
-            }
+    const dmsCoords = parseDMSToLatLng(startInputText);
+    if (dmsCoords) {
+        setStartPoint({ address: startInputText, location: dmsCoords });
+        if (directions) {
+            setDirections(null);
+            setRouteDetails([]);
         }
-    };
-    handleCoordinateInput(startInputText, setStartPoint);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startInputText]);
 
   // Effect to handle coordinate input for destination point
   useEffect(() => {
-     const handleCoordinateInput = (text: string, setPoint: (place: Place) => void) => {
-        const dmsCoords = parseDMSToLatLng(text);
-        if (dmsCoords) {
-            setPoint({ address: text, location: dmsCoords });
-            if (directions) {
-                setDirections(null);
-                setRouteDetails([]);
-            }
+    const dmsCoords = parseDMSToLatLng(destInputText);
+    if (dmsCoords) {
+        setDestinationPoint({ address: destInputText, location: dmsCoords });
+        if (directions) {
+            setDirections(null);
+            setRouteDetails([]);
         }
-    };
-    handleCoordinateInput(destInputText, setDestinationPoint);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destInputText]);
 
