@@ -7,8 +7,7 @@ import Link from 'next/link';
 import { ArrowLeft, MapPin, Wind, Milestone, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import dynamic from 'next/dynamic';
-import type { DivIcon } from 'leaflet';
-import { useMap } from 'react-leaflet/hooks';
+import type { DivIcon, Map as LeafletMap } from 'leaflet';
 
 // Use dynamic import for all react-leaflet components to prevent SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then(mod => mod.MapContainer), { 
@@ -25,15 +24,6 @@ const Polyline = dynamic(() => import('react-leaflet').then(mod => mod.Polyline)
 
 type LatLngTuple = [number, number];
 
-// A helper component to programmatically update the map's view
-function MapUpdater({ center, zoom }: { center: LatLngTuple; zoom: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
-  return null;
-}
-
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of the earth in km
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -48,8 +38,7 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 export default function LocationPage() {
-  // This state controls the map's view and is passed to MapUpdater
-  const [view, setView] = useState<{center: LatLngTuple, zoom: number}>({ center: [20.5937, 78.9629], zoom: 5 });
+  const mapRef = useRef<LeafletMap | null>(null);
   
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
   const [route, setRoute] = useState<LatLngTuple[]>([]);
@@ -105,8 +94,8 @@ export default function LocationPage() {
           return [...prevRoute, newPoint];
         });
 
-        if (isFirstUpdate) {
-            setView({ center: newPoint, zoom: 16 });
+        if (isFirstUpdate && mapRef.current) {
+            mapRef.current.setView(newPoint, 16);
             isFirstUpdate = false;
         }
       },
@@ -125,9 +114,9 @@ export default function LocationPage() {
   }, []);
 
   const recenterMap = () => {
-    if (currentLocation) {
+    if (currentLocation && mapRef.current) {
       const { latitude, longitude } = currentLocation;
-      setView({ center: [latitude, longitude], zoom: 16 });
+      mapRef.current.setView([latitude, longitude], 16);
     }
   };
 
@@ -151,13 +140,12 @@ export default function LocationPage() {
             zoom={5} 
             style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
             zoomControl={false}
+            whenCreated={mapInstance => { mapRef.current = mapInstance }}
         >
             <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                 url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
             />
-            {/* MapUpdater receives the dynamic view state and updates the map imperatively */}
-            <MapUpdater center={view.center} zoom={view.zoom} />
             
             {currentLocation && pulsingIcon && (
                 <Marker position={[currentLocation.latitude, currentLocation.longitude]} icon={pulsingIcon} />
