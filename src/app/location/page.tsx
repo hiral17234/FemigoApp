@@ -566,6 +566,7 @@ function LocationPlanner() {
                         {directions.routes.map((route, index) => {
                             const details = routeDetails[index];
                             if (!details) return null;
+                            const routeHref = `/location/route-details?route=${encodeURIComponent(JSON.stringify(route))}&details=${encodeURIComponent(JSON.stringify(details))}`;
                             return (
                                 <div key={index} onClick={() => onRouteClick(index)} className={cn(
                                     "p-4 rounded-xl cursor-pointer border-2 transition-all",
@@ -576,10 +577,14 @@ function LocationPlanner() {
                                         <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
                                         <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
                                       </div>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-white/10 shrink-0">
-                                          <Info className="h-5 w-5" />
-                                          <span className="sr-only">More Info</span>
-                                      </Button>
+                                      <Link href={routeHref} passHref>
+                                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-white/10 shrink-0">
+                                            <a>
+                                                <Info className="h-5 w-5" />
+                                                <span className="sr-only">More Info</span>
+                                            </a>
+                                        </Button>
+                                      </Link>
                                     </div>
                                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
                                       <div className="flex items-center gap-2" title="Road Quality"><Route className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
