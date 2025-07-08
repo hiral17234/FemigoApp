@@ -249,22 +249,35 @@ function LocationPlanner() {
     }
   }, [placesLibrary]);
 
-  // Effect to re-center the map when a single point is entered.
+  // Effect to re-center the map when a single point is entered or both are entered but no route yet.
   useEffect(() => {
-    let pointToCenter: Point | null = null;
-    if (startPoint.location && !destinationPoint.location) {
-        pointToCenter = startPoint.location;
-    } else if (!startPoint.location && destinationPoint.location) {
-        pointToCenter = destinationPoint.location;
-    } else if (startPoint.location && destinationPoint.location && !directions) {
-        pointToCenter = destinationPoint.location;
-    }
+      if (directions) return; // Don't re-center if we have a route.
+      
+      let pointToCenter: Point | null = null;
+      let zoomLevel = 15;
 
-    if (pointToCenter) {
-        setMapCenter(pointToCenter);
-        setMapZoom(15);
-    }
+      if (startPoint.location && destinationPoint.location) {
+          // If we have both, fit them in the view.
+          const bounds = new window.google.maps.LatLngBounds();
+          bounds.extend(startPoint.location);
+          bounds.extend(destinationPoint.location);
+          // We can't use fitBounds directly, but we can get the center.
+          pointToCenter = bounds.getCenter().toJSON();
+          // A proper zoom calculation is complex, so we'll just use a wider default.
+          zoomLevel = 12;
+
+      } else if (startPoint.location) {
+          pointToCenter = startPoint.location;
+      } else if (destinationPoint.location) {
+          pointToCenter = destinationPoint.location;
+      }
+
+      if (pointToCenter) {
+          setMapCenter(pointToCenter);
+          setMapZoom(zoomLevel);
+      }
   }, [startPoint.location, destinationPoint.location, directions]);
+
 
   // Effect to fetch directions when route parameters change.
   useEffect(() => {
@@ -377,21 +390,13 @@ function LocationPlanner() {
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAddress = e.target.value;
     const dmsCoords = parseDMSToLatLng(newAddress);
-    if (dmsCoords) {
-        setStartPoint({ address: newAddress, location: dmsCoords });
-    } else {
-        setStartPoint({ address: newAddress, location: null });
-    }
+    setStartPoint({ address: newAddress, location: dmsCoords });
   }
   
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newAddress = e.target.value;
     const dmsCoords = parseDMSToLatLng(newAddress);
-    if (dmsCoords) {
-        setDestinationPoint({ address: newAddress, location: dmsCoords });
-    } else {
-        setDestinationPoint({ address: newAddress, location: null });
-    }
+    setDestinationPoint({ address: newAddress, location: dmsCoords });
   }
 
   const handleStartFocus = () => startPoint?.address === "Your Location" && setStartPoint({ address: "", location: null });
