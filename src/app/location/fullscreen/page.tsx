@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, LocateFixed, Search, Siren, Hospital, Trash2, Loader2 } from 'lucide-react';
+import { ArrowLeft, LocateFixed, Search, Siren, Hospital, Trash2, Loader2, MapPin } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -58,6 +58,12 @@ const UserMarker = () => (
     <div className="relative flex h-5 w-5 items-center justify-center">
       <div className="absolute h-full w-full animate-ping rounded-full bg-primary/70" />
       <div className="relative h-3 w-3 rounded-full border-2 border-white bg-primary" />
+    </div>
+);
+
+const SearchedLocationMarker = () => (
+    <div className="text-red-500">
+        <MapPin className="h-8 w-8 drop-shadow-lg" fill="currentColor" stroke="white" strokeWidth={1.5} />
     </div>
 );
 
@@ -120,6 +126,7 @@ export default function FullscreenMapPage() {
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
+    const [searchedLocation, setSearchedLocation] = useState<Point | null>(null);
 
     const processPath = useCallback(async () => {
         if (isProcessingRef.current || rawPathRef.current.length === 0) return;
@@ -187,6 +194,12 @@ export default function FullscreenMapPage() {
         return () => clearInterval(intervalId);
     }, [processPath]);
 
+    useEffect(() => {
+        if (searchQuery.trim() === '') {
+            setSearchedLocation(null);
+        }
+    }, [searchQuery]);
+
     const handleRecenter = () => {
         if (userLocation) {
             setMapCenter(userLocation);
@@ -224,11 +237,13 @@ export default function FullscreenMapPage() {
         
         setIsSearching(true);
         toast({ title: 'Searching...', description: `Finding "${searchQuery}"` });
+        setSearchedLocation(null);
 
         const dmsCoords = parseDMSToLatLng(searchQuery);
         if (dmsCoords) {
             setMapCenter(dmsCoords);
             setMapZoom(15);
+            setSearchedLocation(dmsCoords);
             toast({ title: 'Location Found', description: 'Displaying coordinates on map.' });
             setIsSearching(false);
             return;
@@ -239,6 +254,7 @@ export default function FullscreenMapPage() {
             if (location) {
                 setMapCenter(location);
                 setMapZoom(15);
+                setSearchedLocation(location);
             } else {
                 toast({ 
                     variant: 'destructive', 
@@ -301,6 +317,11 @@ export default function FullscreenMapPage() {
                     {userLocation && (
                         <AdvancedMarker position={userLocation} zIndex={10}>
                             <UserMarker />
+                        </AdvancedMarker>
+                    )}
+                    {searchedLocation && (
+                        <AdvancedMarker position={searchedLocation} zIndex={5}>
+                           <SearchedLocationMarker />
                         </AdvancedMarker>
                     )}
                     <RoutePolyline path={snappedPath} />
