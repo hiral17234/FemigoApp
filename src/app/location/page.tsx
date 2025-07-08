@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Route, AlertTriangle, MessageSquare, Lamp, Users, Info } from 'lucide-react';
+import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Route, AlertTriangle, MessageSquare, Lamp, Users } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -101,7 +101,7 @@ const RoutePolylines = ({ routes, selectedRouteIndex, onRouteClick }: { routes: 
             const polyline = new window.google.maps.Polyline({
                 path: route.overview_path,
                 geodesic: true,
-                strokeColor: isSelected ? 'hsl(var(--primary))' : '#808080', // Primary color for selected, Grey for others
+                strokeColor: isSelected ? '#FF0000' : '#808080', // Red for selected, Grey for others
                 strokeOpacity: isSelected ? 0.9 : 0.7,
                 strokeWeight: isSelected ? 8 : 6,
                 zIndex: isSelected ? 2 : 1,
@@ -620,17 +620,14 @@ function LocationPlanner() {
                                     "p-4 rounded-xl cursor-pointer border-2 transition-all",
                                     selectedRouteIndex === index ? "bg-primary/20 border-primary shadow-lg shadow-primary/20" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800/90"
                                 )}>
-                                    <div className="flex justify-between items-start">
+                                    <div className="flex justify-between items-start gap-4">
                                       <div>
                                         <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
                                         <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
                                       </div>
                                       <Link href={routeHref} passHref>
-                                        <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-white/10 shrink-0">
-                                            <a>
-                                                <Info className="h-5 w-5" />
-                                                <span className="sr-only">More Info</span>
-                                            </a>
+                                        <Button asChild variant="secondary" size="sm" className="shrink-0">
+                                            <a>View Details</a>
                                         </Button>
                                       </Link>
                                     </div>
