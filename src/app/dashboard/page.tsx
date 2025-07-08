@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -54,17 +53,11 @@ export default function DashboardPage() {
       <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
         <header className="flex items-center justify-between py-4">
           <div>
-            <div className="flex items-center gap-2">
-              <Image
-                src="https://i.imgur.com/DFegeIc.jpeg"
-                alt="Femigo Logo"
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
-              <h1 className="text-3xl font-bold text-white">
-                Femigo
-              </h1>
+            <div className="flex items-center gap-1 text-3xl font-bold text-white">
+              Femigo
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
+                  <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
+              </svg>
             </div>
             <p className="mt-1 text-sm font-medium text-white/80">
               Safety. Strength. Solidarity.
@@ -73,7 +66,7 @@ export default function DashboardPage() {
           <div className="relative">
              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-pink-600 to-purple-700 opacity-75 blur-md"></div>
             <Avatar className="relative h-12 w-12 border-2 border-slate-900">
-              <AvatarImage data-ai-hint="woman avatar" src="https://i.imgur.com/x0Lh0uF.png" alt={userName} />
+              <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
               <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
             </Avatar>
           </div>
