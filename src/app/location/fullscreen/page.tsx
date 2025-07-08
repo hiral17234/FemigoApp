@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, LocateFixed, Search, Siren, Hospital, Trash2 } from 'lucide-react';
+import { ArrowLeft, LocateFixed, Search, Siren, Hospital, Trash2, Loader2 } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { snapToRoad } from '@/app/actions/snap-to-road';
 import { findNearbyPlaces } from '@/app/actions/find-nearby-places';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
+import { geocodeAddress } from '@/app/actions/geocode-address';
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
@@ -47,7 +48,7 @@ const RoutePolyline = ({ path }: { path: Point[] }) => {
         }
 
         return () => {
-            if (polyline) polyline.setMap(null);
+            // This component unmounts and remounts, so we should not clear the polyline
         };
     }, [map, path, polyline]);
 
@@ -84,6 +85,7 @@ export default function FullscreenMapPage() {
     const [placeType, setPlaceType] = useState<'police' | 'hospital' | null>(null);
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
 
     const processPath = useCallback(async () => {
         if (isProcessingRef.current || rawPathRef.current.length === 0) return;
@@ -182,18 +184,17 @@ export default function FullscreenMapPage() {
         setPlaceType(null);
     };
 
-    const handleSearch = (e: React.FormEvent) => {
+    const handleSearch = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!searchQuery || !window.google?.maps?.Geocoder) {
-            console.error("Search query or Geocoder not available.");
-            return;
-        }
+        if (!searchQuery) return;
+        
+        setIsSearching(true);
+        toast({ title: 'Searching...', description: `Finding "${searchQuery}"` });
 
-        const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address: searchQuery }, (results, status) => {
-            if (status === 'OK' && results && results[0]) {
-                const location = results[0].geometry.location;
-                setMapCenter({ lat: location.lat(), lng: location.lng() });
+        try {
+            const location = await geocodeAddress(searchQuery);
+            if (location) {
+                setMapCenter(location);
                 setMapZoom(15);
             } else {
                 toast({ 
@@ -202,7 +203,16 @@ export default function FullscreenMapPage() {
                     description: `Could not find a location for "${searchQuery}".` 
                 });
             }
-        });
+        } catch (error) {
+            console.error("Geocoding API call failed", error);
+            toast({
+                variant: 'destructive',
+                title: 'Search Error',
+                description: 'An error occurred during the search. Please try again.'
+            });
+        } finally {
+            setIsSearching(false);
+        }
     };
 
     if (!GOOGLE_MAPS_API_KEY) {
@@ -224,9 +234,10 @@ export default function FullscreenMapPage() {
                             className="bg-background/80 border-gray-500" 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
+                            disabled={isSearching}
                         />
-                        <Button type="submit" variant="outline" size="icon" className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full shrink-0">
-                            <Search className="h-5 w-5" />
+                        <Button type="submit" variant="outline" size="icon" className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full shrink-0" disabled={isSearching}>
+                            {isSearching ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
                         </Button>
                     </form>
                 </div>
