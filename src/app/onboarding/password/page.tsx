@@ -64,10 +64,6 @@ export default function OnboardingPasswordPage() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
-
-    if (typeof window !== "undefined") {
-      localStorage.setItem("userPassword", values.password.trim())
-    }
     
     toast({
       title: "Account Secured!",
