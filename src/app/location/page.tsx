@@ -42,10 +42,6 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 export default function LocationPage() {
   const mapRef = useRef<LeafletMap | null>(null);
   
-  // This key is the definitive safeguard. It's generated once when the component mounts
-  // and forces React to create a new, clean DOM element for the map, preventing initialization errors.
-  const [mapKey, setMapKey] = useState(Date.now());
-  
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
   const [route, setRoute] = useState<LatLngTuple[]>([]);
   const [distance, setDistance] = useState(0);
@@ -92,8 +88,6 @@ export default function LocationPage() {
         // This is a state update, but it's self-contained.
         setCurrentLocation(position.coords);
         
-        // The key change is here: we update the route state and Imperatively pan the map
-        // in the SAME callback. This avoids the unstable re-render -> useEffect cycle.
         setRoute(prevRoute => {
           const newRoute = [...prevRoute, newPoint];
           
@@ -147,7 +141,7 @@ export default function LocationPage() {
         </header>
 
         <MapContainer 
-            key={mapKey}
+            key="main-map"
             center={[20.5937, 78.9629]} 
             zoom={5} 
             style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
