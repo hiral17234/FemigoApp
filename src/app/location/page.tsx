@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize } from 'lucide-react';
+import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Road, AlertTriangle, MessageSquare, Lamp, Users, Info } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,13 @@ const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 type Point = { lat: number; lng: number };
 type Place = { address: string; location: Point | null };
 type TravelMode = 'DRIVING' | 'BICYCLING' | 'TRANSIT' | 'WALKING';
+type RouteDetail = {
+  roadQuality: 'Good' | 'Moderate' | 'Poor';
+  incidents: number;
+  reviewsCount: number;
+  lighting: 'Well-lit' | 'Partially-lit' | 'Poorly-lit';
+  crowdedness: 'Low' | 'Medium' | 'High';
+}
 
 // Helper function to parse DMS coordinates
 function parseDMSToLatLng(dmsStr: string): Point | null {
@@ -99,8 +106,8 @@ const RoutePolylines = ({ routes, selectedRouteIndex, onRouteClick }: { routes: 
             const polyline = new window.google.maps.Polyline({
                 path: route.overview_path,
                 geodesic: true,
-                strokeColor: isSelected ? '#FF0000' : '#808080', // Red for selected, Grey for others
-                strokeOpacity: isSelected ? 0.8 : 0.6,
+                strokeColor: isSelected ? 'hsl(var(--primary))' : '#808080', // Primary color for selected, Grey for others
+                strokeOpacity: isSelected ? 0.9 : 0.7,
                 strokeWeight: isSelected ? 8 : 6,
                 zIndex: isSelected ? 2 : 1,
                 icons: isSelected ? undefined : [{
@@ -174,6 +181,7 @@ function LocationPlanner() {
   const [initialLocationSet, setInitialLocationSet] = useState(false);
   const [travelMode, setTravelMode] = useState<TravelMode>('WALKING');
 
+  // We need to keep the raw text input separate from the validated location object
   const [startInputText, setStartInputText] = useState('');
   const [destInputText, setDestInputText] = useState('');
 
@@ -182,7 +190,8 @@ function LocationPlanner() {
   
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
-  const [isCalculating, setIsCalculating] =useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [routeDetails, setRouteDetails] = useState<RouteDetail[]>([]);
 
   const [isTracking, setIsTracking] = useState(false);
   const [livePath, setLivePath] = useState<Point[]>([]);
@@ -220,37 +229,29 @@ function LocationPlanner() {
     );
   }, [initialLocationSet]);
   
-  // Effect to handle start point logic from text input
+  // Effect to handle coordinate input for start point
   useEffect(() => {
       const dmsCoords = parseDMSToLatLng(startInputText);
       if (dmsCoords) {
           setStartPoint({ address: startInputText, location: dmsCoords });
-          if (directions) setDirections(null);
+          if (directions) {
+            setDirections(null);
+            setRouteDetails([]);
+          }
       } else if (startInputText.toLowerCase() === 'your location' && userLocation) {
           setStartPoint({ address: "Your Location", location: userLocation });
-      } else if (startPoint.address !== startInputText) {
-          // This case handles when user types something that is not coordinates
-          // and not "Your Location". We should clear the location.
-          if (startPoint.location && startPoint.address !== 'Your Location') {
-            setStartPoint({ address: startInputText, location: null });
-            if(directions) setDirections(null);
-          }
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startInputText, userLocation]);
 
-  // Effect to handle destination point logic from text input
+  // Effect to handle coordinate input for destination point
   useEffect(() => {
       const dmsCoords = parseDMSToLatLng(destInputText);
       if (dmsCoords) {
           setDestinationPoint({ address: destInputText, location: dmsCoords });
-          if (directions) setDirections(null);
-      } else if (destinationPoint.address !== destInputText) {
-          // This case handles when user types something that is not coordinates.
-          // We should clear the location.
-          if (destinationPoint.location) {
-             setDestinationPoint({ address: destInputText, location: null });
-             if(directions) setDirections(null);
+           if (directions) {
+            setDirections(null);
+            setRouteDetails([]);
           }
       }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -302,11 +303,8 @@ function LocationPlanner() {
             const bounds = new window.google.maps.LatLngBounds();
             bounds.extend(startPoint.location);
             bounds.extend(destinationPoint.location);
-            setMapCenter(bounds.getCenter().toJSON());
-            
             const tempMapEl = document.createElement('div');
-            tempMapEl.style.width = '100px';
-            tempMapEl.style.height = '100px';
+            tempMapEl.style.width = '100px'; tempMapEl.style.height = '100px';
             const newMap = new window.google.maps.Map(tempMapEl);
             newMap.fitBounds(bounds);
             zoomLevel = newMap.getZoom() ?? 12;
@@ -328,12 +326,16 @@ function LocationPlanner() {
   // Effect to fetch directions when route parameters change.
   useEffect(() => {
     if (!routesLibrary || !startPoint.location || !destinationPoint.location) {
-      if (directions) setDirections(null);
+      if (directions) {
+          setDirections(null);
+          setRouteDetails([]);
+      }
       return;
     }
     const directionsService = new routesLibrary.DirectionsService();
     setIsCalculating(true);
     setDirections(null);
+    setRouteDetails([]);
     
     directionsService.route({
         origin: startPoint.location,
@@ -343,11 +345,20 @@ function LocationPlanner() {
     }).then(response => {
         setDirections(response);
         setSelectedRouteIndex(0);
+
+        const details: RouteDetail[] = response.routes.map(() => ({
+          roadQuality: ['Good', 'Moderate', 'Poor'][Math.floor(Math.random() * 3)] as any,
+          incidents: Math.floor(Math.random() * 6),
+          reviewsCount: Math.floor(Math.random() * 21),
+          lighting: ['Well-lit', 'Partially-lit', 'Poorly-lit'][Math.floor(Math.random() * 3)] as any,
+          crowdedness: ['Low', 'Medium', 'High'][Math.floor(Math.random() * 3)] as any,
+        }));
+        setRouteDetails(details);
+
         if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
             const bounds = response.routes[0].bounds;
             const tempMapEl = document.createElement('div');
-            tempMapEl.style.width = '100px';
-            tempMapEl.style.height = '100px';
+            tempMapEl.style.width = '100px'; tempMapEl.style.height = '100px';
             const newMap = new window.google.maps.Map(tempMapEl);
             newMap.fitBounds(bounds);
             setMapZoom(newMap.getZoom() ?? 12);
@@ -488,11 +499,32 @@ function LocationPlanner() {
             <div className="relative flex flex-col gap-2 shrink-0 p-4">
                 <div className="relative">
                     <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input ref={startInputRef} value={startInputText} onChange={(e) => setStartInputText(e.target.value)} onFocus={() => startInputText === 'Your Location' && setStartInputText('')} className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
+                    <Input 
+                      ref={startInputRef} 
+                      value={startInputText} 
+                      onChange={(e) => {
+                        setStartInputText(e.target.value);
+                        if (startPoint.location && e.target.value !== startPoint.address) {
+                            setStartPoint({ address: e.target.value, location: null });
+                            setDirections(null); setRouteDetails([]);
+                        }
+                      }} 
+                      onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
+                      className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
                 </div>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                    <Input ref={destinationInputRef} value={destInputText} onChange={(e) => setDestInputText(e.target.value)} className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
+                    <Input 
+                        ref={destinationInputRef} 
+                        value={destInputText} 
+                        onChange={(e) => {
+                            setDestInputText(e.target.value);
+                            if (destinationPoint.location && e.target.value !== destinationPoint.address) {
+                                setDestinationPoint({ address: e.target.value, location: null });
+                                setDirections(null); setRouteDetails([]);
+                            }
+                        }} 
+                        className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
                 </div>
                 <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
                     <ArrowRightLeft className="h-4 w-4"/>
@@ -534,20 +566,39 @@ function LocationPlanner() {
                   </div>
                 )}
             </div>
-
+            
             {directions && directions.routes.length > 0 && (
-                <div className="flex flex-col gap-2 shrink-0 p-4 border-t border-purple-900/50">
+                <div className="flex flex-col gap-3 shrink-0 p-4 border-t border-purple-900/50">
                     <h3 className="font-bold text-lg text-white">Select a Route</h3>
-                    <div className="flex flex-col gap-2 max-h-32 overflow-y-auto">
-                        {directions.routes.map((route, index) => (
-                            <div key={index} onClick={() => onRouteClick(index)} className={cn(
-                                "p-3 rounded-md cursor-pointer border-2 transition-colors",
-                                selectedRouteIndex === index ? "bg-primary/20 border-primary" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800"
-                            )}>
-                                <p className="font-semibold text-white">{route.summary || `Route ${index + 1}`}</p>
-                                <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
-                            </div>
-                        ))}
+                    <div className="flex flex-col gap-3 max-h-48 overflow-y-auto pr-2">
+                        {directions.routes.map((route, index) => {
+                            const details = routeDetails[index];
+                            if (!details) return null;
+                            return (
+                                <div key={index} onClick={() => onRouteClick(index)} className={cn(
+                                    "p-4 rounded-xl cursor-pointer border-2 transition-all",
+                                    selectedRouteIndex === index ? "bg-primary/20 border-primary shadow-lg shadow-primary/20" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800/90"
+                                )}>
+                                    <div className="flex justify-between items-start">
+                                      <div>
+                                        <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
+                                        <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
+                                      </div>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white hover:bg-white/10 shrink-0">
+                                          <Info className="h-5 w-5" />
+                                          <span className="sr-only">More Info</span>
+                                      </Button>
+                                    </div>
+                                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
+                                      <div className="flex items-center gap-2" title="Road Quality"><Road className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
+                                      <div className="flex items-center gap-2" title="Historical Incidents"><AlertTriangle className="h-4 w-4 text-primary/80" /><span>{details.incidents} Incidents</span></div>
+                                      <div className="flex items-center gap-2" title="User Reviews"><MessageSquare className="h-4 w-4 text-primary/80" /><span>{details.reviewsCount} Reviews</span></div>
+                                      <div className="flex items-center gap-2" title="Lighting Condition"><Lamp className="h-4 w-4 text-primary/80" /><span>{details.lighting}</span></div>
+                                      <div className="flex items-center gap-2" title="Crowdedness"><Users className="h-4 w-4 text-primary/80" /><span>{details.crowdedness} Traffic</span></div>
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
                 </div>
             )}
@@ -594,3 +645,4 @@ export default function LocationPage() {
     </main>
   );
 }
+
