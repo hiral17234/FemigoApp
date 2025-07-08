@@ -18,7 +18,7 @@ const RouteSafetyInputSchema = z.object({
 });
 export type RouteSafetyInput = z.infer<typeof RouteSafetyInputSchema>;
 
-const RouteSafetyOutputSchema = z.object({
+export const RouteSafetyOutputSchema = z.object({
   roadQuality: z.enum(['Good', 'Moderate', 'Poor']).describe("The overall quality of the road surface."),
   incidents: z.string().describe("A plausible number of recent minor incidents or accidents reported, e.g., '0-2 incidents' or '3 minor delays'."),
   reviewsCount: z.number().describe("A realistic number of user reviews for this route."),
