@@ -1,13 +1,12 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2 } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
@@ -40,7 +39,7 @@ const RoutePolylines = ({ routes, selectedRouteIndex, onRouteClick }: { routes: 
     const polylinesRef = useRef<google.maps.Polyline[]>([]);
 
     useEffect(() => {
-        if (!map) return;
+        if (!map || !window.google?.maps?.Polyline) return;
 
         // Clear previous polylines
         polylinesRef.current.forEach(polyline => polyline.setMap(null));
@@ -50,17 +49,18 @@ const RoutePolylines = ({ routes, selectedRouteIndex, onRouteClick }: { routes: 
         
         routes.forEach((route, index) => {
             const isSelected = index === selectedRouteIndex;
+            // Dashed line symbol for alternate routes
             const lineSymbol = {
                 path: 'M 0,-1 0,1',
                 strokeOpacity: 1,
                 scale: 4,
             };
 
-            const polyline = new google.maps.Polyline({
+            const polyline = new window.google.maps.Polyline({
                 path: route.overview_path,
                 geodesic: true,
-                strokeColor: isSelected ? '#FF0000' : '#808080',
-                strokeOpacity: isSelected ? 0.8 : 0,
+                strokeColor: isSelected ? '#FF0000' : '#808080', // Red for selected, Grey for others
+                strokeOpacity: isSelected ? 0.8 : 0, // Solid for selected, transparent for others (icons make it dashed)
                 strokeWeight: isSelected ? 8 : 5,
                 zIndex: isSelected ? 2 : 1,
                 icons: isSelected ? undefined : [{
@@ -78,6 +78,7 @@ const RoutePolylines = ({ routes, selectedRouteIndex, onRouteClick }: { routes: 
             polylinesRef.current.push(polyline);
         });
 
+        // Cleanup function to remove polylines from map when component unmounts or dependencies change
         return () => {
             polylinesRef.current.forEach(polyline => polyline.setMap(null));
         }
@@ -96,26 +97,28 @@ const LiveTrackingPolyline = ({ path }: { path: Point[] }) => {
     const polylineRef = useRef<google.maps.Polyline | null>(null);
 
     useEffect(() => {
-        if (!map) return;
+        if (!map || !window.google?.maps?.Polyline) return;
 
         if (!polylineRef.current) {
-            polylineRef.current = new google.maps.Polyline({
+            polylineRef.current = new window.google.maps.Polyline({
+                path: path,
                 strokeColor: '#0000FF', // Blue
                 strokeOpacity: 0.9,
                 strokeWeight: 8,
-                zIndex: 3,
+                zIndex: 3, // Ensure it's on top of other route lines
                 map: map,
             });
+        } else {
+             polylineRef.current.setPath(path);
         }
-        polylineRef.current.setPath(path);
-
     }, [map, path]);
     
     // Cleanup on unmount
     useEffect(() => {
+        const polyline = polylineRef.current;
         return () => {
-            if (polylineRef.current) {
-                polylineRef.current.setMap(null);
+            if (polyline) {
+                polyline.setMap(null);
             }
         };
     }, []);
@@ -142,6 +145,7 @@ function LocationPlanner() {
   const [livePath, setLivePath] = useState<Point[]>([]);
   const rawPathRef = useRef<Point[]>([]);
   const watchIdRef = useRef<number | null>(null);
+  const [isRecalculating, setIsRecalculating] = useState(false); // Flag to prevent rapid recalculations
 
   const startInputRef = useRef<HTMLInputElement>(null);
   const destinationInputRef = useRef<HTMLInputElement>(null);
@@ -235,19 +239,15 @@ function LocationPlanner() {
         setDirections(response);
         setSelectedRouteIndex(0);
         if(response.routes.length > 0 && response.routes[0].bounds) {
-            const map = document.querySelector('.gm-style')?.parentElement;
-            if(map){
-                 // This part needs a map instance to fit bounds, will skip for now
-                 // For simplicity, we just center on destination
-                setMapCenter(destinationPoint.location!);
-                setMapZoom(12);
-            }
+            setMapCenter(destinationPoint.location!);
+            setMapZoom(12);
         }
     }).catch(e => {
         console.error("Directions request failed", e);
         toast({ variant: 'destructive', title: 'Could not calculate routes.' });
     }).finally(() => {
         setIsCalculating(false);
+        setIsRecalculating(false); // Allow recalculation after the current one is finished
     });
   }, [routesLibrary, startPoint.location, destinationPoint.location, travelMode, toast]);
   
@@ -287,15 +287,19 @@ function LocationPlanner() {
             rawPathRef.current.push(newLocation);
 
             // Off-route check
-            if (geometryLibrary && directions && directions.routes[selectedRouteIndex]) {
-                const routePath = directions.routes[selectedRouteIndex].overview_path;
-                const onRoute = geometryLibrary.poly.isLocationOnEdge(
-                    new google.maps.LatLng(newLocation.lat, newLocation.lng),
-                    new google.maps.Polyline({ path: routePath }),
-                    0.001 // ~100 meters tolerance
+            if (geometryLibrary && directions && directions.routes[selectedRouteIndex] && window.google?.maps?.geometry) {
+                const routePath = new window.google.maps.Polyline({
+                    path: directions.routes[selectedRouteIndex].overview_path,
+                });
+                
+                const onRoute = window.google.maps.geometry.poly.isLocationOnEdge(
+                    new window.google.maps.LatLng(newLocation.lat, newLocation.lng),
+                    routePath,
+                    0.001 // ~111 meters tolerance
                 );
 
-                if (!onRoute) {
+                if (!onRoute && !isRecalculating) {
+                    setIsRecalculating(true); // Prevent further triggers until this one is done
                     toast({ variant: "destructive", title: "You are off-route!", description: "Recalculating..." });
                     setStartPoint({ address: "Your Location", location: newLocation });
                 }
@@ -314,7 +318,7 @@ function LocationPlanner() {
             navigator.geolocation.clearWatch(watchIdRef.current);
         }
     };
-  }, [isTracking, livePath, directions, selectedRouteIndex, geometryLibrary, toast]);
+  }, [isTracking, livePath, directions, selectedRouteIndex, geometryLibrary, toast, isRecalculating]);
 
 
   const handleSwapLocations = () => {
@@ -322,8 +326,15 @@ function LocationPlanner() {
     setDestinationPoint(startPoint);
   };
   
-  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => setStartPoint({ address: e.target.value, location: null });
-  const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => setDestinationPoint({ address: e.target.value, location: null });
+  const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setStartPoint({ address: e.target.value, location: null });
+      if (e.target.value === "") setDirections(null);
+  }
+  const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setDestinationPoint({ address: e.target.value, location: null });
+      if (e.target.value === "") setDirections(null);
+  }
+
   const handleStartFocus = () => startPoint?.address === "Your Location" && setStartPoint({ address: "", location: null });
   const handleStartTracking = () => {
       if (isTracking) {
@@ -468,3 +479,4 @@ export default function LocationPage() {
   );
 }
 
+    
