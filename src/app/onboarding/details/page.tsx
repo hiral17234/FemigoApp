@@ -109,7 +109,15 @@ export default function OnboardingDetailsPage() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
-    console.log(values)
+    
+    if (typeof window !== "undefined") {
+      // If a nickname is provided, update the displayed name to be the nickname.
+      // Otherwise, the full name from signup will continue to be used.
+      if (values.nickname && values.nickname.trim() !== "") {
+        localStorage.setItem("userName", values.nickname.trim());
+      }
+    }
+
     toast({
       title: "Details Saved!",
       description: "Let's secure your account.",
