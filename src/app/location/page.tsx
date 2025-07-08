@@ -45,11 +45,16 @@ export default function LocationPage() {
   const [currentLocation, setCurrentLocation] = useState<GeolocationCoordinates | null>(null);
   const [route, setRoute] = useState<LatLngTuple[]>([]);
   const [distance, setDistance] = useState(0);
+  const [mapKey, setMapKey] = useState(0);
 
   const [pulsingIcon, setPulsingIcon] = useState<DivIcon | null>(null);
   const [startIcon, setStartIcon] = useState<DivIcon | null>(null);
 
   useEffect(() => {
+    // Generate a unique key on the client side after the initial render.
+    // This forces a re-mount with a new DOM element on navigation, preventing the initialization error.
+    setMapKey(Date.now());
+
     import('leaflet').then(L => {
       setPulsingIcon(new L.DivIcon({
         className: 'pulsing-marker-container',
@@ -120,6 +125,14 @@ export default function LocationPage() {
 
   const speed = currentLocation?.speed ? (currentLocation.speed * 3.6).toFixed(1) : '0.0';
   
+  if (!mapKey) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-[#06010F]">
+            <Loader2 className="h-10 w-10 animate-spin text-white/50" />
+        </div>
+    );
+  }
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#06010F]">
         <header className="absolute top-0 left-0 right-0 z-[1000] flex items-center justify-between p-4 bg-gradient-to-b from-[#06010F] to-transparent">
@@ -133,7 +146,7 @@ export default function LocationPage() {
         </header>
 
         <MapContainer 
-            // These props are for INITIALIZATION ONLY and do not change.
+            key={mapKey}
             center={[20.5937, 78.9629]} 
             zoom={5} 
             style={{ height: '100%', width: '100%', backgroundColor: '#06010F' }}
