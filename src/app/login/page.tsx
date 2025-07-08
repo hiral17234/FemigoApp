@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -52,7 +53,7 @@ export default function LoginPage() {
         const storedEmail = localStorage.getItem("userEmail")
         const storedPassword = localStorage.getItem("userPassword")
 
-        if (storedEmail === values.email && storedPassword === values.password) {
+        if (storedEmail === values.email.trim() && storedPassword === values.password.trim()) {
           toast({
             title: "Logged In!",
             description: "Welcome back.",

@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -44,7 +45,7 @@ export default function VerifyEmailPage() {
     // Simulate sending OTP
     setTimeout(() => {
       if (typeof window !== "undefined") {
-        localStorage.setItem("userEmail", values.email)
+        localStorage.setItem("userEmail", values.email.trim())
       }
       toast({
         title: "OTP Sent!",

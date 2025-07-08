@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -65,7 +66,7 @@ export default function OnboardingPasswordPage() {
     setIsSubmitting(true)
 
     if (typeof window !== "undefined") {
-      localStorage.setItem("userPassword", values.password)
+      localStorage.setItem("userPassword", values.password.trim())
     }
     
     toast({
