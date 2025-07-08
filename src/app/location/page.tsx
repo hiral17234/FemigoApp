@@ -201,7 +201,7 @@ export default function LocationPage() {
             </Link>
              <div className="flex items-center gap-1 text-2xl font-bold text-white">
                 Femigo
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-green-400">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
                     <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
                 </svg>
             </div>
@@ -229,7 +229,7 @@ export default function LocationPage() {
                         variant="ghost" 
                         className={cn(
                             "flex-1 rounded-full text-white/70 hover:text-white",
-                            travelMode === mode.name && "bg-green-500/80 text-white hover:bg-green-500/90"
+                            travelMode === mode.name && "bg-primary/80 text-white hover:bg-primary/90"
                         )}
                         onClick={() => setTravelMode(mode.name as TravelMode)}
                     >
@@ -300,16 +300,16 @@ export default function LocationPage() {
             </div>
 
             <div className="flex flex-col gap-4">
-                <Button className="w-full py-6 text-lg font-bold rounded-xl bg-green-500 hover:bg-green-600 text-black">
+                <Button className="w-full py-6 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90">
                     START
                 </Button>
                 <div className="flex justify-around items-center bg-gray-900/50 p-2 rounded-2xl">
                     <Button variant="ghost" className="text-white font-semibold">
-                        <Share2 className="mr-2 h-5 w-5 text-green-400" />
+                        <Share2 className="mr-2 h-5 w-5 text-primary" />
                         Share Live Location
                     </Button>
                      <Button variant="ghost" className="text-white font-semibold">
-                        <Footprints className="mr-2 h-5 w-5 text-green-400" />
+                        <Footprints className="mr-2 h-5 w-5 text-primary" />
                         Track Me
                     </Button>
                 </div>
@@ -319,3 +319,5 @@ export default function LocationPage() {
     </main>
   );
 }
+
+    
