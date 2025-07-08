@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Route, AlertTriangle, MessageSquare, Lamp, Users } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
@@ -177,6 +178,7 @@ const LiveTrackingPolyline = ({ path }: { path: Point[] }) => {
 }
 
 function LocationPlanner() {
+  const router = useRouter();
   const { toast } = useToast();
   const [userLocation, setUserLocation] = useState<Point | null>(null);
   const [mapCenter, setMapCenter] = useState<Point>({ lat: 20.5937, lng: 78.9629 });
@@ -550,6 +552,13 @@ function LocationPlanner() {
       }
   }
 
+  const handleViewDetails = (route: any, details: any) => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("selectedRouteData", JSON.stringify({ route, details }));
+      router.push("/location/route-details");
+    }
+  };
+
   const travelModes = [
       { name: 'DRIVING', icon: Car },
       { name: 'BICYCLING', icon: Bike },
@@ -652,7 +661,6 @@ function LocationPlanner() {
                         {directions.routes.map((route, index) => {
                             const details = routeDetails[index];
                             if (!details) return null;
-                            const routeHref = `/location/route-details?route=${encodeURIComponent(JSON.stringify(route))}&details=${encodeURIComponent(JSON.stringify(details))}`;
                             const isRecommended = recommendation && index === recommendation.index;
                             return (
                                 <div key={index} onClick={() => onRouteClick(index)} className={cn(
@@ -667,11 +675,17 @@ function LocationPlanner() {
                                         <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
                                         <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
                                       </div>
-                                      <Link href={routeHref} passHref>
-                                        <Button asChild variant="secondary" size="sm" className="shrink-0">
-                                            <a>More Info</a>
+                                        <Button 
+                                            variant="secondary" 
+                                            size="sm" 
+                                            className="shrink-0"
+                                            onClick={(e) => {
+                                                e.stopPropagation(); // Prevent route selection
+                                                handleViewDetails(route, details);
+                                            }}
+                                        >
+                                            More Info
                                         </Button>
-                                      </Link>
                                     </div>
                                     <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
                                       <div className="flex items-center gap-2" title="Road Quality"><Route className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>

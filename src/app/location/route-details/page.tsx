@@ -1,10 +1,9 @@
 
 'use client';
 
-import { Suspense } from 'react';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Route, AlertTriangle, MessageSquare, Lamp, Users, ShieldCheck, MapPin, Cloudy, Building, BadgePercent, ShieldAlert } from 'lucide-react';
+import { Suspense, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Route, AlertTriangle, MessageSquare, Lamp, Users, ShieldCheck, Cloudy, Building, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -23,21 +22,41 @@ type RouteDetail = {
 }
 
 function RouteDetailsContent() {
-    const searchParams = useSearchParams();
-    const routeStr = searchParams.get('route');
-    const detailsStr = searchParams.get('details');
+    const router = useRouter();
+    const [routeData, setRouteData] = useState<{ route: any; details: RouteDetail } | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    if (!routeStr || !detailsStr) {
+    useEffect(() => {
+        try {
+            const storedData = sessionStorage.getItem('selectedRouteData');
+            if (storedData) {
+                setRouteData(JSON.parse(storedData));
+            }
+        } catch (error) {
+            console.error("Failed to parse route data from session storage", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    if (isLoading) {
+        return <RouteDetailsSkeleton />;
+    }
+
+    if (!routeData) {
         return (
-            <div className="text-center text-muted-foreground">
-                <p>Could not load route details. Please go back and try again.</p>
+            <div className="text-center text-white bg-card p-8 rounded-lg shadow-lg">
+                <h2 className="text-xl font-bold text-destructive">No Route Data Found</h2>
+                <p className="mt-2 text-muted-foreground">This can happen if you refresh the page or navigate here directly. Please go back and select a route.</p>
+                <Button onClick={() => router.push('/location')} className="mt-6">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Planner
+                </Button>
             </div>
         );
     }
     
-    // It's safe to parse here because we checked for null/undefined above.
-    const route = JSON.parse(routeStr);
-    const details: RouteDetail = JSON.parse(detailsStr);
+    const { route, details } = routeData;
     
     // Placeholder for safety score calculation
     const safetyScore = Math.floor(Math.random() * 41) + 60; // Random score between 60 and 100
@@ -64,10 +83,10 @@ function RouteDetailsContent() {
 
     return (
         <div className="w-full max-w-md mx-auto">
-            <Link href="/location" className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300">
+            <Button onClick={() => router.push('/location')} variant="ghost" className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Planner
-            </Link>
+            </Button>
             <Card className="w-full rounded-2xl border border-white/10 bg-black/20 p-6 shadow-2xl shadow-pink-500/10 backdrop-blur-xl text-white">
                 <CardHeader className="text-center p-0 pb-6">
                     <CardTitle className="text-2xl font-bold tracking-tight">Route Details</CardTitle>
