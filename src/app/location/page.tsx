@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { snapToRoad } from '@/app/actions/snap-to-road';
 import { getRouteSafetyDetails, type RouteSafetyOutput } from '@/ai/flows/route-safety-flow';
+import { recommendSafestRoute } from '@/ai/flows/recommend-safest-route-flow';
+import { Badge } from '@/components/ui/badge';
 
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -187,6 +189,7 @@ function LocationPlanner() {
   const [selectedRouteIndex, setSelectedRouteIndex] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [routeDetails, setRouteDetails] = useState<RouteDetail[]>([]);
+  const [recommendation, setRecommendation] = useState<{ index: number; reason: string } | null>(null);
 
   const [isTracking, setIsTracking] = useState(false);
   const [livePath, setLivePath] = useState<Point[]>([]);
@@ -271,6 +274,7 @@ function LocationPlanner() {
         if (directions) {
             setDirections(null);
             setRouteDetails([]);
+            setRecommendation(null);
         }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -284,6 +288,7 @@ function LocationPlanner() {
         if (directions) {
             setDirections(null);
             setRouteDetails([]);
+            setRecommendation(null);
         }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -361,6 +366,7 @@ function LocationPlanner() {
       if (directions) {
           setDirections(null);
           setRouteDetails([]);
+          setRecommendation(null);
       }
       return;
     }
@@ -368,6 +374,7 @@ function LocationPlanner() {
     setIsCalculating(true);
     setDirections(null);
     setRouteDetails([]);
+    setRecommendation(null);
     
     directionsService.route({
         origin: startPoint.location,
@@ -376,7 +383,6 @@ function LocationPlanner() {
         provideRouteAlternatives: true,
     }).then(response => {
         setDirections(response);
-        setSelectedRouteIndex(0);
 
         if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
             const bounds = response.routes[0].bounds;
@@ -410,8 +416,28 @@ function LocationPlanner() {
             })
         );
         
-        Promise.all(safetyPromises).then(details => {
-            setRouteDetails(details as RouteDetail[]);
+        Promise.all(safetyPromises).then(async (details) => {
+            const validDetails = details as RouteDetail[];
+            setRouteDetails(validDetails);
+            
+            if (validDetails.length > 1) { // Only run recommendation if there's more than one route
+                try {
+                    const recommendationResult = await recommendSafestRoute(validDetails);
+                    setSelectedRouteIndex(recommendationResult.recommendedRouteIndex);
+                    setRecommendation({ index: recommendationResult.recommendedRouteIndex, reason: recommendationResult.reason });
+                    toast({
+                        title: "Safest Route Recommended",
+                        description: recommendationResult.reason,
+                        className: "bg-green-600 text-white"
+                    });
+                } catch (e) {
+                    console.error("Failed to get route recommendation:", e);
+                    setSelectedRouteIndex(0); // Fallback to first route
+                }
+            } else {
+                 setSelectedRouteIndex(0); // Default to first route if only one
+            }
+
         }).finally(() => {
             setIsCalculating(false);
             setTimeout(() => { isRecalculatingRef.current = false; }, 2000);
@@ -610,16 +636,26 @@ function LocationPlanner() {
             {directions && directions.routes.length > 0 && routeDetails.length > 0 && (
                 <div className="flex flex-col gap-3 shrink-0 p-4 border-t border-purple-900/50">
                     <h3 className="font-bold text-lg text-white">Select a Route</h3>
+                    {recommendation && (
+                        <div className="p-3 rounded-lg bg-green-900/50 border border-green-500/50 text-sm">
+                            <p className="font-bold text-green-300">AI Recommendation</p>
+                            <p className="text-white/80">{recommendation.reason}</p>
+                        </div>
+                    )}
                     <div className="flex flex-col gap-3 max-h-48 overflow-y-auto pr-2">
                         {directions.routes.map((route, index) => {
                             const details = routeDetails[index];
                             if (!details) return null;
                             const routeHref = `/location/route-details?route=${encodeURIComponent(JSON.stringify(route))}&details=${encodeURIComponent(JSON.stringify(details))}`;
+                            const isRecommended = recommendation && index === recommendation.index;
                             return (
                                 <div key={index} onClick={() => onRouteClick(index)} className={cn(
-                                    "p-4 rounded-xl cursor-pointer border-2 transition-all",
+                                    "p-4 rounded-xl cursor-pointer border-2 transition-all relative",
                                     selectedRouteIndex === index ? "bg-primary/20 border-primary shadow-lg shadow-primary/20" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800/90"
                                 )}>
+                                    {isRecommended && (
+                                        <Badge className="absolute -top-2 -right-2 bg-green-500 text-white border-none">Recommended</Badge>
+                                    )}
                                     <div className="flex justify-between items-start gap-4">
                                       <div>
                                         <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
