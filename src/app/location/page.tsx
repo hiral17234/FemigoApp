@@ -370,11 +370,15 @@ function LocationPlanner() {
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const address = e.target.value;
       const dmsCoords = parseDMSToLatLng(address);
+
       if (dmsCoords) {
           setStartPoint({ address, location: dmsCoords });
       } else {
-          setStartPoint({ address: address, location: null });
-          if (address === "") setDirections(null);
+          setStartPoint(prev => ({...prev, address }));
+          if (address === "") {
+              setStartPoint({ address: "", location: null });
+              setDirections(null);
+          }
       }
   }
   
@@ -384,8 +388,11 @@ function LocationPlanner() {
       if (dmsCoords) {
           setDestinationPoint({ address, location: dmsCoords });
       } else {
-          setDestinationPoint({ address: address, location: null });
-          if (address === "") setDirections(null);
+          setDestinationPoint(prev => ({...prev, address }));
+          if (address === "") {
+              setDestinationPoint({ address: "", location: null });
+              setDirections(null);
+          }
       }
   }
 
@@ -464,16 +471,8 @@ function LocationPlanner() {
             <div className="relative flex-1 w-full overflow-hidden min-h-[200px] md:min-h-0">
                 <Map center={mapCenter} zoom={mapZoom} gestureHandling={'greedy'} disableDefaultUI={true} mapId="a2b4a5d6e7f8g9h0" onCenterChanged={(e) => setMapCenter(e.detail.center)}>
                     {userLocation && <AdvancedMarker position={userLocation}><UserMarker /></AdvancedMarker>}
-                    {!directions && startPoint.location && (
-                        <AdvancedMarker position={startPoint.location}>
-                            <SearchedLocationMarker />
-                        </AdvancedMarker>
-                    )}
-                    {!directions && destinationPoint.location && (
-                        <AdvancedMarker position={destinationPoint.location}>
-                            <SearchedLocationMarker />
-                        </AdvancedMarker>
-                    )}
+                    {startPoint.location && !directions && <AdvancedMarker position={startPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
+                    {destinationPoint.location && !directions && <AdvancedMarker position={destinationPoint.location}><SearchedLocationMarker /></AdvancedMarker>}
                     {directions && <RoutePolylines routes={directions.routes} selectedRouteIndex={selectedRouteIndex} onRouteClick={onRouteClick} />}
                     {isTracking && <LiveTrackingPolyline path={livePath} />}
                 </Map>
