@@ -20,6 +20,40 @@ const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 type Point = { lat: number; lng: number };
 type Place = { name: string; vicinity?: string; location: Point; place_id: string; };
 
+// Helper function to parse DMS coordinates
+function parseDMSToLatLng(dmsStr: string): Point | null {
+  const regex = /(\d{1,3}(?:\.\d+)?)°\s*(\d{1,2}(?:\.\d+)?)'\s*([\d.]+)"\s*([NS])[\s,]+(\d{1,3}(?:\.\d+)?)°\s*(\d{1,2}(?:\.\d+)?)'\s*([\d.]+)"\s*([EW])/i;
+  const match = dmsStr.match(regex);
+
+  if (!match) return null;
+
+  try {
+    const latDegrees = parseFloat(match[1]);
+    const latMinutes = parseFloat(match[2]);
+    const latSeconds = parseFloat(match[3]);
+    const latDirection = match[4].toUpperCase();
+
+    const lonDegrees = parseFloat(match[5]);
+    const lonMinutes = parseFloat(match[6]);
+    const lonSeconds = parseFloat(match[7]);
+    const lonDirection = match[8].toUpperCase();
+    
+    if (latDegrees > 90 || lonDegrees > 180 || latMinutes >= 60 || lonMinutes >= 60 || latSeconds >= 60 || lonSeconds >= 60) return null;
+
+    let lat = latDegrees + (latMinutes / 60) + (latSeconds / 3600);
+    if (latDirection === 'S') lat = -lat;
+
+    let lng = lonDegrees + (lonMinutes / 60) + (lonSeconds / 3600);
+    if (lonDirection === 'W') lng = -lng;
+
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+    return { lat, lng };
+  } catch (e) {
+    return null;
+  }
+}
+
 const UserMarker = () => (
     <div className="relative flex h-5 w-5 items-center justify-center">
       <div className="absolute h-full w-full animate-ping rounded-full bg-primary/70" />
@@ -191,6 +225,15 @@ export default function FullscreenMapPage() {
         setIsSearching(true);
         toast({ title: 'Searching...', description: `Finding "${searchQuery}"` });
 
+        const dmsCoords = parseDMSToLatLng(searchQuery);
+        if (dmsCoords) {
+            setMapCenter(dmsCoords);
+            setMapZoom(15);
+            toast({ title: 'Location Found', description: 'Displaying coordinates on map.' });
+            setIsSearching(false);
+            return;
+        }
+
         try {
             const location = await geocodeAddress(searchQuery);
             if (location) {
@@ -230,7 +273,7 @@ export default function FullscreenMapPage() {
                     </Link>
                     <form onSubmit={handleSearch} className="flex-1 flex gap-2">
                         <Input 
-                            placeholder="Search for a location..." 
+                            placeholder="Search for a location or coordinates..." 
                             className="bg-background/80 border-gray-500" 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}

@@ -20,6 +20,40 @@ type Point = { lat: number; lng: number };
 type Place = { address: string; location: Point | null };
 type TravelMode = 'DRIVING' | 'BICYCLING' | 'TRANSIT' | 'WALKING';
 
+// Helper function to parse DMS coordinates
+function parseDMSToLatLng(dmsStr: string): Point | null {
+  const regex = /(\d{1,3}(?:\.\d+)?)°\s*(\d{1,2}(?:\.\d+)?)'\s*([\d.]+)"\s*([NS])[\s,]+(\d{1,3}(?:\.\d+)?)°\s*(\d{1,2}(?:\.\d+)?)'\s*([\d.]+)"\s*([EW])/i;
+  const match = dmsStr.match(regex);
+
+  if (!match) return null;
+
+  try {
+    const latDegrees = parseFloat(match[1]);
+    const latMinutes = parseFloat(match[2]);
+    const latSeconds = parseFloat(match[3]);
+    const latDirection = match[4].toUpperCase();
+
+    const lonDegrees = parseFloat(match[5]);
+    const lonMinutes = parseFloat(match[6]);
+    const lonSeconds = parseFloat(match[7]);
+    const lonDirection = match[8].toUpperCase();
+    
+    if (latDegrees > 90 || lonDegrees > 180 || latMinutes >= 60 || lonMinutes >= 60 || latSeconds >= 60 || lonSeconds >= 60) return null;
+
+    let lat = latDegrees + (latMinutes / 60) + (latSeconds / 3600);
+    if (latDirection === 'S') lat = -lat;
+
+    let lng = lonDegrees + (lonMinutes / 60) + (lonSeconds / 3600);
+    if (lonDirection === 'W') lng = -lng;
+
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+
+    return { lat, lng };
+  } catch (e) {
+    return null;
+  }
+}
+
 // A custom marker component that pulses
 const UserMarker = () => (
     <div className="relative flex h-5 w-5 items-center justify-center">
@@ -219,7 +253,7 @@ function LocationPlanner() {
         setMapCenter(destinationPoint.location);
         setMapZoom(15);
     }
-  }, [startPoint, destinationPoint]);
+  }, [startPoint.location, destinationPoint.location]);
 
   // Effect to fetch directions when route parameters change.
   useEffect(() => {
@@ -247,7 +281,7 @@ function LocationPlanner() {
         toast({ variant: 'destructive', title: 'Could not calculate routes.' });
     }).finally(() => {
         setIsCalculating(false);
-        isRecalculatingRef.current = false;
+        setTimeout(() => { isRecalculatingRef.current = false; }, 2000);
     });
   }, [routesLibrary, startPoint.location, destinationPoint.location, travelMode, toast]);
   
@@ -287,22 +321,21 @@ function LocationPlanner() {
             rawPathRef.current.push(newLocation);
 
             // Off-route check
-            if (geometryLibrary && directions && directions.routes[selectedRouteIndex] && window.google?.maps?.geometry) {
+            if (geometryLibrary && directions && directions.routes.length > selectedRouteIndex && window.google?.maps?.geometry && !isRecalculatingRef.current) {
                 const routePath = new window.google.maps.Polyline({
                     path: directions.routes[selectedRouteIndex].overview_path,
                 });
-                if (!isRecalculatingRef.current) {
-                    const onRoute = window.google.maps.geometry.poly.isLocationOnEdge(
-                        new window.google.maps.LatLng(newLocation.lat, newLocation.lng),
-                        routePath,
-                        0.001 // ~111 meters tolerance
-                    );
-    
-                    if (!onRoute) {
-                        isRecalculatingRef.current = true;
-                        toast({ variant: "destructive", title: "You are off-route!", description: "Recalculating..." });
-                        setStartPoint({ address: "Your Location", location: newLocation });
-                    }
+                
+                const onRoute = window.google.maps.geometry.poly.isLocationOnEdge(
+                    new window.google.maps.LatLng(newLocation.lat, newLocation.lng),
+                    routePath,
+                    0.001 // ~111 meters tolerance
+                );
+
+                if (!onRoute) {
+                    isRecalculatingRef.current = true;
+                    toast({ variant: "destructive", title: "You are off-route!", description: "Recalculating..." });
+                    setStartPoint({ address: "Your Location", location: newLocation });
                 }
             }
         },
@@ -319,7 +352,7 @@ function LocationPlanner() {
             navigator.geolocation.clearWatch(watchIdRef.current);
         }
     };
-  }, [isTracking, directions, selectedRouteIndex, geometryLibrary, toast]);
+  }, [isTracking, directions, selectedRouteIndex, geometryLibrary, toast, livePath]);
 
 
   const handleSwapLocations = () => {
@@ -328,12 +361,25 @@ function LocationPlanner() {
   };
   
   const handleStartChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setStartPoint({ address: e.target.value, location: null });
-      if (e.target.value === "") setDirections(null);
+      const address = e.target.value;
+      const dmsCoords = parseDMSToLatLng(address);
+      if (dmsCoords) {
+          setStartPoint({ address, location: dmsCoords });
+      } else {
+          setStartPoint({ address: address, location: null });
+          if (address === "") setDirections(null);
+      }
   }
+  
   const handleDestinationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setDestinationPoint({ address: e.target.value, location: null });
-      if (e.target.value === "") setDirections(null);
+      const address = e.target.value;
+      const dmsCoords = parseDMSToLatLng(address);
+      if (dmsCoords) {
+          setDestinationPoint({ address, location: dmsCoords });
+      } else {
+          setDestinationPoint({ address: address, location: null });
+          if (address === "") setDirections(null);
+      }
   }
 
   const handleStartFocus = () => startPoint?.address === "Your Location" && setStartPoint({ address: "", location: null });
@@ -384,11 +430,11 @@ function LocationPlanner() {
             <div className="relative flex flex-col gap-2 shrink-0 p-4">
                 <div className="relative">
                     <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input ref={startInputRef} value={startPoint?.address || ''} onChange={handleStartChange} onFocus={handleStartFocus} className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose start location" />
+                    <Input ref={startInputRef} value={startPoint?.address || ''} onChange={handleStartChange} onFocus={handleStartFocus} className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
                 </div>
                 <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                    <Input ref={destinationInputRef} value={destinationPoint?.address || ''} onChange={handleDestinationChange} className="pl-9 bg-gray-800 border-gray-700" placeholder="Choose destination" />
+                    <Input ref={destinationInputRef} value={destinationPoint?.address || ''} onChange={handleDestinationChange} className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
                 </div>
                 <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
                     <ArrowRightLeft className="h-4 w-4"/>
