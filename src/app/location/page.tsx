@@ -689,9 +689,9 @@ function LocationPlanner() {
                 )}
             </div>
             
-            <div className="flex flex-col shrink-0">
+            <div className="flex flex-col shrink-0 overflow-y-auto max-h-[45vh]">
               {directions && directions.routes.length > 0 && routeDetails.length > 0 && (
-                  <div className="flex flex-col gap-3 p-4 border-t border-purple-900/50 overflow-y-auto max-h-64">
+                  <div className="flex flex-col gap-3 p-4 border-t border-purple-900/50">
                       <h3 className="font-bold text-lg text-white">Select a Route</h3>
                       {recommendation && (
                           <div className="p-3 rounded-lg bg-green-900/50 border border-green-500/50 text-sm">
@@ -743,7 +743,7 @@ function LocationPlanner() {
                   </div>
               )}
 
-              <div className="flex flex-col gap-4 p-4">
+              <div className="flex flex-col gap-4 p-4 border-t border-purple-900/50">
                   <Button onClick={handleStartTracking} className="w-full py-6 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50" disabled={!directions || isCalculating}>
                       {isTracking ? "STOP" : "START"}
                   </Button>
