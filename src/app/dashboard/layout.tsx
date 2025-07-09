@@ -18,7 +18,8 @@ import {
   LifeBuoy,
   Settings,
   LogOut,
-  Loader2
+  Loader2,
+  PanelLeftClose
 } from "lucide-react"
 
 import { onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth"
@@ -49,9 +50,8 @@ function ThemeToggle() {
   }, [])
 
   if (!mounted) {
-    // Render a placeholder that matches the structure of the real component to avoid layout shifts.
     return (
-      <SidebarMenuButton 
+      <SidebarMenuButton
           disabled
           tooltip={{ children: "Loading Theme..." }}
           className="w-full justify-start text-sm"
@@ -64,7 +64,7 @@ function ThemeToggle() {
   }
 
   return (
-    <SidebarMenuButton 
+    <SidebarMenuButton
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
       tooltip={{ children: "Toggle Theme" }}
       className="w-full justify-start text-sm"
@@ -93,7 +93,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
-  
+
   const [user, setUser] = React.useState<FirebaseUser | null>(null);
   const [userName, setUserName] = React.useState<string | null>(null)
   const [userInitial, setUserInitial] = React.useState("")
@@ -113,7 +113,7 @@ export default function DashboardLayout({
         try {
           const userDocRef = doc(firebase.db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
-          
+
           let nameToDisplay = "User";
           if (userDoc.exists()) {
             nameToDisplay = userDoc.data().displayName || "User";
@@ -161,7 +161,7 @@ export default function DashboardLayout({
     { href: "#", icon: BookHeart, label: "My Diary" },
     { href: "#", icon: Sparkles, label: "My Corner" },
   ]
-  
+
   const bottomMenuItems = [
     { href: "#", icon: LifeBuoy, label: "Contact Support" },
     { href: "#", icon: Settings, label: "Settings" },
@@ -169,19 +169,15 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <Sidebar side="left" collapsible="icon" className="border-r border-purple-900/50">
+      <Sidebar side="left" collapsible="offcanvas" className="border-r border-purple-900/50">
         <SidebarHeader>
-           <div className={cn(
-              "flex items-center justify-between p-2",
-              "group-data-[collapsible=icon]:justify-center"
-            )}>
-              <div className="flex items-center gap-1 text-2xl font-bold text-white group-data-[collapsible=icon]:hidden">
+           <div className="flex items-center justify-between p-2">
+              <div className="flex items-center gap-1 text-2xl font-bold text-white">
                 Femigo
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
                     <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
                 </svg>
               </div>
-              <SidebarTrigger className="hidden text-white hover:bg-sidebar-accent hover:text-sidebar-primary transition-colors duration-300 md:flex group-data-[collapsible=icon]:hidden" />
            </div>
         </SidebarHeader>
         <SidebarContent className="p-2">
@@ -225,12 +221,12 @@ export default function DashboardLayout({
            </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      
+
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b border-purple-900/50 bg-[#06010F]/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden text-white hover:bg-sidebar-accent hover:text-sidebar-primary transition-colors duration-300" />
-            <div className="flex items-center gap-1 text-2xl font-bold text-white md:hidden">
+            <SidebarTrigger className="text-white hover:bg-sidebar-accent hover:text-sidebar-primary transition-colors duration-300" />
+            <div className="flex items-center gap-1 text-2xl font-bold text-white">
               Femigo
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
                 <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
