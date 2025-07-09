@@ -95,7 +95,7 @@ function SidebarHeaderClose() {
     if (state === "collapsed") return null;
 
     return (
-       <Button variant="ghost" size="icon" className="absolute right-2 top-3 h-7 w-7" onClick={toggleSidebar}>
+        <Button variant="ghost" size="icon" className="absolute right-2 top-3 h-7 w-7" onClick={toggleSidebar}>
             <PanelLeftClose />
             <span className="sr-only">Close sidebar</span>
         </Button>
@@ -247,7 +247,7 @@ export default function DashboardLayout({
             <SidebarTrigger className="text-white hover:bg-sidebar-accent hover:text-sidebar-primary transition-colors duration-300" />
             <div>
               <h1 className="text-3xl font-bold text-white">Femigo</h1>
-              <p className="text-sm text-purple-300 -mt-1">Safety. Strength. Solidarity.</p>
+              <p className="text-sm text-purple-300">Safety. Strength. Solidarity.</p>
             </div>
           </div>
           {isLoadingUser ? (
