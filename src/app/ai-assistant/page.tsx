@@ -19,7 +19,7 @@ type Message = {
 const AssistantMessage = ({ content }: { content: string }) => (
   <div className="flex items-start gap-3 animate-in fade-in-0 slide-in-from-left-4 duration-500">
     <Avatar className="h-9 w-9 border-2 border-primary/50">
-      <AvatarImage src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg" alt="Sangini" data-ai-hint="logo abstract" />
+      <AvatarImage src="https://i.ibb.co/HLzTTrPk/Whats-App-Image-2025-06-24-at-20-28-17-0f216b7b.jpg" alt="Sangini Assistant" data-ai-hint="woman illustration" />
       <AvatarFallback>S</AvatarFallback>
     </Avatar>
     <div className="max-w-xs sm:max-w-md rounded-2xl rounded-tl-none bg-card p-3 text-sm text-card-foreground shadow-md">
@@ -44,7 +44,7 @@ const UserMessage = ({ content }: { content:string }) => (
 const TypingIndicator = () => (
     <div className="flex items-start gap-3 animate-in fade-in-0 duration-500">
         <Avatar className="h-9 w-9 border-2 border-primary/50">
-            <AvatarImage src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg" alt="Sangini" data-ai-hint="logo abstract"/>
+            <AvatarImage src="https://i.ibb.co/HLzTTrPk/Whats-App-Image-2025-06-24-at-20-28-17-0f216b7b.jpg" alt="Sangini Assistant" data-ai-hint="woman illustration"/>
             <AvatarFallback>S</AvatarFallback>
         </Avatar>
         <div className="max-w-xs sm:max-w-md rounded-2xl rounded-tl-none bg-card p-4 text-sm text-card-foreground shadow-md flex items-center gap-1.5">
@@ -110,7 +110,7 @@ export default function AiAssistantPage() {
           <div className="relative">
              <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#ff4da6] to-purple-600 opacity-75 blur-md"></div>
              <Avatar className="relative h-20 w-20 border-2 border-[#ff4da6]/50">
-                <AvatarImage src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg" alt="Sangini" data-ai-hint="logo abstract" />
+                <AvatarImage src="https://i.ibb.co/HLzTTrPk/Whats-App-Image-2025-06-24-at-20-28-17-0f216b7b.jpg" alt="Sangini Assistant" data-ai-hint="woman illustration" />
                 <AvatarFallback>S</AvatarFallback>
              </Avatar>
           </div>
