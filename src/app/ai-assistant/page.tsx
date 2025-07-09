@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
@@ -53,11 +54,11 @@ export default function AiAssistantPage() {
 
       const aiMessage: Message = { role: 'assistant', content: aiResponseContent };
       setMessages((prev) => [...prev, aiMessage]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error calling Sangini:", error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: "Sorry to say , but currently account is under verification. I will come back as soon as the process is completed",
+        content: error.message || "An unknown error occurred. Please check the browser console for more details.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {

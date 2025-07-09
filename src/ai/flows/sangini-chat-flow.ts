@@ -1,6 +1,7 @@
+
 'use server';
 /**
- * @fileOverview A friendly AI chat assistant named Sangini, running a local simulation.
+ * @fileOverview A friendly AI chat assistant named Sangini, connected to Hugging Face.
  *
  * - askSangini - The main function to interact with the assistant.
  * - SanginiChatInput - The input type for the chat flow.
@@ -20,59 +21,9 @@ export const SanginiChatInputSchema = z.object({
 });
 export type SanginiChatInput = z.infer<typeof SanginiChatInputSchema>;
 
-// This is the local simulation that will run instantly for your hackathon demo.
-const runLocalSimulation = async (prompt: string): Promise<string> => {
-    // A small delay to simulate the AI "thinking"
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const p = prompt.toLowerCase();
-
-    // Greetings
-    if (p.includes('hello') || p.includes('hi') || p.includes('hey')) {
-        const responses = [
-            "Hello there! I'm Sangini, your personal safety companion. How can I empower you today?",
-            "Hi! Sangini here. I'm ready to help. What's on your mind?",
-            "Hey! So glad you reached out. I'm here to support you."
-        ];
-        return responses[Math.floor(Math.random() * responses.length)];
-    }
-
-    // Asking for help / SOS
-    if (p.includes('help') || p.includes('sos') || p.includes('emergency')) {
-        return "If this is an emergency, please use the SOS button on the dashboard to contact authorities or your trusted contacts immediately. For safety tips or a friendly chat, just ask!";
-    }
-
-    // Asking for safety tips
-    if (p.includes('safety') && p.includes('tip')) {
-        const tips = [
-            "A great safety tip is to always be aware of your surroundings. Avoid walking alone at night if possible, and always let someone know your route and estimated arrival time. Stay strong and stay safe!",
-            "Always trust your gut instinct. If a situation or person feels off, it probably is. Remove yourself from the situation as quickly and safely as you can.",
-            "When traveling, share your live location with a trusted friend or family member. You can do this right from the Femigo app!",
-            "Consider carrying a personal safety alarm. It can be a powerful deterrent and attract attention when you need it most."
-        ];
-        return tips[Math.floor(Math.random() * tips.length)];
-    }
-
-    // Feeling unsafe or scared
-    if (p.includes('scared') || p.includes('unsafe') || p.includes('nervous')) {
-        return "I hear you, and it's okay to feel that way. Take a deep breath. Your safety is the priority. Can you tell me more about what's happening? If you're in immediate danger, please use the SOS feature.";
-    }
-
-    // Thank you
-    if (p.includes('thank')) {
-        return "You're very welcome! I'm always here if you need me. Remember, you've got this. Stay safe!";
-    }
-
-    // Default catch-all responses
-    const defaultResponses = [
-        "That's a great question. As your safety companion, I'm here to support you. Remember to always trust your instincts and prioritize your well-being.",
-        "I understand. Your feelings are valid. Let's talk through it. What's on your mind?",
-        "I'm here to listen. Tell me more.",
-        "Thank you for sharing that with me. Remember, your strength is greater than any struggle."
-    ];
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-};
-
+// The model we'll use from Hugging Face
+const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2";
+const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
 
 const sanginiChatFlow = ai.defineFlow(
   {
@@ -81,12 +32,80 @@ const sanginiChatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async ({ history, prompt }) => {
-    // This provides an instant, interactive experience for the hackathon.
-    console.log("Sangini Chat in LOCAL SIMULATION MODE.");
-    return runLocalSimulation(prompt);
+    const HUGGINGFACE_API_KEY = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY;
+
+    if (!HUGGINGFACE_API_KEY) {
+        console.error("Hugging Face API Key is not configured.");
+        throw new Error("The Hugging Face API Key is missing. Please add it to your .env file to use the AI assistant.");
+    }
+    
+    // Define the persona for the AI model
+    const persona = "You are Sangini, a friendly, caring, and empowering safety companion for women. Your tone should always be supportive and helpful. Keep your answers concise and to the point.";
+
+    // Format the conversation history and the new prompt according to Mistral's instruction format.
+    let fullPrompt = `[INST] ${persona} [/INST]\n`;
+    history.forEach(msg => {
+        if (msg.role === 'user') {
+            fullPrompt += `[INST] ${msg.content} [/INST]\n`;
+        } else {
+            fullPrompt += `${msg.content}\n`;
+        }
+    });
+    fullPrompt += `[INST] ${prompt} [/INST]`;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${HUGGINGFACE_API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                inputs: fullPrompt,
+                parameters: {
+                    return_full_text: false, // We only want the AI's response
+                    max_new_tokens: 250,    // Limit response length
+                    temperature: 0.7,       // Control randomness
+                    top_p: 0.95,
+                    do_sample: true,
+                }
+            }),
+        });
+
+        if (!response.ok) {
+            const errorDetails = await response.text();
+            console.error("Hugging Face API Error:", errorDetails);
+            throw new Error(`Failed to get a response from the AI model. Status: ${response.status}.`);
+        }
+
+        const result = await response.json();
+        
+        if (result && Array.isArray(result) && result[0] && result[0].generated_text) {
+            return result[0].generated_text.trim();
+        } else if (result.error) {
+            // Handle specific errors like the model loading
+            if (result.error.includes("is currently loading")) {
+                const estimatedTime = result.estimated_time || 20;
+                throw new Error(`The AI model is starting up. Please wait about ${Math.ceil(estimatedTime)} seconds and try again.`);
+            }
+            throw new Error(`Hugging Face Error: ${result.error}`);
+        } else {
+            throw new Error("Received an unexpected response format from the AI model.");
+        }
+
+    } catch (e: any) {
+        console.error("Failed to call Hugging Face API", e);
+        // Re-throw the error with a clear message for the UI to display
+        throw new Error(e.message || "An unexpected error occurred while communicating with the AI model.");
+    }
   }
 );
 
 export async function askSangini(input: SanginiChatInput): Promise<string> {
-    return sanginiChatFlow(input);
+    try {
+        return await sanginiChatFlow(input);
+    } catch(e: any) {
+        // Re-throw the caught error so the UI layer can display the specific message.
+        throw e;
+    }
 }
