@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview A friendly AI chat assistant named Sangini.
+ * @fileOverview A friendly AI chat assistant named Sangini, running a local simulation.
  *
  * - askSangini - The main function to interact with the assistant.
  * - SanginiChatInput - The input type for the chat flow.
@@ -81,45 +81,9 @@ const sanginiChatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async ({ history, prompt }) => {
-    // LOCAL SIMULATION FOR HACKATHON DEMO
-    // This provides an instant, interactive experience while your Google Cloud account is under review.
-    // It will be replaced with the live Gemini model call once verification is complete.
-    console.log("Sangini Chat in LOCAL SIMULATION MODE for Hackathon.");
+    // This provides an instant, interactive experience for the hackathon.
+    console.log("Sangini Chat in LOCAL SIMULATION MODE.");
     return runLocalSimulation(prompt);
-    
-    // ----- LIVE GEMINI IMPLEMENTATION (Currently Blocked by Account Verification) -----
-    /*
-    try {
-        const model = ai.getGenerator('googleai/gemini-pro');
-        const historyForModel = history.map(msg => ({
-            role: msg.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: msg.content }],
-        }));
-
-        const result = await model.generate({
-            history: historyForModel,
-            prompt: prompt,
-        });
-
-        return result.text();
-    } catch (e: any) {
-        console.error("Genkit AI call failed:", e);
-
-        // More detailed error checking
-        if (e.message.includes('API key not valid')) {
-            return "It seems there's an issue with the API key. Please ensure it's set correctly in the environment variables.";
-        }
-        if (e.message.includes('permission denied')) {
-            return "I'm having trouble accessing the AI service due to a permissions issue. Please check the IAM roles for the service account.";
-        }
-        if (e.message.toLowerCase().includes('billing')) {
-            return "It looks like there's a billing issue with the account. Please ensure the project is linked to an active billing account.";
-        }
-        
-        // Fallback for other errors
-        return `I'm encountering a technical issue. Error: ${e.message}`;
-    }
-    */
   }
 );
 
