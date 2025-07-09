@@ -18,7 +18,7 @@ import {
 import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent"
 
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -356,5 +356,3 @@ export default function DiaryPage() {
     </div>
   )
 }
-
-    
