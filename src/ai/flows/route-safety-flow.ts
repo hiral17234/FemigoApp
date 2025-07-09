@@ -7,7 +7,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { RouteSafetyInputSchema, RouteSafetyOutputSchema, type RouteSafetyInput, type RouteSafetyOutput } from './types';
+import { RouteSafetyInputSchema, RouteSafetyOutputSchema, type RouteSafetyInput, type RouteSafetyOutput } from '@/ai/types';
 
 
 const routeSafetyFlow = ai.defineFlow(

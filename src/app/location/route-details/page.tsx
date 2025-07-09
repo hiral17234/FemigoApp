@@ -8,18 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-
-type RouteDetail = {
-  roadQuality: 'Good' | 'Moderate' | 'Poor';
-  incidents: string;
-  reviewsCount: number;
-  lighting: 'Well-lit' | 'Partially-lit' | 'Poorly-lit';
-  crowdedness: 'Low' | 'Medium' | 'High';
-  safetySummary: string;
-  crimeSummary: string;
-  policeInfo: string;
-  weatherInfo: string;
-}
+import { type RouteSafetyOutput as RouteDetail } from '@/ai/types';
 
 function RouteDetailsContent() {
     const router = useRouter();

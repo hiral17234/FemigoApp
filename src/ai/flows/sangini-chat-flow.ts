@@ -8,7 +8,7 @@
 
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import { SanginiChatInputSchema, type SanginiChatInput } from './types';
+import { SanginiChatInputSchema, type SanginiChatInput } from '@/ai/types';
 
 
 const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2";

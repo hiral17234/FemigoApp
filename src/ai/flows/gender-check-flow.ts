@@ -7,7 +7,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { GenderCheckInputSchema, GenderCheckOutputSchema, type GenderCheckInput, type GenderCheckOutput } from './types';
+import { GenderCheckInputSchema, GenderCheckOutputSchema, type GenderCheckInput, type GenderCheckOutput } from '@/ai/types';
 
 
 const genderCheckPrompt = ai.definePrompt({

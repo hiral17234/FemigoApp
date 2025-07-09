@@ -7,7 +7,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import { AadhaarVerificationInputSchema, AadhaarVerificationOutputSchema, type AadhaarVerificationInput, type AadhaarVerificationOutput } from './types';
+import { AadhaarVerificationInputSchema, AadhaarVerificationOutputSchema, type AadhaarVerificationInput, type AadhaarVerificationOutput } from '@/ai/types';
 
 
 const aadhaarVerificationPrompt = ai.definePrompt({

@@ -8,7 +8,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { RecommendSafestRouteInputSchema, RecommendSafestRouteOutputSchema, type RecommendSafestRouteInput, type RecommendSafestRouteOutput } from './types';
+import { RecommendSafestRouteInputSchema, RecommendSafestRouteOutputSchema, type RecommendSafestRouteInput, type RecommendSafestRouteOutput } from '@/ai/types';
 
 
 const recommendationPrompt = ai.definePrompt({

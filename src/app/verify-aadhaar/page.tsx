@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import { verifyAadhaar } from "@/ai/flows/aadhaar-verification-flow"
-import { type AadhaarVerificationOutput } from "@/ai/flows/types"
+import { type AadhaarVerificationOutput } from "@/ai/types"
 
 type CaptureMode = "camera" | "upload"
 type FacingMode = "user" | "environment"

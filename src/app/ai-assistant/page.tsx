@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { askSangini } from '@/ai/flows/sangini-chat-flow';
-import { type Message } from '@/ai/flows/types';
+import { type Message } from '@/ai/types';
 
 // The local message type now only needs role and content for display purposes.
 type DisplayMessage = {

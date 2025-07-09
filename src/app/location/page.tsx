@@ -17,7 +17,7 @@ import { getRouteSafetyDetails } from '@/ai/flows/route-safety-flow';
 import { recommendSafestRoute } from '@/ai/flows/recommend-safest-route-flow';
 import { Badge } from '@/components/ui/badge';
 import { geocodeAddress } from '../actions/geocode-address';
-import { type RouteSafetyOutput } from '@/ai/flows/types';
+import { type RouteSafetyOutput } from '@/ai/types';
 
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
