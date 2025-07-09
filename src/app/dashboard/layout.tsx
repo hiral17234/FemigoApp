@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -13,6 +14,7 @@ import {
   FileText,
   BookHeart,
   Sparkles,
+  Flower2,
   Moon,
   Sun,
   LifeBuoy,
@@ -159,7 +161,8 @@ export default function DashboardLayout({
     { href: "/verify", icon: Camera, label: "Camera & Uploads" },
     { href: "/verify-aadhaar", icon: FileText, label: "Aadhaar Verification" },
     { href: "#", icon: BookHeart, label: "My Diary" },
-    { href: "#", icon: Sparkles, label: "My Corner" },
+    { href: "#", icon: Flower2, label: "My Corner" },
+    { href: "#", icon: Sparkles, label: "AI Assistant" },
   ]
 
   const bottomMenuItems = [
