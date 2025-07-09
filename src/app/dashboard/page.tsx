@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import {
   Siren,
   MapPin,
@@ -16,12 +15,10 @@ import {
   CalendarDays,
   Quote
 } from "lucide-react"
-import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 import { format } from "date-fns"
 
 import { auth, db, firebaseError } from "@/lib/firebase"
-import { Button } from "@/components/ui/button"
 
 const dailyQuotes = [
   { quote: "A strong woman looks a challenge in the eye and gives it a wink.", author: "Gina Carey" },
@@ -53,7 +50,6 @@ function DailyThought() {
   const [dailyQuote, setDailyQuote] = useState({ quote: "", author: "" });
 
   useEffect(() => {
-    // Set daily quote based on the day of the year
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 0);
     const diff = now.getTime() - startOfYear.getTime();
@@ -62,7 +58,6 @@ function DailyThought() {
     const quoteIndex = dayOfYear % dailyQuotes.length;
     setDailyQuote(dailyQuotes[quoteIndex]);
 
-    // Defer client-side specific date logic to useEffect to prevent hydration mismatch
     setCurrentDateTime(new Date());
     const timerId = setInterval(() => setCurrentDateTime(new Date()), 1000);
 
@@ -77,7 +72,6 @@ function DailyThought() {
   
   return (
     <div className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700 space-y-6 text-center">
-        {/* Date/Time toastbox */}
         <div className="inline-block rounded-full bg-gradient-to-r from-pink-500/30 to-purple-500/30 p-px shadow-lg shadow-pink-500/10">
             <div className="rounded-full bg-[#110D1F] px-4 py-2 flex items-center justify-center gap-2 text-sm text-purple-300">
                 <CalendarDays className="h-4 w-4" />
@@ -85,7 +79,6 @@ function DailyThought() {
             </div>
         </div>
 
-        {/* Improved Quote Box */}
         <div className="rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-6 shadow-inner-lg border border-white/10 relative">
             <Quote className="absolute top-4 left-2 h-8 w-8 text-primary/30" />
             <Quote className="absolute bottom-4 right-2 h-8 w-8 text-primary/30 rotate-180" />
@@ -98,22 +91,18 @@ function DailyThought() {
 
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userName, setUserName] = useState<string | null>(null)
-  const [userInitial, setUserInitial] = useState("")
   const [isLoadingUser, setIsLoadingUser] = useState(true)
 
   useEffect(() => {
-    if (firebaseError || !auth || !db) {
-        setIsLoadingUser(false);
-        return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
+    const fetchUserData = async () => {
+      if (auth?.currentUser) {
+        const currentUser = auth.currentUser;
         try {
+          if (!db) {
+             setUserName(currentUser.displayName || "User");
+             return;
+          }
           const userDocRef = doc(db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
@@ -124,7 +113,6 @@ export default function DashboardPage() {
             nameToDisplay = currentUser.displayName || "User";
           }
           setUserName(nameToDisplay);
-          setUserInitial(nameToDisplay.charAt(0).toUpperCase());
         } catch (error) {
             console.error("Failed to fetch user data:", error);
             setUserName(currentUser.displayName || "User");
@@ -132,12 +120,12 @@ export default function DashboardPage() {
             setIsLoadingUser(false);
         }
       } else {
-        router.push("/login");
+        setIsLoadingUser(false);
       }
-    });
+    };
 
-    return () => unsubscribe();
-  }, [router]);
+    fetchUserData();
+  }, []);
   
   if (firebaseError) {
     return (
@@ -150,7 +138,17 @@ export default function DashboardPage() {
     );
   }
 
-  if (isLoadingUser || !user) {
+  if (isLoadingUser) {
+    return (
+      <main className="flex flex-1 items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </main>
+    );
+  }
+
+  if (!userName) {
+    // The layout component is responsible for redirecting unauthenticated users.
+    // This state can occur briefly before the redirect happens.
     return (
       <main className="flex flex-1 items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
