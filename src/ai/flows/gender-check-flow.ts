@@ -52,11 +52,22 @@ const genderCheckFlow = ai.defineFlow(
     outputSchema: GenderCheckOutputSchema,
   },
   async (input) => {
-    const { output } = await genderCheckPrompt(input);
-    if (!output) {
-      throw new Error("The AI failed to generate a valid response. Please try again with a clearer image.");
+    try {
+        const { output } = await genderCheckPrompt(input);
+        if (!output) {
+            throw new Error("The AI failed to generate a valid response. Please try with a clearer image.");
+        }
+        return output;
+    } catch (error: any) {
+        console.error("Gender check flow failed:", error.message);
+        const errorMessage = error.message || '';
+        
+        if (errorMessage.toLowerCase().includes('api not enabled') || errorMessage.toLowerCase().includes('permission denied')) {
+            throw new Error("The AI service is not enabled for this project. Please enable the 'Vertex AI API' in your Google Cloud Console and try again.");
+        }
+        
+        throw new Error(`Verification failed due to a server error: ${errorMessage}`);
     }
-    return output;
   }
 );
 
