@@ -4,16 +4,17 @@
 import { useState, useEffect, useRef, ChangeEvent } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Loader2, Paintbrush } from "lucide-react"
+import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Loader2, Paintbrush, Folder } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { moods, themesList, type Mood, type DiaryEntry, type DiaryPhoto } from "@/lib/diary-data"
+import { moods, themesList, type Mood, type DiaryEntry, type DiaryPhoto, type Folder as JournalFolder } from "@/lib/diary-data"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function EditDiaryEntryPage() {
     const router = useRouter()
@@ -30,9 +31,17 @@ export default function EditDiaryEntryPage() {
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [isLoading, setIsLoading] = useState(true)
 
+    const [folders, setFolders] = useState<JournalFolder[]>([]);
+    const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
+
     useEffect(() => {
         if (!entryId) return;
         try {
+            const savedFoldersString = localStorage.getItem("diaryFolders");
+            if (savedFoldersString) {
+                setFolders(JSON.parse(savedFoldersString));
+            }
+
             const savedEntriesString = localStorage.getItem('diaryEntries');
             if (savedEntriesString) {
                 const savedEntries: DiaryEntry[] = JSON.parse(savedEntriesString);
@@ -43,6 +52,7 @@ export default function EditDiaryEntryPage() {
                     setSelectedMood(foundEntry.mood);
                     setPhotos(foundEntry.photos || []);
                     setSelectedTheme(foundEntry.themeUrl || null);
+                    setSelectedFolderId(foundEntry.folderId || undefined);
                 } else {
                    toast({ variant: "destructive", title: "Entry not found" });
                    router.push("/diary");
@@ -72,6 +82,11 @@ export default function EditDiaryEntryPage() {
     }
 
     const handleRemovePhoto = (index: number) => {
+        const photoToRemove = photos[index];
+        // If it's a blob URL, revoke it to prevent memory leaks
+        if (photoToRemove.url.startsWith('blob:')) {
+            URL.revokeObjectURL(photoToRemove.url);
+        }
         setPhotos(prev => prev.filter((_, i) => i !== index));
     }
     
@@ -80,7 +95,7 @@ export default function EditDiaryEntryPage() {
     }
   
     const handleSave = () => {
-        if (!selectedMood || !title.trim() || !content.trim()) {
+        if (!selectedMood || !title.trim() || !content.trim() || content === '<p><br></p>') {
             toast({ variant: "destructive", title: "Please fill all required fields" });
             return;
         }
@@ -100,9 +115,10 @@ export default function EditDiaryEntryPage() {
                 ...existingEntries[entryIndex],
                 mood: selectedMood,
                 title: title.trim(),
-                content: content, // Content is now HTML
+                content: content,
                 photos: photos,
                 themeUrl: selectedTheme || undefined,
+                folderId: selectedFolderId === 'uncategorized' ? undefined : selectedFolderId,
             };
             
             existingEntries[entryIndex] = updatedEntry;
@@ -176,28 +192,42 @@ export default function EditDiaryEntryPage() {
             </header>
 
             <Card className={cn(
-                "rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden transition-colors duration-500",
-                selectedTheme 
-                    ? "bg-transparent border-transparent" 
-                    : "bg-card/80 dark:bg-background/80 backdrop-blur-sm"
+                "rounded-2xl shadow-lg overflow-hidden transition-colors duration-500",
+                selectedTheme ? "bg-transparent border-none shadow-none" : "bg-card/80 dark:bg-background/80 backdrop-blur-sm border-black/10 dark:border-white/10"
             )}>
               <CardContent className="p-6 space-y-6">
-                <div className="text-center">
-                  <h2 className="text-lg font-semibold mb-3">How are you feeling?</h2>
-                  <div className="flex justify-center items-center gap-3 sm:gap-4">
-                    {Object.keys(moods).map((moodKey) => {
-                      const mood = moods[moodKey as Mood]
-                      return (
-                        <button
-                          key={moodKey}
-                          onClick={() => setSelectedMood(moodKey as Mood)}
-                          className={cn("text-3xl sm:text-4xl p-2 rounded-full transition-all duration-300", selectedMood === moodKey ? 'bg-primary/30 scale-125 ring-2 ring-primary' : 'hover:scale-110 hover:bg-muted')}
-                        >
-                          {mood.emoji}
-                        </button>
-                      )
-                    })}
-                  </div>
+                 <div className="flex justify-between items-center gap-4 flex-wrap">
+                    <div className="text-center">
+                        <h2 className="text-lg font-semibold mb-3">How are you feeling?</h2>
+                        <div className="flex justify-center items-center gap-3 sm:gap-4">
+                            {Object.keys(moods).map((moodKey) => {
+                            const mood = moods[moodKey as Mood]
+                            return (
+                                <button
+                                key={moodKey}
+                                onClick={() => setSelectedMood(moodKey as Mood)}
+                                className={cn("text-3xl sm:text-4xl p-2 rounded-full transition-all duration-300", selectedMood === moodKey ? 'bg-primary/30 scale-125 ring-2 ring-primary' : 'hover:scale-110 hover:bg-muted')}
+                                >
+                                {mood.emoji}
+                                </button>
+                            )
+                            })}
+                        </div>
+                    </div>
+                     <div className="w-full sm:w-auto">
+                        <Select value={selectedFolderId} onValueChange={setSelectedFolderId}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <Folder className="mr-2 h-4 w-4" />
+                                <SelectValue placeholder="Select a journal" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                                {folders.map(folder => (
+                                    <SelectItem key={folder.id} value={folder.id}>{folder.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 <Input 

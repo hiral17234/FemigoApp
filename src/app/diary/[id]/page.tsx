@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic } from 'lucide-react'
+import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,8 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { moods, type DiaryEntry } from '@/lib/diary-data'
 import { cn } from '@/lib/utils'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
+import { useToast } from '@/hooks/use-toast'
 
 function ViewDiaryEntrySkeleton() {
     return (
@@ -59,6 +61,7 @@ export default function ViewDiaryEntryPage() {
     const router = useRouter()
     const params = useParams()
     const entryId = params.id as string
+    const { toast } = useToast()
 
     const [entry, setEntry] = useState<DiaryEntry | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -80,6 +83,22 @@ export default function ViewDiaryEntryPage() {
             setIsLoading(false)
         }
     }, [entryId])
+
+    const handleDelete = () => {
+        try {
+            const savedEntriesString = localStorage.getItem('diaryEntries');
+            if (savedEntriesString) {
+                let savedEntries: DiaryEntry[] = JSON.parse(savedEntriesString);
+                savedEntries = savedEntries.filter(e => e.id !== entryId);
+                localStorage.setItem('diaryEntries', JSON.stringify(savedEntries));
+                toast({ title: "Entry Deleted" });
+                router.push('/diary');
+            }
+        } catch (error) {
+            console.error("Failed to delete entry", error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not delete the entry." });
+        }
+    }
     
     if (isLoading) {
         return (
@@ -119,11 +138,32 @@ export default function ViewDiaryEntryPage() {
                         <ArrowLeft />
                     </Button>
                     <h1 className="text-2xl font-bold">Diary Entry</h1>
-                    <Link href={`/diary/edit/${entry.id}`}>
-                        <Button size="icon" className="bg-primary/80 hover:bg-primary">
-                            <Edit />
-                        </Button>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                        <Link href={`/diary/edit/${entry.id}`}>
+                            <Button size="icon" className="bg-primary/80 hover:bg-primary">
+                                <Edit />
+                            </Button>
+                        </Link>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="icon">
+                                    <Trash2 />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete this diary entry.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                 </header>
 
                 <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden bg-card/80 dark:bg-background/80 backdrop-blur-sm">
@@ -143,7 +183,7 @@ export default function ViewDiaryEntryPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <Separator />
-                        <div className="prose dark:prose-invert" dangerouslySetInnerHTML={{ __html: entry.content }} />
+                        <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: entry.content }} />
                         
                         {entry.photos && entry.photos.length > 0 && (
                             <div>

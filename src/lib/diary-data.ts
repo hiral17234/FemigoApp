@@ -40,6 +40,7 @@ export type DiaryEntry = {
     photos: DiaryPhoto[];
     voiceNotes?: VoiceNote[];
     themeUrl?: string;
+    folderId?: string;
 };
 
 export type Folder = {
