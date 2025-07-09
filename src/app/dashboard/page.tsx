@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -173,9 +174,9 @@ export default function DashboardPage() {
       <DailyThought />
 
       <Link href="/emergency" className="w-full max-w-md mx-auto">
-        <div className="group rounded-3xl bg-gradient-to-r from-pink-500 to-purple-500 p-px shadow-lg shadow-pink-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/30">
-          <div className="flex h-24 items-center justify-center gap-4 rounded-[23px] bg-[#110D1F]">
-            <Siren className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+        <div className="group rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-px shadow-lg shadow-[#FF0080]/20 transition-all duration-300 hover:shadow-xl hover:shadow-[#FF0080]/30">
+          <div className="flex h-24 items-center justify-center gap-4 rounded-[23px] bg-[#0A0A0F]">
+            <Siren className="h-8 w-8 text-[#FF0080] transition-transform duration-300 group-hover:scale-110" />
             <span className="text-2xl font-bold text-white">
               Emergency
             </span>
