@@ -71,12 +71,12 @@ function DailyThought() {
 
   if (!currentDateTime) {
     return (
-        <div className="w-full max-w-sm mx-auto h-[164px] rounded-2xl bg-[#110D1F] animate-pulse" />
+        <div className="w-full max-w-md mx-auto h-[164px] rounded-2xl bg-[#110D1F] animate-pulse" />
     );
   }
   
   return (
-    <div className="group w-full max-w-sm mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700">
+    <div className="group w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700">
         <div className="rounded-2xl bg-gradient-to-r from-pink-500/30 to-purple-500/30 p-px shadow-lg shadow-pink-500/10 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20">
             <div className="rounded-[15px] bg-[#110D1F] p-4 text-center space-y-3">
                 <div className="flex items-center justify-center gap-2 text-sm text-purple-300">
@@ -170,7 +170,7 @@ export default function DashboardPage() {
       
       <DailyThought />
 
-      <Link href="/emergency" className="w-full max-w-sm mx-auto">
+      <Link href="/emergency" className="w-full max-w-md mx-auto">
         <div className="group rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 p-px shadow-lg shadow-pink-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/30">
           <div className="flex h-16 items-center justify-center gap-4 rounded-[15px] bg-[#110D1F]">
             <Siren className="h-7 w-7 text-primary transition-transform duration-300 group-hover:scale-110" />
@@ -181,7 +181,7 @@ export default function DashboardPage() {
         </div>
       </Link>
       
-      <section className="w-full max-w-sm mx-auto">
+      <section className="w-full max-w-md mx-auto">
         <div className="grid grid-cols-3 gap-6 sm:gap-8">
           {features.map((feature) => (
             <Link
