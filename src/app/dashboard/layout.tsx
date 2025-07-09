@@ -253,10 +253,13 @@ export default function DashboardLayout({
           {isLoadingUser ? (
              <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            <Avatar className="h-10 w-10 border-2 border-primary/50">
-                <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
-                <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
-            </Avatar>
+            <div className="relative">
+                <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 opacity-75 blur"></div>
+                <Avatar className="relative h-10 w-10 border-2 border-white/20">
+                    <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
+                    <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
+                </Avatar>
+            </div>
           )}
         </header>
         <div className="flex-1 overflow-y-auto bg-[#06010F] text-white">
