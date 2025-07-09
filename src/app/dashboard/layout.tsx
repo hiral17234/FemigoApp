@@ -255,7 +255,7 @@ export default function DashboardLayout({
           ) : (
             <div className="relative">
                 <Avatar className="h-10 w-10 border-2 border-primary/50">
-                    <AvatarImage data-ai-hint="woman illustration" src="https://i.imgur.com/3Z4hL9g.png" alt="User Avatar" />
+                    <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
                     <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
                 </Avatar>
                 <div className="absolute -inset-1 rounded-full bg-primary/70 blur-lg animate-pulse" style={{ animationDuration: '3s' }}/>
