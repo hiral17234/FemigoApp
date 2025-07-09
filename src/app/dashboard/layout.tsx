@@ -41,7 +41,28 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 function ThemeToggle() {
+  const [mounted, setMounted] = React.useState(false)
   const { theme, setTheme } = useTheme()
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    // Render a placeholder that matches the structure of the real component to avoid layout shifts.
+    return (
+      <SidebarMenuButton 
+          disabled
+          tooltip={{ children: "Loading Theme..." }}
+          className="w-full justify-start text-sm"
+      >
+          <div className="h-[1.5rem] w-[1.5rem]" />
+          <span className="group-data-[collapsible=icon]:hidden ml-2">Loading...</span>
+          <span className="sr-only">Loading theme</span>
+      </SidebarMenuButton>
+    )
+  }
+
   return (
     <SidebarMenuButton 
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
