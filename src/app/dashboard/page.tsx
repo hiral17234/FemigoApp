@@ -62,7 +62,7 @@ function DailyThought() {
     const quoteIndex = dayOfYear % dailyQuotes.length;
     setDailyQuote(dailyQuotes[quoteIndex]);
 
-    // Set initial time and then update every second
+    // Defer client-side specific date logic to useEffect to prevent hydration mismatch
     setCurrentDateTime(new Date());
     const timerId = setInterval(() => setCurrentDateTime(new Date()), 1000);
 
@@ -71,7 +71,7 @@ function DailyThought() {
 
   if (!currentDateTime) {
     return (
-        <div className="w-full max-w-md mx-auto h-[164px] rounded-2xl bg-[#110D1F] animate-pulse" />
+        <div className="w-full max-w-md mx-auto h-[230px] rounded-2xl bg-[#110D1F]/50 animate-pulse" />
     );
   }
   
@@ -85,14 +85,12 @@ function DailyThought() {
             </div>
         </div>
 
-        {/* Free-floating Quote */}
-        <div className="space-y-2 px-4">
-            <div className="relative text-white/90 italic pt-2 text-lg">
-                <Quote className="absolute -left-4 -top-1 h-5 w-5 text-primary/50" />
-                <p>{dailyQuote.quote}</p>
-                <Quote className="absolute -right-2 -bottom-1 h-5 w-5 text-primary/50 rotate-180" />
-            </div>
-            <p className="text-right text-sm text-muted-foreground font-medium">- {dailyQuote.author}</p>
+        {/* Improved Quote Box */}
+        <div className="rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-6 shadow-inner-lg border border-white/10 relative">
+            <Quote className="absolute top-4 left-4 h-8 w-8 text-primary/30" />
+            <Quote className="absolute bottom-4 right-4 h-8 w-8 text-primary/30 rotate-180" />
+            <p className="text-lg italic text-white/90">"{dailyQuote.quote}"</p>
+            <p className="text-right text-sm text-muted-foreground font-medium mt-4">- {dailyQuote.author}</p>
         </div>
     </div>
   );
