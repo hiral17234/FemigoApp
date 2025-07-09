@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { moods, type Mood } from "@/lib/diary-data"
+import { moods, type Mood, type DiaryEntry } from "@/lib/diary-data"
 
 
 export default function NewDiaryEntryPage() {
@@ -66,9 +66,31 @@ export default function NewDiaryEntryPage() {
         return;
     }
 
-    console.log("Saving entry:", { mood: selectedMood, title, content, photos });
-    toast({ title: "Entry Saved!", description: "Your thoughts are safe with us." });
-    router.push("/diary");
+    const photosToSave = photos.map(p => ({ url: p.url, caption: p.caption }));
+
+    const newEntry: DiaryEntry = {
+      id: new Date().toISOString(),
+      date: new Date().toISOString(),
+      mood: selectedMood!,
+      title: title.trim(),
+      content: content.trim(),
+      photos: photosToSave,
+    };
+
+    try {
+      const existingEntriesString = localStorage.getItem('diaryEntries');
+      const existingEntries: DiaryEntry[] = existingEntriesString ? JSON.parse(existingEntriesString) : [];
+      
+      const updatedEntries = [newEntry, ...existingEntries];
+
+      localStorage.setItem('diaryEntries', JSON.stringify(updatedEntries));
+
+      toast({ title: "Entry Saved!", description: "Your thoughts are safe with us." });
+      router.push("/diary");
+    } catch (error) {
+        console.error("Failed to save entry to localStorage", error);
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save your entry." });
+    }
   }
 
   const moodDetails = selectedMood ? moods[selectedMood] : null;

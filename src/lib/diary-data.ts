@@ -9,10 +9,24 @@ export const moods: Record<Mood, { emoji: string; bg: string; sticker: string }>
   love: { emoji: '😍', bg: 'bg-love-gradient', sticker: '💖' },
 };
 
+export type DiaryPhoto = {
+  url: string;
+  caption: string;
+}
+
+export type DiaryEntry = {
+    id: string;
+    date: string;
+    mood: Mood;
+    title: string;
+    content: string;
+    photos: DiaryPhoto[];
+};
+
 // Data is now empty to allow users to start fresh.
 // In a real app, this would be fetched from a database.
 export const mockFolders: any[] = [];
 
-export const mockEntries: any[] = [];
+export const mockEntries: DiaryEntry[] = [];
 
 export const mockChartData: any[] = [];
