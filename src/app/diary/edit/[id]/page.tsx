@@ -7,13 +7,13 @@ import Image from "next/image"
 import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Loader2, Paintbrush } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { moods, themesList, type Mood, type DiaryEntry, type DiaryPhoto } from "@/lib/diary-data"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 
 export default function EditDiaryEntryPage() {
     const router = useRouter()
@@ -100,7 +100,7 @@ export default function EditDiaryEntryPage() {
                 ...existingEntries[entryIndex],
                 mood: selectedMood,
                 title: title.trim(),
-                content: content.trim(),
+                content: content, // Content is now HTML
                 photos: photos,
                 themeUrl: selectedTheme || undefined,
             };
@@ -202,11 +202,10 @@ export default function EditDiaryEntryPage() {
                     className="text-xl font-bold bg-transparent border-0 border-b-2 rounded-none px-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary"
                 />
 
-                <Textarea
-                  placeholder="What's on your mind today?"
+                <RichTextEditor
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[250px] w-full bg-transparent text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+                  onChange={setContent}
+                  placeholder="What's on your mind today?"
                 />
                 
                  <div className="space-y-4">

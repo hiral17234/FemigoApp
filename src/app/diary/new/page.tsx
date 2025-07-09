@@ -7,13 +7,13 @@ import Image from "next/image"
 import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Paintbrush } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import { moods, themesList, type Mood, type DiaryEntry } from "@/lib/diary-data"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 
 
 export default function NewDiaryEntryPage() {
@@ -79,11 +79,11 @@ export default function NewDiaryEntryPage() {
     const photosToSave = photos.map(p => ({ url: p.url, caption: p.caption }));
 
     const newEntry: DiaryEntry = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(), // Use crypto.randomUUID for a reliable unique ID
       date: new Date().toISOString(),
       mood: selectedMood,
       title: title.trim(),
-      content: content.trim(),
+      content: content, // Content is now HTML
       photos: photosToSave,
       voiceNotes: [],
       themeUrl: selectedTheme || undefined,
@@ -177,12 +177,11 @@ export default function NewDiaryEntryPage() {
                 onChange={(e) => setTitle(e.target.value)}
                 className="text-xl font-bold bg-transparent border-0 border-b-2 rounded-none px-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary"
             />
-
-            <Textarea
-              placeholder="What's on your mind today?"
+            
+            <RichTextEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[250px] w-full bg-transparent text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
+              onChange={setContent}
+              placeholder="What's on your mind today?"
             />
 
             <div className="space-y-4">

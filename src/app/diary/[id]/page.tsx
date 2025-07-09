@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic, Loader2 } from 'lucide-react'
+import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic } from 'lucide-react'
 import { format } from 'date-fns'
 
 import { Button } from '@/components/ui/button'
@@ -72,9 +72,6 @@ export default function ViewDiaryEntryPage() {
                 const foundEntry = savedEntries.find(e => e.id === entryId);
                 if (foundEntry) {
                     setEntry(foundEntry);
-                } else {
-                    // Entry not found, maybe redirect or show a proper message
-                    // For now, this will lead to the 'not found' state below
                 }
             }
         } catch (error) {
@@ -82,7 +79,7 @@ export default function ViewDiaryEntryPage() {
         } finally {
             setIsLoading(false)
         }
-    }, [entryId, router])
+    }, [entryId])
     
     if (isLoading) {
         return (
@@ -146,7 +143,7 @@ export default function ViewDiaryEntryPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <Separator />
-                        <p className="text-base whitespace-pre-wrap leading-relaxed">{entry.content}</p>
+                        <div className="prose dark:prose-invert" dangerouslySetInnerHTML={{ __html: entry.content }} />
                         
                         {entry.photos && entry.photos.length > 0 && (
                             <div>
