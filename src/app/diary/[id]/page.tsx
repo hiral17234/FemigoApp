@@ -7,9 +7,6 @@ import Link from 'next/link'
 import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic, Trash2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import Image from "next/image"
-import { onAuthStateChanged, type User } from "firebase/auth"
-import { doc, getDoc, deleteDoc } from "firebase/firestore"
-import { auth, db } from "@/lib/firebase"
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -20,6 +17,27 @@ import { moods, type DiaryEntry } from '@/lib/diary-data'
 import { cn } from '@/lib/utils'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
+
+
+const getFromStorage = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        console.error(`Error reading from localStorage key “${key}”:`, error);
+        return fallback;
+    }
+};
+
+const saveToStorage = <T,>(key: string, value: T) => {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error writing to localStorage key “${key}”:`, error);
+    }
+};
 
 function ViewDiaryEntrySkeleton() {
     return (
@@ -69,49 +87,34 @@ export default function ViewDiaryEntryPage() {
     const entryId = params.id as string
     const { toast } = useToast()
 
-    const [user, setUser] = useState<User | null>(null);
     const [entry, setEntry] = useState<DiaryEntry | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         if (!entryId) return;
 
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                setUser(currentUser);
-                try {
-                    const entryDocRef = doc(db, "users", currentUser.uid, "diaryEntries", entryId);
-                    const docSnap = await getDoc(entryDocRef);
-                    if (docSnap.exists()) {
-                        setEntry({ id: docSnap.id, ...docSnap.data() } as DiaryEntry);
-                    } else {
-                        toast({ variant: 'destructive', title: "Not Found", description: "The diary entry could not be found." });
-                        router.push('/diary');
-                    }
-                } catch (error) {
-                    console.error("Failed to load entry", error)
-                    toast({ variant: 'destructive', title: "Error", description: "Failed to load entry from the database." });
-                } finally {
-                    setIsLoading(false);
-                }
-            } else {
-                router.push('/login');
-            }
-        });
-        
-        return () => unsubscribe();
+        setIsLoading(true);
+        const allEntries = getFromStorage<DiaryEntry[]>('diaryEntries', []);
+        const foundEntry = allEntries.find(e => e.id === entryId);
+
+        if (foundEntry) {
+            setEntry(foundEntry);
+        } else {
+            toast({ variant: 'destructive', title: "Not Found", description: "The diary entry could not be found." });
+            router.push('/diary');
+        }
+        setIsLoading(false);
     }, [entryId, router, toast])
 
-    const handleDelete = async () => {
-        if (!user || !entryId) return;
-        try {
-            await deleteDoc(doc(db, "users", user.uid, "diaryEntries", entryId));
-            toast({ title: "Entry Deleted" });
-            router.push('/diary');
-        } catch (error) {
-            console.error("Failed to delete entry", error);
-            toast({ variant: 'destructive', title: "Error", description: "Could not delete the entry." });
-        }
+    const handleDelete = () => {
+        if (!entryId) return;
+
+        const allEntries = getFromStorage<DiaryEntry[]>('diaryEntries', []);
+        const updatedEntries = allEntries.filter(e => e.id !== entryId);
+        saveToStorage('diaryEntries', updatedEntries);
+
+        toast({ title: "Entry Deleted" });
+        router.push('/diary');
     }
     
     if (isLoading) {

@@ -5,9 +5,6 @@ import { useState, useRef, ChangeEvent, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Folder, Loader2 } from "lucide-react"
-import { onAuthStateChanged, type User } from "firebase/auth"
-import { collection, addDoc, getDocs, query } from "firebase/firestore"
-import { auth, db } from "@/lib/firebase"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,6 +15,26 @@ import { moods, type Mood, type DiaryEntry, type Folder as JournalFolder, type D
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+const getFromStorage = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        console.error(`Error reading from localStorage key “${key}”:`, error);
+        return fallback;
+    }
+};
+
+const saveToStorage = <T,>(key: string, value: T) => {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error writing to localStorage key “${key}”:`, error);
+    }
+};
+
 export default function NewDiaryEntryPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -27,35 +44,17 @@ export default function NewDiaryEntryPage() {
   const [photos, setPhotos] = useState<DiaryPhoto[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   
-  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   const [folders, setFolders] = useState<JournalFolder[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>("uncategorized");
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-        if (currentUser) {
-            setUser(currentUser);
-            try {
-                const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
-                const querySnapshot = await getDocs(foldersQuery);
-                const foldersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalFolder));
-                setFolders(foldersData);
-            } catch (error) {
-                console.error("Could not load folders", error);
-                toast({ variant: 'destructive', title: 'Error', description: 'Could not load your journals.' });
-            } finally {
-                setIsLoading(false);
-            }
-        } else {
-            router.push('/login');
-        }
-    });
-
-    return () => unsubscribe();
-  }, [router, toast]);
+    setIsLoading(true);
+    const foldersData = getFromStorage<JournalFolder[]>('diaryFolders', []);
+    setFolders(foldersData);
+    setIsLoading(false);
+  }, []);
 
   const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -94,8 +93,7 @@ export default function NewDiaryEntryPage() {
     })
   }
   
-  const handleSave = async () => {
-    if (!user) return;
+  const handleSave = () => {
     if (!selectedMood) {
         toast({ variant: "destructive", title: "Please select a mood" });
         return;
@@ -109,7 +107,8 @@ export default function NewDiaryEntryPage() {
         return;
     }
 
-    const newEntry = {
+    const newEntry: DiaryEntry = {
+      id: Date.now().toString(),
       date: new Date().toISOString(),
       mood: selectedMood,
       title: title.trim(),
@@ -120,14 +119,11 @@ export default function NewDiaryEntryPage() {
       themeUrl: selectedTheme || '',
     };
 
-    try {
-      await addDoc(collection(db, "users", user.uid, "diaryEntries"), newEntry);
-      toast({ title: "Entry Saved!", description: "Your thoughts are safe with us." });
-      router.push("/diary");
-    } catch (error) {
-        console.error("Failed to save entry to Firestore", error);
-        toast({ variant: "destructive", title: "Save Failed", description: "Could not save your entry." });
-    }
+    const existingEntries = getFromStorage<DiaryEntry[]>('diaryEntries', []);
+    saveToStorage('diaryEntries', [...existingEntries, newEntry]);
+
+    toast({ title: "Entry Saved!", description: "Your thoughts are safe with us." });
+    router.push("/diary");
   }
 
   if (isLoading) {

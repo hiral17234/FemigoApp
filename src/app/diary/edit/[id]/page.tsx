@@ -5,9 +5,6 @@ import { useState, useEffect, useRef, ChangeEvent } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Loader2, Folder } from "lucide-react"
-import { onAuthStateChanged, type User } from "firebase/auth"
-import { doc, getDoc, updateDoc, collection, getDocs, query } from "firebase/firestore"
-import { auth, db } from "@/lib/firebase"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -18,13 +15,32 @@ import { moods, type Mood, type DiaryEntry, type DiaryPhoto, type Folder as Jour
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+const getFromStorage = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        console.error(`Error reading from localStorage key “${key}”:`, error);
+        return fallback;
+    }
+};
+
+const saveToStorage = <T,>(key: string, value: T) => {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error writing to localStorage key “${key}”:`, error);
+    }
+};
+
 export default function EditDiaryEntryPage() {
     const router = useRouter()
     const params = useParams()
     const entryId = params.id as string
     const { toast } = useToast()
     
-    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true)
 
     const [selectedMood, setSelectedMood] = useState<Mood | null>(null)
@@ -40,44 +56,25 @@ export default function EditDiaryEntryPage() {
     useEffect(() => {
         if (!entryId) return;
 
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                setUser(currentUser);
-                try {
-                    // Fetch folders
-                    const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
-                    const foldersSnapshot = await getDocs(foldersQuery);
-                    const foldersData = foldersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalFolder));
-                    setFolders(foldersData);
+        setIsLoading(true);
+        const foldersData = getFromStorage<JournalFolder[]>('diaryFolders', []);
+        setFolders(foldersData);
 
-                    // Fetch the specific entry
-                    const entryDocRef = doc(db, "users", currentUser.uid, "diaryEntries", entryId);
-                    const entryDoc = await getDoc(entryDocRef);
+        const allEntries = getFromStorage<DiaryEntry[]>('diaryEntries', []);
+        const foundEntry = allEntries.find(e => e.id === entryId);
 
-                    if (entryDoc.exists()) {
-                        const foundEntry = entryDoc.data() as Omit<DiaryEntry, 'id'>;
-                        setTitle(foundEntry.title);
-                        setContent(foundEntry.content);
-                        setSelectedMood(foundEntry.mood);
-                        setPhotos(foundEntry.photos || []);
-                        setSelectedFolderId(foundEntry.folderId || 'uncategorized');
-                        setSelectedTheme(foundEntry.themeUrl || null);
-                    } else {
-                       toast({ variant: "destructive", title: "Entry not found" });
-                       router.push("/diary");
-                    }
-                } catch (error) {
-                    console.error("Failed to load entry", error);
-                    toast({ variant: "destructive", title: "Error loading entry" });
-                } finally {
-                    setIsLoading(false);
-                }
-            } else {
-                router.push("/login");
-            }
-        });
-        
-        return () => unsubscribe();
+        if (foundEntry) {
+            setTitle(foundEntry.title);
+            setContent(foundEntry.content);
+            setSelectedMood(foundEntry.mood);
+            setPhotos(foundEntry.photos || []);
+            setSelectedFolderId(foundEntry.folderId || 'uncategorized');
+            setSelectedTheme(foundEntry.themeUrl || null);
+        } else {
+            toast({ variant: "destructive", title: "Entry not found" });
+            router.push("/diary");
+        }
+        setIsLoading(false);
     }, [entryId, router, toast]);
 
     const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -106,31 +103,31 @@ export default function EditDiaryEntryPage() {
         setPhotos(prev => prev.map((photo, i) => i === index ? { ...photo, caption } : photo));
     }
   
-    const handleSave = async () => {
-        if (!user) return;
+    const handleSave = () => {
         if (!selectedMood || !title.trim() || !content.trim() || content === '<p><br></p>') {
             toast({ variant: "destructive", title: "Please fill all required fields" });
             return;
         }
 
-        const updatedEntryData = {
-            mood: selectedMood,
-            title: title.trim(),
-            content: content,
-            photos: photos,
-            folderId: selectedFolderId === 'uncategorized' ? '' : selectedFolderId,
-            themeUrl: selectedTheme || '',
-        };
-        
-        try {
-            const entryDocRef = doc(db, "users", user.uid, "diaryEntries", entryId);
-            await updateDoc(entryDocRef, updatedEntryData);
-            toast({ title: "Entry Updated!", description: "Your changes have been saved." });
-            router.push(`/diary/${entryId}`);
-        } catch (error) {
-            console.error("Failed to save entry", error);
-            toast({ variant: "destructive", title: "Save Failed" });
-        }
+        const allEntries = getFromStorage<DiaryEntry[]>('diaryEntries', []);
+        const updatedEntries = allEntries.map(entry => {
+            if (entry.id === entryId) {
+                return {
+                    ...entry,
+                    mood: selectedMood,
+                    title: title.trim(),
+                    content: content,
+                    photos: photos,
+                    folderId: selectedFolderId === 'uncategorized' ? '' : selectedFolderId,
+                    themeUrl: selectedTheme || '',
+                };
+            }
+            return entry;
+        });
+
+        saveToStorage('diaryEntries', updatedEntries);
+        toast({ title: "Entry Updated!", description: "Your changes have been saved." });
+        router.push(`/diary/${entryId}`);
     }
     
      const handleAddVoiceNote = () => {

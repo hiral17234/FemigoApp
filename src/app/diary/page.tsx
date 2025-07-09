@@ -25,12 +25,31 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
-import { moods, type DiaryEntry, type Folder, placeholderFolders } from "@/lib/diary-data"
+import { moods, type DiaryEntry, type Folder, placeholderFolders, placeholderEntries } from "@/lib/diary-data"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import { auth, db } from "@/lib/firebase"
-import { onAuthStateChanged, type User } from "firebase/auth"
-import { collection, query, where, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs } from "firebase/firestore"
+
+
+// --- Local Storage Helper Functions ---
+const getFromStorage = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        console.error(`Error reading from localStorage key “${key}”:`, error);
+        return fallback;
+    }
+};
+
+const saveToStorage = <T,>(key: string, value: T) => {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error writing to localStorage key “${key}”:`, error);
+    }
+};
 
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
@@ -77,7 +96,6 @@ export default function DiaryPage() {
   const [chartData, setChartData] = useState<any[]>([])
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
 
-  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [isNewJournalDialogOpen, setIsNewJournalDialogOpen] = useState(false)
@@ -102,48 +120,31 @@ export default function DiaryPage() {
   }
 
   useEffect(() => {
-    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        
-        const fetchData = async () => {
-            if (!currentUser) return;
-            setIsLoading(true);
-            try {
-                // Fetch folders
-                const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
-                const foldersSnapshot = await getDocs(foldersQuery);
-                const foldersData = foldersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
-                setFolders(foldersData);
+    setIsLoading(true);
+    let storedFolders = getFromStorage<Folder[]>('diaryFolders', []);
+    let storedEntries = getFromStorage<DiaryEntry[]>('diaryEntries', []);
 
-                // Fetch entries
-                const entriesQuery = query(collection(db, "users", currentUser.uid, "diaryEntries"));
-                const entriesSnapshot = await getDocs(entriesQuery);
-                const entriesData = entriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiaryEntry));
-                
-                // Sort client-side
-                entriesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-                
-                setEntries(entriesData);
-                updateChartData(entriesData);
+    // Initialize with placeholder data if empty
+    if (storedFolders.length === 0 && storedEntries.length === 0) {
+        const initialFolders: Folder[] = [
+            { id: 'journal1', name: 'My Reflections', ...placeholderFolders[0] },
+            { id: 'journal2', name: 'Travel Notes', ...placeholderFolders[1] }
+        ];
+        const initialEntries: DiaryEntry[] = placeholderEntries.map(e => ({...e, id: Date.now().toString() + Math.random() }));
 
-            } catch (error) {
-                console.error("Error fetching diary data:", error);
-                toast({ variant: 'destructive', title: "Error", description: "Could not load diary entries." });
-            } finally {
-                setIsLoading(false);
-            }
-        };
+        saveToStorage('diaryFolders', initialFolders);
+        saveToStorage('diaryEntries', initialEntries);
+        storedFolders = initialFolders;
+        storedEntries = initialEntries;
+    }
 
-        fetchData();
+    storedEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-      } else {
-        router.push("/login");
-      }
-    });
-
-    return () => unsubscribeAuth();
-  }, [router, toast]);
+    setFolders(storedFolders);
+    setEntries(storedEntries);
+    updateChartData(storedEntries);
+    setIsLoading(false);
+  }, []);
 
 
   const filteredEntries = entries.filter((entry) => {
@@ -154,94 +155,67 @@ export default function DiaryPage() {
     }
   );
 
-  const handleCreateJournal = async () => {
-    if (!user) return;
+  const handleCreateJournal = () => {
     if (newJournalName.trim().length < 3) {
       toast({ variant: "destructive", title: "Invalid Name", description: "Journal name must be at least 3 characters long." });
       return;
     }
     const randomPlaceholder = placeholderFolders[Math.floor(Math.random() * placeholderFolders.length)];
-    const newFolderData = {
+    const newFolder: Folder = {
+      id: Date.now().toString(),
       name: newJournalName.trim(),
       imageUrl: randomPlaceholder.imageUrl,
       imageHint: randomPlaceholder.imageHint,
     };
-    try {
-        const docRef = await addDoc(collection(db, "users", user.uid, "diaryFolders"), newFolderData);
-        setFolders(prev => [...prev, {id: docRef.id, ...newFolderData}]);
-        toast({ title: "Journal Created!", description: `"${newFolderData.name}" has been added.` });
-        setNewJournalName("");
-        setIsNewJournalDialogOpen(false);
-    } catch(e) {
-        toast({ variant: "destructive", title: "Error", description: "Could not create journal." });
-    }
+    
+    const updatedFolders = [...folders, newFolder];
+    setFolders(updatedFolders);
+    saveToStorage('diaryFolders', updatedFolders);
+    toast({ title: "Journal Created!", description: `"${newFolder.name}" has been added.` });
+    setNewJournalName("");
+    setIsNewJournalDialogOpen(false);
   }
 
-  const handleRenameJournal = async () => {
-    if (!user || !folderToEdit || newJournalName.trim().length < 3) {
+  const handleRenameJournal = () => {
+    if (!folderToEdit || newJournalName.trim().length < 3) {
       toast({ variant: "destructive", title: "Invalid Name", description: "Journal name must be at least 3 characters long." });
       return;
     }
-    const folderDocRef = doc(db, "users", user.uid, "diaryFolders", folderToEdit.id);
-    try {
-        await updateDoc(folderDocRef, { name: newJournalName.trim() });
-        setFolders(prev => prev.map(f => f.id === folderToEdit.id ? { ...f, name: newJournalName.trim() } : f));
-        if (selectedFolder?.id === folderToEdit.id) {
-            setSelectedFolder(prev => prev ? { ...prev, name: newJournalName.trim() } : null);
-        }
-        toast({ title: "Journal Renamed!" });
-        setNewJournalName("");
-        setFolderToEdit(null);
-        setIsRenameJournalDialogOpen(false);
-    } catch(e) {
-        toast({ variant: "destructive", title: "Error", description: "Could not rename journal." });
+    
+    const updatedFolders = folders.map(f => f.id === folderToEdit.id ? { ...f, name: newJournalName.trim() } : f);
+    setFolders(updatedFolders);
+    saveToStorage('diaryFolders', updatedFolders);
+    
+    if (selectedFolder?.id === folderToEdit.id) {
+        setSelectedFolder(prev => prev ? { ...prev, name: newJournalName.trim() } : null);
+    }
+    
+    toast({ title: "Journal Renamed!" });
+    setNewJournalName("");
+    setFolderToEdit(null);
+    setIsRenameJournalDialogOpen(false);
+  }
+
+  const handleDeleteJournal = (folderId: string) => {
+    const updatedFolders = folders.filter(f => f.id !== folderId);
+    setFolders(updatedFolders);
+    saveToStorage('diaryFolders', updatedFolders);
+
+    const updatedEntries = entries.map(e => e.folderId === folderId ? { ...e, folderId: "" } : e);
+    setEntries(updatedEntries);
+    saveToStorage('diaryEntries', updatedEntries);
+    
+    toast({ title: "Journal Deleted" });
+    if (selectedFolder?.id === folderId) {
+        setSelectedFolder(null); 
     }
   }
 
-  const handleDeleteJournal = async (folderId: string) => {
-    if(!user) return;
-
-    try {
-        // Find all entries in this folder
-        const entriesQuery = query(collection(db, 'users', user.uid, 'diaryEntries'), where('folderId', '==', folderId));
-        const entriesSnapshot = await getDocs(entriesQuery);
-
-        const batch = writeBatch(db);
-
-        // Remove folderId from each entry
-        entriesSnapshot.forEach(entryDoc => {
-            const entryRef = doc(db, 'users', user.uid, 'diaryEntries', entryDoc.id);
-            batch.update(entryRef, { folderId: "" });
-        });
-        
-        // Delete the folder itself
-        const folderRef = doc(db, 'users', user.uid, 'diaryFolders', folderId);
-        batch.delete(folderRef);
-
-        await batch.commit();
-
-        setFolders(prev => prev.filter(f => f.id !== folderId));
-        setEntries(prev => prev.map(e => e.folderId === folderId ? { ...e, folderId: "" } : e));
-        
-        toast({ title: "Journal Deleted" });
-        if (selectedFolder?.id === folderId) {
-            setSelectedFolder(null); 
-        }
-    } catch (e) {
-        console.error("Error deleting journal: ", e);
-        toast({ variant: "destructive", title: "Error", description: "Could not delete journal and update entries." });
-    }
-  }
-
-  const handleDeleteEntry = async (entryId: string) => {
-    if (!user) return;
-    try {
-        await deleteDoc(doc(db, "users", user.uid, "diaryEntries", entryId));
-        setEntries(prev => prev.filter(entry => entry.id !== entryId));
-        toast({ title: "Entry Deleted" });
-    } catch(e) {
-        toast({ variant: "destructive", title: "Error", description: "Could not delete entry." });
-    }
+  const handleDeleteEntry = (entryId: string) => {
+    const updatedEntries = entries.filter(entry => entry.id !== entryId);
+    setEntries(updatedEntries);
+    saveToStorage('diaryEntries', updatedEntries);
+    toast({ title: "Entry Deleted" });
   }
   
   const handleEditCoverClick = (folder: Folder) => {
@@ -250,25 +224,22 @@ export default function DiaryPage() {
   }
 
   const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (!user || !e.target.files || e.target.files.length === 0 || !folderToEdit) {
+    if (!e.target.files || e.target.files.length === 0 || !folderToEdit) {
       return;
     }
     const file = e.target.files[0];
     const reader = new FileReader();
 
-    reader.onload = async (event) => {
+    reader.onload = (event) => {
         const imageUrl = event.target?.result as string;
         if (!imageUrl) return;
 
-        const folderRef = doc(db, "users", user.uid, "diaryFolders", folderToEdit.id);
-        try {
-            await updateDoc(folderRef, { imageUrl, imageHint: 'custom cover' });
-            setFolders(prev => prev.map(f => f.id === folderToEdit.id ? { ...f, imageUrl, imageHint: 'custom cover' } : f));
-            toast({ title: "Cover Photo Updated!" });
-            setFolderToEdit(null);
-        } catch(err) {
-            toast({ variant: "destructive", title: "Error", description: "Could not update cover photo." });
-        }
+        const updatedFolders = folders.map(f => f.id === folderToEdit.id ? { ...f, imageUrl, imageHint: 'custom cover' } : f);
+        setFolders(updatedFolders);
+        saveToStorage('diaryFolders', updatedFolders);
+        
+        toast({ title: "Cover Photo Updated!" });
+        setFolderToEdit(null);
     };
     reader.readAsDataURL(file);
     if(fileInputRef.current) fileInputRef.current.value = "";
@@ -431,5 +402,3 @@ export default function DiaryPage() {
     </div>
   )
 }
-
-    

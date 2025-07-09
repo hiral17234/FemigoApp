@@ -48,7 +48,7 @@ export const themesList = [
 ];
 
 
-export const placeholderFolders: Omit<Folder, 'id' | 'name'>[] = [
+export const placeholderFolders: Omit<Folder, 'id'>[] = [
     { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'abstract landscape' },
     { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'serene nature' },
     { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'mountain view' },
@@ -56,4 +56,31 @@ export const placeholderFolders: Omit<Folder, 'id' | 'name'>[] = [
     { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'forest path' },
 ];
 
-    
+export const placeholderEntries: Omit<DiaryEntry, 'id'>[] = [
+  {
+    date: new Date(Date.now() - 86400000 * 2).toISOString(),
+    mood: 'happy',
+    title: 'A Wonderful Day',
+    content: '<p>Today was a fantastic day! I spent the afternoon at the park, enjoying the sunshine and reading a good book. It felt so refreshing to just disconnect and be present in the moment.</p>',
+    photos: [],
+    folderId: 'journal1'
+  },
+    {
+    date: new Date(Date.now() - 86400000).toISOString(),
+    mood: 'calm',
+    title: 'Quiet Evening Thoughts',
+    content: '<p>The evening was so peaceful. I listened to some lo-fi music and just let my mind wander. It\'s amazing how calming a bit of quiet can be after a hectic week. Feeling centered and ready for whatever comes next.</p>',
+    photos: [
+        { url: 'https://placehold.co/600x400.png', caption: 'My cozy corner' }
+    ],
+    folderId: 'journal2'
+  },
+    {
+    date: new Date().toISOString(),
+    mood: 'love',
+    title: 'Feeling Grateful',
+    content: '<p>Had a lovely video call with my family today. It\'s moments like these that remind me of how much love surrounds me. Feeling incredibly grateful for my support system. ❤️</p>',
+    photos: [],
+    folderId: 'journal1'
+  },
+];
