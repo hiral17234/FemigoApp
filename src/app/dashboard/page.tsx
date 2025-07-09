@@ -20,7 +20,7 @@ import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 import { format } from "date-fns"
 
-import { getFirebaseServices } from "@/lib/firebase"
+import { auth, db, firebaseError } from "@/lib/firebase"
 import { Button } from "@/components/ui/button"
 
 const dailyQuotes = [
@@ -103,19 +103,17 @@ export default function DashboardPage() {
   const [userInitial, setUserInitial] = useState("")
   const [isLoadingUser, setIsLoadingUser] = useState(true)
 
-  const firebase = getFirebaseServices();
-
   useEffect(() => {
-    if (!firebase.auth || !firebase.db) {
+    if (firebaseError || !auth || !db) {
         setIsLoadingUser(false);
         return;
     }
 
-    const unsubscribe = onAuthStateChanged(firebase.auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         try {
-          const userDocRef = doc(firebase.db, "users", currentUser.uid);
+          const userDocRef = doc(db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
           let nameToDisplay = "User";
@@ -138,14 +136,14 @@ export default function DashboardPage() {
     });
 
     return () => unsubscribe();
-  }, [router, firebase.auth, firebase.db]);
+  }, [router]);
   
-  if (firebase.error) {
+  if (firebaseError) {
     return (
       <main className="flex flex-1 items-center justify-center p-4 text-center">
           <div className="rounded-lg bg-card p-8 text-card-foreground">
               <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
-              <p className="mt-2 text-muted-foreground">{firebase.error}</p>
+              <p className="mt-2 text-muted-foreground">{firebaseError}</p>
           </div>
       </main>
     );

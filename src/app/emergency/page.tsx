@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { getFirebaseServices } from '@/lib/firebase';
+import { auth, db, firebaseError } from '@/lib/firebase';
 import { emergencyContacts, type EmergencyService } from '@/lib/emergency-contacts';
 
 type TrustedContact = {
@@ -34,16 +34,17 @@ export default function EmergencyPage() {
   const [newContactPhone, setNewContactPhone] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const firebase = getFirebaseServices();
-
   useEffect(() => {
-    if (!firebase.auth || !firebase.db) return;
+    if (firebaseError || !auth || !db) {
+        setLoading(false);
+        return;
+    }
 
-    const unsubscribe = onAuthStateChanged(firebase.auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         try {
-          const userDocRef = doc(firebase.db, "users", currentUser.uid);
+          const userDocRef = doc(db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
           
           let countryCode = 'default';
@@ -73,10 +74,10 @@ export default function EmergencyPage() {
     });
 
     return () => unsubscribe();
-  }, [router, toast, firebase.auth, firebase.db]);
+  }, [router, toast]);
 
   const handleSaveContact = async () => {
-    if (!user || !firebase.db) {
+    if (!user || !db) {
         toast({ variant: "destructive", title: "Not logged in", description: "You must be logged in to add contacts." });
         return;
     }
@@ -96,7 +97,7 @@ export default function EmergencyPage() {
       phone: newContactPhone.trim(),
     };
     
-    const userDocRef = doc(firebase.db, "users", user.uid);
+    const userDocRef = doc(db, "users", user.uid);
 
     try {
         await updateDoc(userDocRef, {
@@ -117,12 +118,12 @@ export default function EmergencyPage() {
     }
   };
 
-  if (firebase.error) {
+  if (firebaseError) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
           <div className="rounded-lg bg-card p-8 text-card-foreground">
               <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
-              <p className="mt-2 text-muted-foreground">{firebase.error}</p>
+              <p className="mt-2 text-muted-foreground">{firebaseError}</p>
           </div>
       </div>
     );

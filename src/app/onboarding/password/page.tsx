@@ -23,7 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { PasswordStrength } from "@/components/ui/password-strength"
-import { getFirebaseServices } from "@/lib/firebase"
+import { auth, db, firebaseError } from "@/lib/firebase"
 
 const formSchema = z
   .object({
@@ -44,7 +44,6 @@ export default function OnboardingPasswordPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const { auth, db, error: firebaseError } = getFirebaseServices()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -55,7 +54,7 @@ export default function OnboardingPasswordPage() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!auth || !db) {
+    if (firebaseError || !auth || !db) {
         toast({
             variant: "destructive",
             title: "Configuration Error",

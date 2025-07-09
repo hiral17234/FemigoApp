@@ -26,7 +26,7 @@ import {
 
 import { onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
-import { getFirebaseServices } from "@/lib/firebase"
+import { auth, db } from "@/lib/firebase"
 import {
   Sidebar,
   SidebarProvider,
@@ -116,19 +116,17 @@ export default function DashboardLayout({
   const [userInitial, setUserInitial] = React.useState("")
   const [isLoadingUser, setIsLoadingUser] = React.useState(true)
 
-  const firebase = getFirebaseServices();
-
   React.useEffect(() => {
-    if (!firebase.auth || !firebase.db) {
+    if (!auth || !db) {
       setIsLoadingUser(false)
       return;
     };
 
-    const unsubscribe = onAuthStateChanged(firebase.auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         try {
-          const userDocRef = doc(firebase.db, "users", currentUser.uid);
+          const userDocRef = doc(db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
           let nameToDisplay = "User";
@@ -151,12 +149,12 @@ export default function DashboardLayout({
     });
 
     return () => unsubscribe();
-  }, [router, firebase.auth, firebase.db]);
+  }, [router, toast]);
 
   const handleLogout = async () => {
-    if (!firebase.auth) return;
+    if (!auth) return;
     try {
-      await signOut(firebase.auth)
+      await signOut(auth)
       toast({ title: "Logged Out", description: "You have been successfully logged out." })
       router.push("/login")
     } catch (error) {

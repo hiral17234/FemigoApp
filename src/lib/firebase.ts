@@ -12,60 +12,27 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-interface FirebaseServices {
-  app: FirebaseApp;
-  auth: Auth;
-  db: Firestore;
-  error: null;
-}
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let db: Firestore | null = null;
+let firebaseError: string | null = null;
 
-interface FirebaseError {
-  error: string;
-  app: null;
-  auth: null;
-  db: null;
-}
-
-let firebaseServices: FirebaseServices | FirebaseError | null = null;
-
-function getFirebaseServices(): FirebaseServices | FirebaseError {
-  if (firebaseServices) {
-    return firebaseServices;
-  }
-
+try {
   const isConfigValid = firebaseConfig.apiKey &&
                         typeof firebaseConfig.apiKey === 'string' &&
                         !firebaseConfig.apiKey.includes('YOUR_');
 
   if (!isConfigValid) {
-    const errorMessage = "Firebase configuration is missing or incomplete. Please check your .env file and restart the server.";
-    console.error(errorMessage);
-    firebaseServices = { 
-        error: errorMessage,
-        app: null,
-        auth: null,
-        db: null,
-    };
-    return firebaseServices;
+    throw new Error("Firebase configuration is missing or incomplete. Please check your .env file and restart the server.");
   }
 
-  try {
-    const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    firebaseServices = { app, auth, db, error: null };
-    return firebaseServices;
-  } catch (e: any) {
-     const errorMessage = `Firebase initialization failed: ${e.message}. Please verify your credentials in the .env file.`;
-     console.error(errorMessage, e);
-     firebaseServices = {
-        error: errorMessage,
-        app: null,
-        auth: null,
-        db: null,
-     };
-     return firebaseServices;
-  }
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+
+} catch (e: any) {
+   firebaseError = `Firebase initialization failed: ${e.message}. Please verify your credentials in the .env file.`;
+   console.error(firebaseError, e);
 }
 
-export { getFirebaseServices };
+export { app, auth, db, firebaseError };
