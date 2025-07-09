@@ -58,9 +58,7 @@ export default function AiAssistantPage() {
       console.error("Error calling Sangini:", error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: error.message.includes('API Key is not configured')
-          ? "Sorry to say, but currently the account is under verification. I will come back as soon as the process is completed"
-          : error.message || "I'm having some trouble right now. Please try again later.",
+        content: "I'm having a little trouble connecting right now. Please try again in a moment.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -69,11 +67,11 @@ export default function AiAssistantPage() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#0f0f0f] text-[#f5f5f5]">
+    <div className="flex h-full flex-col bg-[#121212] text-[#f5f5f5]">
       {/* Header with AI Avatar */}
       <header className="flex flex-col items-center justify-center p-4 pt-6 shrink-0">
         <div className="relative">
-          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#ff4da6] to-purple-600 opacity-75 blur-md animate-pulse"></div>
+          <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#ff69b4] to-purple-600 opacity-75 blur-md animate-pulse"></div>
           <Image
             src="https://i.ibb.co/GfjHvTsR/Whats-App-Image-2025-06-24-at-20-28-17-60edfed4.jpg"
             data-ai-hint="woman face"
@@ -84,7 +82,7 @@ export default function AiAssistantPage() {
           />
         </div>
         <h1 className="mt-4 text-2xl font-bold flex items-center gap-2">
-          Sangini <Sparkles className="text-[#ff4da6] h-5 w-5" />
+          Sangini <Sparkles className="text-[#ff69b4] h-5 w-5" />
         </h1>
       </header>
 
@@ -102,7 +100,7 @@ export default function AiAssistantPage() {
               className={cn(
                 "max-w-xs md:max-w-md lg:max-w-lg rounded-2xl px-4 py-2 text-white",
                 message.role === 'user'
-                  ? 'bg-gradient-to-br from-[#ff4da6] to-[#c4328b]'
+                  ? 'bg-gradient-to-br from-[#ff69b4] to-[#c4328b]'
                   : 'bg-gray-800'
               )}
             >
@@ -127,13 +125,13 @@ export default function AiAssistantPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ask me anything about safety..."
-              className="h-12 w-full rounded-full border-gray-700 bg-gray-800 pl-4 pr-14 text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#ff4da6]"
+              className="h-12 w-full rounded-full border-gray-700 bg-gray-800 pl-4 pr-14 text-white placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#ff69b4]"
               disabled={isLoading}
             />
             <Button
               type="submit"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-gradient-to-r from-[#ff4da6] to-[#c4328b] text-white transition-transform hover:scale-110 disabled:bg-gray-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-gradient-to-r from-[#ff69b4] to-[#c4328b] text-white transition-transform hover:scale-110 disabled:bg-gray-600"
               disabled={isLoading || !input.trim()}
             >
               <SendHorizontal className="h-5 w-5" />

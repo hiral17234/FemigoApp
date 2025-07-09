@@ -5,8 +5,8 @@
  * - askSangini - The main function to interact with the assistant.
  */
 
+import { z } from 'zod';
 import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -30,11 +30,12 @@ const sanginiChatFlow = ai.defineFlow(
     outputSchema: z.string(),
   },
   async ({ history, prompt }) => {
-    const HUGGINGFACE_API_KEY = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY;
+    // IMPORTANT: This key is NOT prefixed with NEXT_PUBLIC_ so it is NOT exposed to the client.
+    const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
 
     if (!HUGGINGFACE_API_KEY || HUGGINGFACE_API_KEY.includes('YOUR_')) {
-        console.error("Hugging Face API Key is not configured.");
-        throw new Error("The Hugging Face API Key is missing. Please add it to your .env file to use the AI assistant.");
+        console.error("CRITICAL: Hugging Face API Key is not configured on the server.");
+        throw new Error("The AI assistant is not configured. Please contact support.");
     }
     
     const persona = "You are Sangini, a friendly, caring, and empowering safety companion for women. Your tone should always be supportive and helpful. Keep your answers concise and to the point.";
