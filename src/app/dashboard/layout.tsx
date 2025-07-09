@@ -42,6 +42,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSidebar } from "@/components/ui/sidebar"
+import { useToast } from "@/hooks/use-toast"
 
 function ThemeToggle() {
   const [mounted, setMounted] = React.useState(false)
