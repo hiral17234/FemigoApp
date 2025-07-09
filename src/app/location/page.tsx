@@ -13,10 +13,11 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { snapToRoad } from '@/app/actions/snap-to-road';
-import { getRouteSafetyDetails, type RouteSafetyOutput } from '@/ai/flows/route-safety-flow';
+import { getRouteSafetyDetails } from '@/ai/flows/route-safety-flow';
 import { recommendSafestRoute } from '@/ai/flows/recommend-safest-route-flow';
 import { Badge } from '@/components/ui/badge';
 import { geocodeAddress } from '../actions/geocode-address';
+import { type RouteSafetyOutput } from '@/ai/flows/types';
 
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;

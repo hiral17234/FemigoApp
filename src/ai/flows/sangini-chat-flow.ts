@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview A friendly AI chat assistant named Sangini, connected to Hugging Face.
@@ -7,17 +8,8 @@
 
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
+import { SanginiChatInputSchema, type SanginiChatInput } from './types';
 
-const MessageSchema = z.object({
-  role: z.enum(['user', 'model']),
-  content: z.string(),
-});
-
-const SanginiChatInputSchema = z.object({
-  history: z.array(MessageSchema),
-  prompt: z.string().describe('The latest message from the user.'),
-});
-type SanginiChatInput = z.infer<typeof SanginiChatInputSchema>;
 
 const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2";
 const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
@@ -35,7 +27,7 @@ const sanginiChatFlow = ai.defineFlow(
 
     if (!HUGGINGFACE_API_KEY || HUGGINGFACE_API_KEY.includes('YOUR_')) {
         console.error("CRITICAL: Hugging Face API Key is not configured on the server.");
-        throw new Error("The AI assistant is not configured. Please contact support.");
+        throw new Error("I'm having a little trouble connecting right now. Please try again in a moment.");
     }
     
     const persona = "You are Sangini, a friendly, caring, and empowering safety companion for women. Your tone should always be supportive and helpful. Keep your answers concise and to the point.";

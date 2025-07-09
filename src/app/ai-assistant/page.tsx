@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
@@ -7,14 +8,16 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { askSangini } from '@/ai/flows/sangini-chat-flow';
+import { type Message } from '@/ai/flows/types';
 
-type Message = {
+// The local message type now only needs role and content for display purposes.
+type DisplayMessage = {
   role: 'user' | 'assistant';
   content: string;
 };
 
 export default function AiAssistantPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -37,25 +40,26 @@ export default function AiAssistantPage() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input.trim() };
+    const userMessage: DisplayMessage = { role: 'user', content: input.trim() };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
     try {
       // Format history for the AI flow (user/model roles)
-      const history = messages.map(msg => ({
+      // The `Message` type is now imported from `types.ts`
+      const historyForApi: Message[] = messages.map(msg => ({
           role: msg.role === 'user' ? 'user' : 'model',
           content: msg.content
       }));
 
-      const aiResponseContent = await askSangini({ history, prompt: userMessage.content });
+      const aiResponseContent = await askSangini({ history: historyForApi, prompt: userMessage.content });
 
-      const aiMessage: Message = { role: 'assistant', content: aiResponseContent };
+      const aiMessage: DisplayMessage = { role: 'assistant', content: aiResponseContent };
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error: any) {
       console.error("Error calling Sangini:", error);
-      const errorMessage: Message = {
+      const errorMessage: DisplayMessage = {
         role: 'assistant',
         content: "I'm having a little trouble connecting right now. Please try again in a moment.",
       };
