@@ -73,7 +73,8 @@ export default function ViewDiaryEntryPage() {
                 if (foundEntry) {
                     setEntry(foundEntry);
                 } else {
-                    router.push('/diary');
+                    // Entry not found, maybe redirect or show a proper message
+                    // For now, this will lead to the 'not found' state below
                 }
             }
         } catch (error) {
@@ -93,8 +94,8 @@ export default function ViewDiaryEntryPage() {
 
     if (!entry) {
         return (
-            <div className="flex h-screen items-center justify-center">
-                 <Card className="p-8 text-center">
+            <div className="flex h-screen items-center justify-center bg-background p-4">
+                 <Card className="p-8 text-center bg-card">
                     <CardTitle>Entry Not Found</CardTitle>
                     <CardDescription>Could not find the diary entry you were looking for.</CardDescription>
                     <Button onClick={() => router.push('/diary')} className="mt-4">
@@ -109,7 +110,12 @@ export default function ViewDiaryEntryPage() {
     const moodDetails = moods[entry.mood];
 
     return (
-        <main className={cn("min-h-screen w-full transition-colors duration-700", moodDetails.bg)}>
+        <main className="min-h-screen w-full transition-colors duration-700 bg-background">
+             {entry.themeUrl ? (
+                <Image src={entry.themeUrl} layout="fill" objectFit="cover" alt="Theme" className="fixed inset-0 z-[-1] opacity-40 dark:opacity-20" />
+            ) : (
+                <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
+            )}
             <div className="mx-auto max-w-2xl p-4 sm:p-6 md:p-8">
                 <header className="flex items-center justify-between mb-6">
                     <Button variant="ghost" size="icon" onClick={() => router.push('/diary')}>
@@ -123,7 +129,7 @@ export default function ViewDiaryEntryPage() {
                     </Link>
                 </header>
 
-                <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden">
+                <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden bg-card/80 dark:bg-background/80 backdrop-blur-sm">
                     <CardHeader>
                         <div className="flex justify-between items-start">
                             <div>

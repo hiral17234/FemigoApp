@@ -4,7 +4,7 @@
 import { useState, useRef, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Camera, ImagePlus, Send, X, Mic } from "lucide-react"
+import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Paintbrush } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -12,7 +12,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { moods, type Mood, type DiaryEntry } from "@/lib/diary-data"
+import { moods, themesList, type Mood, type DiaryEntry } from "@/lib/diary-data"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 
 export default function NewDiaryEntryPage() {
@@ -22,6 +23,8 @@ export default function NewDiaryEntryPage() {
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
   const [photos, setPhotos] = useState<{ url: string; file: File; caption: string }[]>([])
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
+  const [themePopoverOpen, setThemePopoverOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -76,13 +79,14 @@ export default function NewDiaryEntryPage() {
     const photosToSave = photos.map(p => ({ url: p.url, caption: p.caption }));
 
     const newEntry: DiaryEntry = {
-      id: new Date().toISOString(),
+      id: Date.now().toString(),
       date: new Date().toISOString(),
-      mood: selectedMood!,
+      mood: selectedMood,
       title: title.trim(),
       content: content.trim(),
       photos: photosToSave,
       voiceNotes: [],
+      themeUrl: selectedTheme || undefined,
     };
 
     try {
@@ -104,22 +108,47 @@ export default function NewDiaryEntryPage() {
   const moodDetails = selectedMood ? moods[selectedMood] : null;
 
   return (
-    <main className={cn(
-      "min-h-screen w-full transition-colors duration-700",
-       moodDetails ? moodDetails.bg : "bg-background"
-    )}>
+    <main className={cn( "min-h-screen w-full bg-background transition-colors duration-700" )}>
+      {selectedTheme ? (
+        <Image src={selectedTheme} layout="fill" objectFit="cover" alt="Selected theme" className="fixed inset-0 z-[-1] opacity-40 dark:opacity-20" />
+      ) : (
+        moodDetails && <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
+      )}
       <div className="mx-auto max-w-2xl p-4 sm:p-6 md:p-8">
         <header className="flex items-center justify-between mb-6">
           <Button variant="ghost" size="icon" onClick={() => router.push('/diary')}>
             <ArrowLeft />
           </Button>
           <h1 className="text-2xl font-bold">New Entry</h1>
-          <Button size="icon" className="bg-primary/80 hover:bg-primary" onClick={handleSave}>
-            <Send />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Popover open={themePopoverOpen} onOpenChange={setThemePopoverOpen}>
+                <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon"><Paintbrush /></Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-2">
+                    <div className="grid grid-cols-3 gap-2">
+                        {themesList.map((theme, index) => (
+                            <button key={index} onClick={() => {
+                                setSelectedTheme(theme);
+                                setThemePopoverOpen(false);
+                            }}>
+                                <Image src={theme} width={100} height={100} alt={`Theme ${index + 1}`} className="rounded-md object-cover aspect-square hover:scale-105 transition-transform" />
+                            </button>
+                        ))}
+                         <Button variant="outline" className="col-span-3 mt-2" onClick={() => {
+                            setSelectedTheme(null);
+                            setThemePopoverOpen(false);
+                        }}>Clear Theme</Button>
+                    </div>
+                </PopoverContent>
+            </Popover>
+            <Button size="icon" className="bg-primary/80 hover:bg-primary" onClick={handleSave}>
+                <Send />
+            </Button>
+          </div>
         </header>
 
-        <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden">
+        <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden bg-card/80 dark:bg-background/80 backdrop-blur-sm">
           <CardContent className="p-6 space-y-6">
             <div className="text-center">
               <h2 className="text-lg font-semibold mb-3">How are you feeling today?</h2>

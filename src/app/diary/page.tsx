@@ -31,7 +31,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameT
     const moodValue = payload[0].value as number
     const moodName = Object.keys(moods).find(key => {
         const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
-        return moodMap[key] === moodValue
+        return moodMap[key as keyof typeof moodMap] === moodValue
     }) || "Unknown"
     const moodEmoji = moodName !== "Unknown" ? moods[moodName as keyof typeof moods].emoji : '🤔'
 
@@ -103,7 +103,7 @@ export default function DiaryPage() {
             month: "short",
             day: "numeric",
           }),
-          mood: moodMap[entry.mood] || 3,
+          mood: moodMap[entry.mood as keyof typeof moodMap] || 3,
         }))
 
         setChartData(generatedChartData)
@@ -132,7 +132,7 @@ export default function DiaryPage() {
     const randomPlaceholder = placeholderFolders[Math.floor(Math.random() * placeholderFolders.length)];
 
     const newFolder: Folder = {
-      id: new Date().toISOString(),
+      id: Date.now().toString(),
       name: newJournalName.trim(),
       entryCount: 0,
       imageUrl: randomPlaceholder.imageUrl,
