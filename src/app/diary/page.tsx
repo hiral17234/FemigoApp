@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, ChangeEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Plus, Search, ChevronRight, BookOpenText, AreaChart, Pencil } from "lucide-react"
@@ -70,6 +70,9 @@ export default function DiaryPage() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newJournalName, setNewJournalName] = useState("")
+  
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [folderToEdit, setFolderToEdit] = useState<string | null>(null)
 
   useEffect(() => {
     try {
@@ -148,9 +151,47 @@ export default function DiaryPage() {
     setNewJournalName("")
     setIsDialogOpen(false)
   }
+  
+  const handleEditCoverClick = (folderId: string) => {
+    setFolderToEdit(folderId)
+    fileInputRef.current?.click()
+  }
+
+  const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0] && folderToEdit) {
+      const file = e.target.files[0]
+      const newImageUrl = URL.createObjectURL(file)
+
+      const updatedFolders = folders.map(f => {
+        if (f.id === folderToEdit) {
+          // If the old URL was a blob, revoke it to prevent memory leaks
+          if (f.imageUrl.startsWith('blob:')) {
+            URL.revokeObjectURL(f.imageUrl);
+          }
+          return { ...f, imageUrl: newImageUrl, imageHint: 'custom cover' }
+        }
+        return f
+      });
+
+      setFolders(updatedFolders)
+      localStorage.setItem("diaryFolders", JSON.stringify(updatedFolders))
+      toast({ title: "Cover Photo Updated!" })
+      setFolderToEdit(null)
+    }
+    // Clear the input value so the same file can be selected again
+    if(fileInputRef.current) fileInputRef.current.value = ""
+  }
+
 
   return (
     <div className="relative min-h-screen">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleCoverImageChange}
+        className="hidden"
+        accept="image/png, image/jpeg, image/webp"
+      />
       <div className="mx-auto max-w-2xl space-y-8 p-4 sm:p-6 md:p-8">
         <header className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">My Diary</h1>
@@ -226,7 +267,7 @@ export default function DiaryPage() {
                         </Link>
                       </Card>
                       <button 
-                        onClick={() => toast({ title: "Feature coming soon!"})}
+                        onClick={() => handleEditCoverClick(folder.id)}
                         className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         aria-label="Edit Journal Cover"
                       >
