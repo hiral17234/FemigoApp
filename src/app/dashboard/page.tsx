@@ -76,20 +76,23 @@ function DailyThought() {
   }
   
   return (
-    <div className="group w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700">
-        <div className="rounded-2xl bg-gradient-to-r from-pink-500/30 to-purple-500/30 p-px shadow-lg shadow-pink-500/10 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20">
-            <div className="rounded-[15px] bg-[#110D1F] p-4 text-center space-y-3">
-                <div className="flex items-center justify-center gap-2 text-sm text-purple-300">
-                    <CalendarDays className="h-4 w-4" />
-                    <p>{format(currentDateTime, "eeee, MMMM d, yyyy 'at' hh:mm:ss a")}</p>
-                </div>
-                <div className="relative text-white/90 italic pt-2">
-                    <Quote className="absolute -left-2 -top-1 h-5 w-5 text-primary/50" />
-                    <p className="text-base">{dailyQuote.quote}</p>
-                    <Quote className="absolute -right-2 -bottom-1 h-5 w-5 text-primary/50 rotate-180" />
-                </div>
-                 <p className="text-right text-xs text-muted-foreground font-medium">- {dailyQuote.author}</p>
+    <div className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700 space-y-6 text-center">
+        {/* Date/Time toastbox */}
+        <div className="inline-block rounded-full bg-gradient-to-r from-pink-500/30 to-purple-500/30 p-px shadow-lg shadow-pink-500/10">
+            <div className="rounded-full bg-[#110D1F] px-4 py-2 flex items-center justify-center gap-2 text-sm text-purple-300">
+                <CalendarDays className="h-4 w-4" />
+                <p>{format(currentDateTime, "eeee, MMMM d, yyyy 'at' hh:mm:ss a")}</p>
             </div>
+        </div>
+
+        {/* Free-floating Quote */}
+        <div className="space-y-2 px-4">
+            <div className="relative text-white/90 italic pt-2 text-lg">
+                <Quote className="absolute -left-2 -top-1 h-5 w-5 text-primary/50" />
+                <p>{dailyQuote.quote}</p>
+                <Quote className="absolute -right-2 -bottom-1 h-5 w-5 text-primary/50 rotate-180" />
+            </div>
+            <p className="text-right text-sm text-muted-foreground font-medium">- {dailyQuote.author}</p>
         </div>
     </div>
   );
