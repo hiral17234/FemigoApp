@@ -18,7 +18,6 @@ import {
   LifeBuoy,
   Settings,
   LogOut,
-  PanelLeft,
   Loader2
 } from "lucide-react"
 
@@ -26,7 +25,6 @@ import { onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase
 import { doc, getDoc } from "firebase/firestore"
 import { getFirebaseServices } from "@/lib/firebase"
 import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
 import {
   Sidebar,
@@ -45,19 +43,24 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 function ThemeToggle() {
   const { theme, setTheme } = useTheme()
   return (
-    <Button
-      variant="ghost"
-      size="icon"
+    <SidebarMenuButton 
       onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      tooltip={{ children: "Toggle Theme" }}
       className="w-full justify-start text-sm"
     >
-      <Sun className="h-[1.5rem] w-[1.5rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.5rem] w-[1.5rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="ml-2 group-data-[collapsible=icon]:hidden">
+      <Sun className={cn(
+        "h-[1.5rem] w-[1.5rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0",
+        theme === 'light' ? 'text-primary' : 'text-muted-foreground'
+      )} />
+      <Moon className={cn(
+        "absolute h-[1.5rem] w-[1.5rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100",
+        theme === 'dark' ? 'text-primary' : 'text-muted-foreground'
+      )} />
+      <span className="group-data-[collapsible=icon]:hidden ml-2">
         {theme === "light" ? "Dark" : "Light"} Mode
       </span>
       <span className="sr-only">Toggle theme</span>
-    </Button>
+    </SidebarMenuButton>
   )
 }
 
@@ -204,7 +207,7 @@ export default function DashboardLayout({
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b border-purple-900/50 bg-[#06010F]/80 px-4 backdrop-blur-sm sm:h-16 sm:px-6">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="md:hidden text-white hover:bg-white/10" />
+            <SidebarTrigger className="md:hidden text-white hover:bg-sidebar-accent hover:text-sidebar-primary transition-colors duration-300" />
             <div className="flex items-center gap-1 text-2xl font-bold text-white md:hidden">
               Femigo
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
