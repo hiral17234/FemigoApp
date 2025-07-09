@@ -42,8 +42,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarClose,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSidebar } from "@/components/ui/sidebar"
 
@@ -98,9 +98,10 @@ function SidebarHeaderClose() {
     if (state === "collapsed") return null;
 
     return (
-        <SidebarClose asChild>
-            <SidebarTrigger className="absolute right-2 top-3"/>
-        </SidebarClose>
+       <Button variant="ghost" size="icon" className="absolute right-2 top-3 h-7 w-7" onClick={toggleSidebar}>
+            <PanelLeftClose />
+            <span className="sr-only">Close sidebar</span>
+        </Button>
     )
 }
 
