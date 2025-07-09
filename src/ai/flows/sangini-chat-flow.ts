@@ -34,7 +34,7 @@ const sanginiChatFlow = ai.defineFlow(
   async ({ history, prompt }) => {
     const HUGGINGFACE_API_KEY = process.env.NEXT_PUBLIC_HUGGINGFACE_API_KEY;
 
-    if (!HUGGINGFACE_API_KEY) {
+    if (!HUGGINGFACE_API_KEY || HUGGINGFACE_API_KEY.includes('YOUR_')) {
         console.error("Hugging Face API Key is not configured.");
         throw new Error("The Hugging Face API Key is missing. Please add it to your .env file to use the AI assistant.");
     }
