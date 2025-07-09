@@ -18,13 +18,13 @@ const GenderCheckInputSchema = z.object({
       "A live photo of the user, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
 });
-export type GenderCheckInput = z.infer<typeof GenderCheckInputSchema>;
+type GenderCheckInput = z.infer<typeof GenderCheckInputSchema>;
 
 const GenderCheckOutputSchema = z.object({
   isFemale: z.boolean().describe('Whether the person in the photo is identified as female.'),
   reason: z.string().describe('A brief explanation of the outcome.'),
 });
-export type GenderCheckOutput = z.infer<typeof GenderCheckOutputSchema>;
+type GenderCheckOutput = z.infer<typeof GenderCheckOutputSchema>;
 
 const genderCheckPrompt = ai.definePrompt({
     name: 'genderCheckPrompt',

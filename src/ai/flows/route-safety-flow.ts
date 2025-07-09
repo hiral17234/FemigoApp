@@ -16,7 +16,7 @@ const RouteSafetyInputSchema = z.object({
   distance: z.string().describe("The total distance of the route, e.g., '15.3 km'"),
   duration: z.string().describe("The estimated travel time for the route, e.g., '25 mins'"),
 });
-export type RouteSafetyInput = z.infer<typeof RouteSafetyInputSchema>;
+type RouteSafetyInput = z.infer<typeof RouteSafetyInputSchema>;
 
 const RouteSafetyOutputSchema = z.object({
   roadQuality: z.enum(['Good', 'Moderate', 'Poor']).describe("The overall quality of the road surface."),
@@ -29,7 +29,7 @@ const RouteSafetyOutputSchema = z.object({
   policeInfo: z.string().describe("A brief, one-sentence summary of local police presence or station info."),
   weatherInfo: z.string().describe("A brief, one-sentence summary of the current weather and visibility."),
 });
-export type RouteSafetyOutput = z.infer<typeof RouteSafetyOutputSchema>;
+type RouteSafetyOutput = z.infer<typeof RouteSafetyOutputSchema>;
 
 const routeSafetyFlow = ai.defineFlow(
     {

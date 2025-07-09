@@ -19,7 +19,7 @@ const AadhaarVerificationInputSchema = z.object({
     ),
   userName: z.string().describe("The user's full name, as provided during signup."),
 });
-export type AadhaarVerificationInput = z.infer<typeof AadhaarVerificationInputSchema>;
+type AadhaarVerificationInput = z.infer<typeof AadhaarVerificationInputSchema>;
 
 const AadhaarVerificationOutputSchema = z.object({
     verificationPassed: z.boolean().describe("Whether the overall verification passed."),
@@ -28,7 +28,7 @@ const AadhaarVerificationOutputSchema = z.object({
     extractedGender: z.string().optional().describe("The gender extracted from the Aadhaar card."),
     extractedAadhaarNumber: z.string().optional().describe("The 12-digit Aadhaar number extracted from the card."),
 });
-export type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutputSchema>;
+type AadhaarVerificationOutput = z.infer<typeof AadhaarVerificationOutputSchema>;
 
 const aadhaarVerificationPrompt = ai.definePrompt({
     name: 'aadhaarVerificationPrompt',

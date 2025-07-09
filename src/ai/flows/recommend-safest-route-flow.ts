@@ -24,13 +24,13 @@ const RouteSafetyOutputSchema = z.object({
 });
 
 const RecommendSafestRouteInputSchema = z.array(RouteSafetyOutputSchema);
-export type RecommendSafestRouteInput = z.infer<typeof RecommendSafestRouteInputSchema>;
+type RecommendSafestRouteInput = z.infer<typeof RecommendSafestRouteInputSchema>;
 
 const RecommendSafestRouteOutputSchema = z.object({
     recommendedRouteIndex: z.number().describe("The 0-based array index of the recommended safest route."),
     reason: z.string().describe("A brief explanation for why this route was recommended, highlighting its key safety advantages."),
 });
-export type RecommendSafestRouteOutput = z.infer<typeof RecommendSafestRouteOutputSchema>;
+type RecommendSafestRouteOutput = z.infer<typeof RecommendSafestRouteOutputSchema>;
 
 const recommendationPrompt = ai.definePrompt({
     name: 'recommendationPrompt',
