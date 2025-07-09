@@ -24,6 +24,12 @@ export type SanginiChatInput = z.infer<typeof SanginiChatInputSchema>;
 
 
 export async function sanginiChat(input: SanginiChatInput): Promise<string> {
+  // Check for the API key before making a call.
+  if (!process.env.NEXT_PUBLIC_GOOGLE_AI_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_KEY.includes('YOUR_')) {
+    console.error("Google AI API key is missing. Please add it to your .env file as NEXT_PUBLIC_GOOGLE_AI_KEY.");
+    return "I'm sorry, I cannot connect to the AI service right now. The application's AI capabilities are not configured correctly. An API key is required.";
+  }
+  
   const history: Message[] = [...input.history, { role: 'user', content: input.message }];
 
   const { output } = await ai.generate({
