@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef, ChangeEvent } from "react"
@@ -136,7 +137,7 @@ export default function EditDiaryEntryPage() {
     return (
         <main className={cn("min-h-screen w-full bg-background transition-colors duration-700")}>
             {selectedTheme ? (
-                <Image src={selectedTheme} layout="fill" objectFit="cover" alt="Selected theme" className="fixed inset-0 z-[-1] opacity-40 dark:opacity-20" />
+                <Image src={selectedTheme} layout="fill" objectFit="cover" alt="Selected theme" className="fixed inset-0 z-[-1] opacity-60 dark:opacity-40" />
             ) : (
                 moodDetails && <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
             )}
@@ -175,8 +176,10 @@ export default function EditDiaryEntryPage() {
             </header>
 
             <Card className={cn(
-                "rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden backdrop-blur-sm transition-colors duration-500",
-                selectedTheme ? "bg-card/40 dark:bg-background/40" : "bg-card/80 dark:bg-background/80"
+                "rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden transition-colors duration-500",
+                selectedTheme 
+                    ? "bg-transparent border-transparent" 
+                    : "bg-card/80 dark:bg-background/80 backdrop-blur-sm"
             )}>
               <CardContent className="p-6 space-y-6">
                 <div className="text-center">
