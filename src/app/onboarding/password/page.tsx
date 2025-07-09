@@ -104,8 +104,8 @@ export default function OnboardingPasswordPage() {
       await setDoc(userDocRef, {
         uid: user.uid,
         email: user.email,
-        name: name, // Original full name
-        displayName: displayName, // Nickname if available, else full name
+        name: name, // Original full name from step 1
+        displayName: displayName, // Use nickname if provided, otherwise the full name
         country: country,
         age: onboardingDetails.age,
         address1: onboardingDetails.address1,
@@ -114,10 +114,11 @@ export default function OnboardingPasswordPage() {
         state: onboardingDetails.state,
         city: city,
         altPhone: altPhone,
+        trustedContacts: [], // Initialize trusted contacts
         createdAt: new Date().toISOString(),
       })
 
-      // 4. Clear localStorage and redirect
+      // 4. Clear all temporary localStorage items
       localStorage.removeItem("userEmail")
       localStorage.removeItem("userName")
       localStorage.removeItem("userCountry")
@@ -125,6 +126,8 @@ export default function OnboardingPasswordPage() {
       localStorage.removeItem("userLivePhoto")
       localStorage.removeItem("aadhaarImage")
       localStorage.removeItem("userPhone")
+      localStorage.removeItem("femigo-location-planner")
+
 
       toast({
         title: "Account Created & Secured!",

@@ -47,25 +47,29 @@ const formSchema = z.object({
     message: "Please specify your city when 'Other' is selected.",
     path: ["otherCity"],
 }).superRefine((data, ctx) => {
-    if (data.altPhone) {
-        if (!data.altCountryCode) {
-            ctx.addIssue({
-                path: ['altCountryCode'],
-                message: 'Code is required.',
-                code: z.ZodIssueCode.custom
-            });
-        }
-        if (!/^\d{5,15}$/.test(data.altPhone)) {
-             ctx.addIssue({
-                path: ['altPhone'],
-                message: 'Invalid number.',
-                code: z.ZodIssueCode.custom
-            });
-        }
-    } else if (data.altCountryCode) {
+    const phoneProvided = !!data.altPhone;
+    const codeProvided = !!data.altCountryCode;
+
+    if (phoneProvided && !codeProvided) {
+        ctx.addIssue({
+            path: ['altCountryCode'],
+            message: 'Code is required.',
+            code: z.ZodIssueCode.custom
+        });
+    }
+
+    if (!phoneProvided && codeProvided) {
         ctx.addIssue({
             path: ['altPhone'],
             message: 'Number is required.',
+            code: z.ZodIssueCode.custom
+        });
+    }
+
+    if (phoneProvided && !/^\d{5,15}$/.test(data.altPhone!)) {
+         ctx.addIssue({
+            path: ['altPhone'],
+            message: 'Invalid number (5-15 digits).',
             code: z.ZodIssueCode.custom
         });
     }

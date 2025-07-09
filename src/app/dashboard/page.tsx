@@ -39,33 +39,42 @@ const features: Feature[] = [
 export default function DashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(null);
   const [userName, setUserName] = useState<string | null>(null)
   const [userInitial, setUserInitial] = useState("")
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
-      if (user) {
-        // User is signed in. Fetch their data.
-        const userDocRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userDocRef);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
+      if (currentUser) {
+        setUser(currentUser);
+        try {
+          const userDocRef = doc(db, "users", currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
 
-        let nameToDisplay = "User";
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          nameToDisplay = userData.displayName || userData.name || "User";
-        } else {
-          // Fallback to auth display name if Firestore doc doesn't exist
-          nameToDisplay = user.displayName || "User";
+          let nameToDisplay = "User";
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            // Use displayName from Firestore, which could be nickname or full name
+            nameToDisplay = userData.displayName || "User";
+          } else {
+            // Fallback to auth display name if Firestore doc doesn't exist for some reason
+            nameToDisplay = currentUser.displayName || "User";
+          }
+          
+          setUserName(nameToDisplay);
+          setUserInitial(nameToDisplay.charAt(0).toUpperCase());
+        } catch (error) {
+            console.error("Failed to fetch user data:", error);
+            // If there's an error, still try to show something
+            setUserName(currentUser.displayName || "User");
+        } finally {
+            setLoading(false);
         }
-        
-        setUserName(nameToDisplay);
-        setUserInitial(nameToDisplay.charAt(0).toUpperCase());
 
       } else {
         // User is signed out. Redirect to login.
         router.push("/login");
       }
-      setLoading(false)
     });
 
     // Cleanup subscription on unmount
@@ -83,7 +92,7 @@ export default function DashboardPage() {
 
   // If we are no longer loading, but have no user, it means a redirect is in progress.
   // Show a loader to prevent a flash of a broken page.
-  if (!userName) {
+  if (!user || !userName) {
     return (
         <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] text-white">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
