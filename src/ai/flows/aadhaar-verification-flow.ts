@@ -78,15 +78,53 @@ const aadhaarVerificationFlow = ai.defineFlow(
       outputSchema: AadhaarVerificationOutputSchema,
     },
     async (input) => {
-      const { output } = await aadhaarVerificationPrompt(input);
-      if (!output) {
-        // This case should be rare given the strict prompt, but it's good practice.
+        const maxRetries = 3;
+        const initialDelay = 1000; // 1 second
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const { output } = await aadhaarVerificationPrompt(input);
+                if (!output) {
+                    return {
+                        verificationPassed: false,
+                        reason: "The AI failed to generate a valid response. Please try with a clearer image.",
+                    };
+                }
+                return output; // Success
+            } catch (error: any) {
+                console.error(`Aadhaar verification attempt ${attempt} failed:`, error.message);
+
+                const errorMessage = error.message || '';
+                const isRetriable = errorMessage.includes('503') || errorMessage.toLowerCase().includes('service unavailable') || errorMessage.toLowerCase().includes('overloaded');
+                
+                if (isRetriable && attempt < maxRetries) {
+                    // Wait before the next attempt, with exponential backoff
+                    const delay = initialDelay * Math.pow(2, attempt - 1);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue; // Go to the next iteration
+                }
+                
+                // If it's the last attempt or not a retriable error, return a user-friendly failure message.
+                if (isRetriable) {
+                    return {
+                        verificationPassed: false,
+                        reason: "The verification service is temporarily unavailable. Please try again in a few moments."
+                    };
+                } else {
+                    // For non-retriable errors, fail with the actual error message for debugging
+                    return {
+                        verificationPassed: false,
+                        reason: `An unexpected error occurred: ${errorMessage}`,
+                    };
+                }
+            }
+        }
+        
+        // This should be unreachable, but acts as a fallback.
         return {
             verificationPassed: false,
-            reason: "The AI failed to generate a valid response. Please try again with a clearer image.",
+            reason: "The verification process failed after multiple attempts. Please try again later.",
         };
-      }
-      return output;
     }
 );
 
