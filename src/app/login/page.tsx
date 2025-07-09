@@ -61,13 +61,9 @@ export default function LoginPage() {
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Login error:", error)
-      const isInvalidCredential = error.code === 'auth/invalid-credential' || 
-                                  error.code === 'auth/user-not-found' || 
-                                  error.code === 'auth/wrong-password';
-      
-      const errorMessage = isInvalidCredential
+      const errorMessage = error.code === 'auth/invalid-credential'
         ? "Invalid email or password. Please check your credentials and try again."
-        : "An unexpected error occurred during login. Please try again later.";
+        : `An unexpected error occurred. Please try again. (${error.code})`;
 
       toast({
         variant: "destructive",

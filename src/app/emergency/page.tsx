@@ -179,7 +179,7 @@ export default function EmergencyPage() {
                 <div key={contact.id} className="flex items-center justify-between p-3 bg-gray-900/70 rounded-xl shadow-lg shadow-black/20">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage data-ai-hint="person" src={`https://placehold.co/60x60.png`} />
+                      <AvatarImage data-ai-hint="person face" src={`https://placehold.co/60x60.png`} />
                       <AvatarFallback>{contact.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>

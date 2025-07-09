@@ -135,7 +135,7 @@ export default function DashboardPage() {
           <div className="relative">
              <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF0080] to-purple-900 opacity-75 blur-md"></div>
             <Avatar className="relative h-12 w-12 border-2 border-slate-900">
-              <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
+              <AvatarImage data-ai-hint="logo abstract" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
               <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
             </Avatar>
           </div>

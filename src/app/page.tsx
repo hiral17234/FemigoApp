@@ -13,7 +13,7 @@ export default function WelcomePage() {
       <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-black/20 p-8 text-center shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
         <Image
           src="https://i.imgur.com/DFegeIc.jpeg"
-          data-ai-hint="logo"
+          data-ai-hint="logo abstract"
           alt="Femigo Logo"
           width={120}
           height={120}
