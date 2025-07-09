@@ -4,17 +4,17 @@
 import { useState, useRef, ChangeEvent, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Folder } from "lucide-react"
+import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Folder, PaintBrush, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { moods, type Mood, type DiaryEntry, type Folder as JournalFolder, type DiaryPhoto } from "@/lib/diary-data"
+import { moods, themesList, type Mood, type DiaryEntry, type Folder as JournalFolder, type DiaryPhoto } from "@/lib/diary-data"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 export default function NewDiaryEntryPage() {
   const router = useRouter()
@@ -27,6 +27,8 @@ export default function NewDiaryEntryPage() {
 
   const [folders, setFolders] = useState<JournalFolder[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>("uncategorized");
+  const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
+  const [themePopoverOpen, setThemePopoverOpen] = useState(false)
 
   useEffect(() => {
     try {
@@ -100,6 +102,7 @@ export default function NewDiaryEntryPage() {
       photos: photos,
       voiceNotes: [],
       folderId: selectedFolderId === 'uncategorized' ? undefined : selectedFolderId,
+      themeUrl: selectedTheme || undefined,
     };
 
     try {
@@ -122,7 +125,6 @@ export default function NewDiaryEntryPage() {
 
   return (
     <main className={cn( "min-h-screen w-full bg-background transition-colors duration-700" )}>
-      {moodDetails && <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />}
       <div className="mx-auto max-w-2xl p-4 sm:p-6 md:p-8">
         <header className="flex items-center justify-between mb-6">
           <Button variant="ghost" size="icon" onClick={() => router.push('/diary')}>
@@ -182,11 +184,22 @@ export default function NewDiaryEntryPage() {
                 className="text-xl font-bold bg-transparent border-0 border-b-2 rounded-none px-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary"
             />
             
-            <RichTextEditor
-              value={content}
-              onChange={setContent}
-              placeholder="What's on your mind today?"
-            />
+            <div
+                className="rounded-lg border border-input overflow-hidden relative"
+                style={{
+                  backgroundImage: selectedTheme ? `url(${selectedTheme})` : 'none',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              >
+                <div className={cn( "bg-transparent", selectedTheme && 'bg-background/80 backdrop-blur-sm')}>
+                  <RichTextEditor
+                    value={content}
+                    onChange={setContent}
+                    placeholder="What's on your mind today?"
+                  />
+                </div>
+            </div>
 
             <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
@@ -196,6 +209,31 @@ export default function NewDiaryEntryPage() {
                     <Button variant="outline" onClick={handleAddVoiceNote}>
                         <Mic className="mr-2" /> Add Voice Note
                     </Button>
+                     <Popover open={themePopoverOpen} onOpenChange={setThemePopoverOpen}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline"><PaintBrush className="mr-2" /> Theme</Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto">
+                            <div className="grid grid-cols-3 gap-2">
+                                {themesList.map((theme, index) => (
+                                    <button key={index} className="relative aspect-square w-20 h-20 rounded-md overflow-hidden ring-offset-background ring-offset-2 focus:outline-none focus:ring-2 focus:ring-ring" onClick={() => {
+                                        setSelectedTheme(theme);
+                                        setThemePopoverOpen(false);
+                                    }}>
+                                        <Image src={theme} layout="fill" objectFit="cover" alt={`Theme ${index + 1}`} className="hover:scale-110 transition-transform" />
+                                        {selectedTheme === theme && (
+                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                                <Check className="text-white h-8 w-8" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                            {selectedTheme && (
+                                <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => setSelectedTheme(null)}>Clear Theme</Button>
+                            )}
+                        </PopoverContent>
+                    </Popover>
                 </div>
                 <input 
                     type="file" 

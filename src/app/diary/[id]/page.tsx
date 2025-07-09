@@ -182,8 +182,24 @@ export default function ViewDiaryEntryPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <Separator />
-                        <div className="prose dark:prose-invert max-w-none prose-p:text-foreground prose-strong:text-foreground" dangerouslySetInnerHTML={{ __html: entry.content }} />
-                        
+
+                        <div
+                            className="rounded-lg overflow-hidden border"
+                            style={{
+                                backgroundImage: entry.themeUrl ? `url(${entry.themeUrl})` : 'none',
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                            }}
+                        >
+                            <div
+                                className={cn(
+                                    "prose dark:prose-invert max-w-none prose-p:text-foreground prose-strong:text-foreground",
+                                    entry.themeUrl ? 'bg-background/80 backdrop-blur-sm p-4' : 'p-4'
+                                )}
+                                dangerouslySetInnerHTML={{ __html: entry.content }}
+                            />
+                        </div>
+
                         {entry.photos && entry.photos.length > 0 && (
                             <div>
                                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2"><ImageIcon /> Photos</h3>

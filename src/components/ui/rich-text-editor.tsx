@@ -14,7 +14,7 @@ interface RichTextEditorProps {
 }
 
 const colors = [
-  "#000000", // Black
+  "#000000",
   "#ffffff", // White
   "#868e96", // Gray
   "#fa5252", // Red
@@ -35,25 +35,28 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Only update if the content is actually different, to avoid cursor jumps.
     if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value
     }
   }, [value])
-
+  
   const handleInput = (event: React.FormEvent<HTMLDivElement>) => {
-    onChange(event.currentTarget.innerHTML)
-  }
-
+    // This is the correct way to get the latest content and update state.
+    onChange(event.currentTarget.innerHTML);
+  };
+  
   const executeAndUpdate = (command: string, val?: string) => {
-    if (editorRef.current) {
-      editorRef.current.focus();
-      document.execCommand(command, false, val);
-      onChange(editorRef.current.innerHTML);
+    // onMouseDown={(e) => e.preventDefault()} on the buttons prevents the editor from losing focus.
+    document.execCommand(command, false, val);
+    if(editorRef.current) {
+        onChange(editorRef.current.innerHTML); // Ensure state updates after execCommand
+        editorRef.current.focus(); // Re-focus the editor
     }
   };
 
   return (
-    <div className="rounded-md border border-input bg-background/50">
+    <div className="rounded-md border border-input bg-transparent">
       <div className="flex flex-wrap items-center gap-1 border-b p-2">
         <Button
           type="button"
@@ -110,6 +113,7 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
         ref={editorRef}
         contentEditable
         onInput={handleInput}
+        suppressContentEditableWarning={true}
         className={cn(
           "min-h-[250px] w-full bg-transparent p-4 text-base focus-visible:outline-none prose-p:my-0",
           !value && "text-muted-foreground"
