@@ -93,7 +93,7 @@ export default function DiaryPage() {
         setUser(currentUser);
         // Set up listeners for folders and entries
         const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
-        const entriesQuery = query(collection(db, "users", currentUser.uid, "diaryEntries"), orderBy("date", "desc"));
+        const entriesQuery = query(collection(db, "users", currentUser.uid, "diaryEntries"));
         
         const unsubscribeFolders = onSnapshot(foldersQuery, (querySnapshot) => {
             const foldersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
@@ -106,6 +106,8 @@ export default function DiaryPage() {
 
         const unsubscribeEntries = onSnapshot(entriesQuery, (querySnapshot) => {
             const entriesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiaryEntry));
+            // Sort client-side to avoid needing a composite index
+            entriesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             setEntries(entriesData);
             updateChartData(entriesData);
             setIsLoading(false);
@@ -385,7 +387,10 @@ export default function DiaryPage() {
 
         <section>
           <Card>
-            <CardHeader><CardTitle>Mood Tracker</CardTitle><CardDescription>Your emotional trends over the last 7 entries.</CardDescription></CardHeader>
+            <CardHeader>
+              <CardTitle>Mood Tracker</CardTitle>
+              <CardDescription>Your emotional trends over the last 7 entries.</CardDescription>
+            </CardHeader>
             <CardContent>
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={200}>
