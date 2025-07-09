@@ -8,11 +8,11 @@ const BOTPRESS_CHAT_URL = "https://cdn.botpress.cloud/webchat/v3.1/shareable.htm
 
 export default function AiAssistantPage() {
   return (
-    <div className="h-full w-full flex flex-col bg-background">
+    <div className="h-screen w-full flex flex-col bg-background">
       <iframe
         src={BOTPRESS_CHAT_URL}
         title="Femigo AI Assistant"
-        className="h-full w-full flex-1 border-none"
+        className="flex-1 w-full border-none"
       />
     </div>
   );
