@@ -3,7 +3,6 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import {
   Siren,
@@ -15,9 +14,7 @@ import {
   ShieldPlus,
   Loader2,
 } from "lucide-react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { onAuthStateChanged, type User } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
 import { getFirebaseServices } from "@/lib/firebase"
 
 
@@ -40,116 +37,47 @@ export default function DashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null);
-  const [userName, setUserName] = useState<string | null>(null)
-  const [userInitial, setUserInitial] = useState("")
 
   const firebase = getFirebaseServices();
 
   useEffect(() => {
     if (!firebase.auth || !firebase.db) return;
 
-    const unsubscribe = onAuthStateChanged(firebase.auth, async (currentUser: User | null) => {
+    const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser: User | null) => {
       if (currentUser) {
         setUser(currentUser);
-        try {
-          const userDocRef = doc(firebase.db, "users", currentUser.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          let nameToDisplay = "User";
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            // Use displayName from Firestore, which could be nickname or full name
-            nameToDisplay = userData.displayName || "User";
-          } else {
-            // Fallback to auth display name if Firestore doc doesn't exist for some reason
-            nameToDisplay = currentUser.displayName || "User";
-          }
-          
-          setUserName(nameToDisplay);
-          setUserInitial(nameToDisplay.charAt(0).toUpperCase());
-        } catch (error) {
-            console.error("Failed to fetch user data:", error);
-            // If there's an error, still try to show something
-            setUserName(currentUser.displayName || "User");
-        } finally {
-            setLoading(false);
-        }
-
+        setLoading(false);
       } else {
-        // User is signed out. Redirect to login.
         router.push("/login");
       }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [router, firebase.auth, firebase.db]);
 
   if (firebase.error) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
+      <main className="flex flex-1 items-center justify-center p-4 text-center">
           <div className="rounded-lg bg-card p-8 text-card-foreground">
               <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
               <p className="mt-2 text-muted-foreground">{firebase.error}</p>
           </div>
-      </div>
+      </main>
     );
   }
   
-  if (loading) {
+  if (loading || !user) {
     return (
-      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] text-white">
+      <main className="flex flex-1 items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4">Loading Dashboard...</p>
-      </div>
+      </main>
     );
   }
-
-  // If we are no longer loading, but have no user, it means a redirect is in progress.
-  // Show a loader to prevent a flash of a broken page.
-  if (!user || !userName) {
-    return (
-        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] text-white">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="mt-4">Redirecting...</p>
-        </div>
-    );
-  }
-
 
   return (
-    <div className="min-h-screen w-full overflow-hidden bg-[#06010F] font-sans text-white">
+    <main className="flex-1 overflow-y-auto bg-[#06010F] text-white">
       <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
-        <header className="flex items-center justify-between py-4">
-          <div>
-            <div className="flex items-center gap-1 text-3xl font-bold text-white">
-              Femigo
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
-                  <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
-              </svg>
-            </div>
-            <p className="mt-1 text-sm font-medium text-white/80">
-              Safety. Strength. Solidarity.
-            </p>
-          </div>
-          <div className="relative">
-             <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#FF0080] to-purple-900 opacity-75 blur-md"></div>
-            <Avatar className="relative h-12 w-12 border-2 border-slate-900">
-              <AvatarImage data-ai-hint="logo abstract" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
-              <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
-            </Avatar>
-          </div>
-        </header>
-
-        <section className="my-8 text-center">
-          <h2 className="text-4xl font-bold tracking-tight text-white">
-            Welcome, <span className="bg-gradient-to-r from-[#FF0080] to-purple-800 bg-clip-text text-transparent">{userName}!</span>
-          </h2>
-          <p className="mt-2 text-base text-white/80">
-            Your safety is our priority.
-          </p>
-        </section>
-
+        
         <Link href="/emergency" className="relative my-8 block group">
           <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-purple-900 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
           
@@ -183,6 +111,6 @@ export default function DashboardPage() {
           </div>
         </section>
       </div>
-    </div>
+    </main>
   )
 }
