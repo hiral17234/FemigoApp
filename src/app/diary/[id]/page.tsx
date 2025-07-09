@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
@@ -17,6 +16,7 @@ import { moods, type DiaryEntry } from '@/lib/diary-data'
 import { cn } from '@/lib/utils'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
+import Image from 'next/image'
 
 function ViewDiaryEntrySkeleton() {
     return (
@@ -130,11 +130,7 @@ export default function ViewDiaryEntryPage() {
 
     return (
         <main className="min-h-screen w-full transition-colors duration-700 bg-background">
-             {entry.themeUrl ? (
-                <Image src={entry.themeUrl} layout="fill" objectFit="cover" alt="Theme" className="fixed inset-0 z-[-1] opacity-40 dark:opacity-20" />
-            ) : (
-                <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
-            )}
+            <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
             <div className="mx-auto max-w-2xl p-4 sm:p-6 md:p-8">
                 <header className="flex items-center justify-between mb-6">
                     <Button variant="ghost" size="icon" onClick={() => router.push('/diary')}>
@@ -169,10 +165,7 @@ export default function ViewDiaryEntryPage() {
                     </div>
                 </header>
 
-                <Card className={cn(
-                    "rounded-2xl shadow-lg overflow-hidden transition-colors duration-500",
-                    entry.themeUrl ? "bg-transparent border-none shadow-none" : "bg-card/80 dark:bg-background/80 backdrop-blur-sm border-black/10 dark:border-white/10"
-                )}>
+                <Card className="rounded-2xl shadow-lg overflow-hidden transition-colors duration-500 bg-card/80 dark:bg-background/80 backdrop-blur-sm border-black/10 dark:border-white/10">
                     <CardHeader>
                         <div className="flex justify-between items-start">
                             <div>
