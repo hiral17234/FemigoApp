@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { onAuthStateChanged, type User } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
-import { auth, db } from "@/lib/firebase"
+import { getFirebaseServices } from "@/lib/firebase"
 
 
 type Feature = {
@@ -43,12 +43,16 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState<string | null>(null)
   const [userInitial, setUserInitial] = useState("")
 
+  const firebase = getFirebaseServices();
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser: User | null) => {
+    if (!firebase.auth || !firebase.db) return;
+
+    const unsubscribe = onAuthStateChanged(firebase.auth, async (currentUser: User | null) => {
       if (currentUser) {
         setUser(currentUser);
         try {
-          const userDocRef = doc(db, "users", currentUser.uid);
+          const userDocRef = doc(firebase.db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
           let nameToDisplay = "User";
@@ -79,7 +83,18 @@ export default function DashboardPage() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [router]);
+  }, [router, firebase.auth, firebase.db]);
+
+  if (firebase.error) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
+          <div className="rounded-lg bg-card p-8 text-card-foreground">
+              <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
+              <p className="mt-2 text-muted-foreground">{firebase.error}</p>
+          </div>
+      </div>
+    );
+  }
   
   if (loading) {
     return (

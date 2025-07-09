@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { cn } from "@/lib/utils"
-import { auth, db } from "@/lib/firebase"
+import { getFirebaseServices } from "@/lib/firebase"
 
 
 const passwordValidation = new RegExp(
@@ -54,7 +54,9 @@ export default function OnboardingPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  
+
+  const firebase = getFirebaseServices();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     mode: 'onTouched',
@@ -67,6 +69,8 @@ export default function OnboardingPasswordPage() {
   const password = form.watch("password")
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firebase.auth || !firebase.db) return; // Should not happen if firebase.error is null
+
     setIsSubmitting(true)
     
     try {
@@ -83,7 +87,7 @@ export default function OnboardingPasswordPage() {
       const onboardingDetails = JSON.parse(onboardingDetailsJSON)
 
       // 1. Create user with Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, values.password)
+      const userCredential = await createUserWithEmailAndPassword(firebase.auth, email, values.password)
       const user = userCredential.user
 
       // 2. Update auth profile with name
@@ -91,7 +95,7 @@ export default function OnboardingPasswordPage() {
       await updateProfile(user, { displayName })
 
       // 3. Create user document in Firestore
-      const userDocRef = doc(db, "users", user.uid)
+      const userDocRef = doc(firebase.db, "users", user.uid)
       
       const city = onboardingDetails.city === "Other" 
         ? (onboardingDetails.otherCity || "")
@@ -142,6 +146,8 @@ export default function OnboardingPasswordPage() {
       let errorMessage = "An unknown error occurred during signup."
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = "This email is already in use. Please use a different email or log in."
+      } else if (error.code === 'auth/api-key-not-valid') {
+        errorMessage = "The API Key is not valid. Please check your .env file."
       } else if (error instanceof Error) {
         errorMessage = error.message
       }
@@ -153,6 +159,17 @@ export default function OnboardingPasswordPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (firebase.error) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
+          <div className="rounded-lg bg-card p-8 text-card-foreground">
+              <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
+              <p className="mt-2 text-muted-foreground">{firebase.error}</p>
+          </div>
+      </div>
+    );
   }
 
   return (

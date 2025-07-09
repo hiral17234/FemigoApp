@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { auth } from "@/lib/firebase"
+import { getFirebaseServices } from "@/lib/firebase"
 
 const formSchema = z.object({
   email: z.string().email({
@@ -38,6 +38,8 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
+  const firebase = getFirebaseServices();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -47,9 +49,10 @@ export default function LoginPage() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firebase.auth) return;
     setIsSubmitting(true)
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password)
+      await signInWithEmailAndPassword(firebase.auth, values.email, values.password)
       toast({
         title: "Logged In!",
         description: "Welcome back.",
@@ -59,8 +62,10 @@ export default function LoginPage() {
     } catch (error: any) {
       console.error("Login error:", error)
       let errorMessage = "Invalid email or password. Please try again.";
-      if (error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.code === 'auth/api-key-not-valid') {
+        errorMessage = "The API Key is not valid. Please check your .env file."
       }
       toast({
         variant: "destructive",
@@ -70,6 +75,17 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (firebase.error) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
+          <div className="rounded-lg bg-card p-8 text-card-foreground">
+              <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
+              <p className="mt-2 text-muted-foreground">{firebase.error}</p>
+          </div>
+      </div>
+    );
   }
 
   return (
