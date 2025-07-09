@@ -98,12 +98,20 @@ export default function DiaryPage() {
         const unsubscribeFolders = onSnapshot(foldersQuery, (querySnapshot) => {
             const foldersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
             setFolders(foldersData);
+        }, (error) => {
+            console.error("Error fetching folders:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not load journals." });
+            setIsLoading(false);
         });
 
         const unsubscribeEntries = onSnapshot(entriesQuery, (querySnapshot) => {
             const entriesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiaryEntry));
             setEntries(entriesData);
             updateChartData(entriesData);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching entries:", error);
+            toast({ variant: 'destructive', title: "Error", description: "Could not load diary entries." });
             setIsLoading(false);
         });
 
@@ -118,19 +126,7 @@ export default function DiaryPage() {
     });
 
     return () => unsubscribe();
-  }, [router]);
-
-  // Update folder entry counts when entries or folders change
-  useEffect(() => {
-      if (folders.length > 0 || entries.length > 0) {
-        const updatedFolders = folders.map(folder => ({
-            ...folder,
-            entryCount: entries.filter(entry => entry.folderId === folder.id).length
-        }));
-        setFolders(updatedFolders);
-      }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entries]);
+  }, [router, toast]);
 
   const updateChartData = (currentEntries: DiaryEntry[]) => {
       if (currentEntries.length > 0) {
@@ -148,7 +144,7 @@ export default function DiaryPage() {
 
   const filteredEntries = entries.filter((entry) => {
       const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            entry.content.toLowerCase().includes(searchTerm.toLowerCase());
+                            (entry.content || '').toLowerCase().includes(searchTerm.toLowerCase());
       const matchesFolder = !selectedFolder ? !entry.folderId : entry.folderId === selectedFolder.id;
       return matchesSearch && matchesFolder;
     }
@@ -163,7 +159,6 @@ export default function DiaryPage() {
     const randomPlaceholder = placeholderFolders[Math.floor(Math.random() * placeholderFolders.length)];
     const newFolder = {
       name: newJournalName.trim(),
-      entryCount: 0,
       imageUrl: randomPlaceholder.imageUrl,
       imageHint: randomPlaceholder.imageHint,
     };
@@ -323,7 +318,7 @@ export default function DiaryPage() {
                 <div key={folder.id} onClick={() => setSelectedFolder(folder)} className={cn("relative group cursor-pointer rounded-lg border-2", selectedFolder?.id === folder.id ? "border-primary" : "border-transparent")}>
                     <Card className="w-40 shrink-0 overflow-hidden">
                       <div className="relative h-24"><Image src={folder.imageUrl} data-ai-hint={folder.imageHint} alt={folder.name} layout="fill" objectFit="cover" className="transition-transform group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" /></div>
-                      <div className="p-3"><h3 className="font-semibold truncate">{folder.name}</h3><p className="text-xs text-muted-foreground">{folder.entryCount} Entries</p></div>
+                      <div className="p-3"><h3 className="font-semibold truncate">{folder.name}</h3><p className="text-xs text-muted-foreground">{entries.filter(entry => entry.folderId === folder.id).length} Entries</p></div>
                     </Card>
                       <DropdownMenu>
                           <DropdownMenuTrigger asChild>
