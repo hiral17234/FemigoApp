@@ -87,8 +87,8 @@ function DailyThought() {
 
         {/* Improved Quote Box */}
         <div className="rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-6 shadow-inner-lg border border-white/10 relative">
-            <Quote className="absolute top-4 left-4 h-8 w-8 text-primary/30" />
-            <Quote className="absolute bottom-4 right-4 h-8 w-8 text-primary/30 rotate-180" />
+            <Quote className="absolute top-4 left-2 h-8 w-8 text-primary/30" />
+            <Quote className="absolute bottom-4 right-2 h-8 w-8 text-primary/30 rotate-180" />
             <p className="text-lg italic text-white/90">"{dailyQuote.quote}"</p>
             <p className="text-right text-sm text-muted-foreground font-medium mt-4">- {dailyQuote.author}</p>
         </div>
