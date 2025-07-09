@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -88,7 +87,7 @@ function DailyThought() {
         {/* Free-floating Quote */}
         <div className="space-y-2 px-4">
             <div className="relative text-white/90 italic pt-2 text-lg">
-                <Quote className="absolute -left-2 -top-1 h-5 w-5 text-primary/50" />
+                <Quote className="absolute -left-4 -top-1 h-5 w-5 text-primary/50" />
                 <p>{dailyQuote.quote}</p>
                 <Quote className="absolute -right-2 -bottom-1 h-5 w-5 text-primary/50 rotate-180" />
             </div>
