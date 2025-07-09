@@ -38,6 +38,7 @@ const features: Feature[] = [
 
 export default function DashboardPage() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
   const [userName, setUserName] = useState<string | null>(null)
   const [userInitial, setUserInitial] = useState("")
 
@@ -64,18 +65,30 @@ export default function DashboardPage() {
         // User is signed out. Redirect to login.
         router.push("/login");
       }
+      setLoading(false)
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, [router]);
   
-  if (!userName) {
+  if (loading) {
     return (
       <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] text-white">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
         <p className="mt-4">Loading Dashboard...</p>
       </div>
+    );
+  }
+
+  // If we are no longer loading, but have no user, it means a redirect is in progress.
+  // Show a loader to prevent a flash of a broken page.
+  if (!userName) {
+    return (
+        <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] text-white">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="mt-4">Redirecting...</p>
+        </div>
     );
   }
 
