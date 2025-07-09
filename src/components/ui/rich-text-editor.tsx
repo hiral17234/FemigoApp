@@ -3,7 +3,7 @@
 
 import { cn } from "@/lib/utils"
 import { Bold, Italic, Palette } from "lucide-react"
-import React, { useRef } from "react"
+import React, { useRef, useEffect } from "react"
 import { Popover, PopoverContent, PopoverTrigger } from "./popover"
 import { Button } from "./button"
 
@@ -15,6 +15,7 @@ interface RichTextEditorProps {
 
 const colors = [
   "#ffffff", // White
+  "#000000", // Black
   "#868e96", // Gray
   "#fa5252", // Red
   "#e64980", // Pink
@@ -33,26 +34,37 @@ const colors = [
 export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) => {
   const editorRef = useRef<HTMLDivElement>(null)
 
+  // This effect syncs the editor's content with the `value` prop
+  // ONLY when the internal HTML doesn't match the external state.
+  // This prevents React from resetting the cursor position on every keystroke.
+  useEffect(() => {
+    if (editorRef.current && editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value
+    }
+  }, [value])
+
   const handleInput = (event: React.FormEvent<HTMLDivElement>) => {
     onChange(event.currentTarget.innerHTML)
   }
 
-  const handleCommand = (command: string, value?: string) => {
-    document.execCommand(command, false, value)
+  const executeAndUpdate = (command: string, val?: string) => {
+    document.execCommand(command, false, val);
     if (editorRef.current) {
-        editorRef.current.focus()
-        onChange(editorRef.current.innerHTML)
+      editorRef.current.focus();
+      // Manually trigger onChange to ensure React state is in sync after a command.
+      onChange(editorRef.current.innerHTML);
     }
-  }
+  };
 
   return (
     <div className="rounded-md border border-input">
-      <div className="flex items-center gap-1 border-b p-2">
+      <div className="flex flex-wrap items-center gap-1 border-b p-2">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          onClick={() => handleCommand("bold")}
+          onMouseDown={(e) => e.preventDefault()} // Prevent editor from losing focus
+          onClick={() => executeAndUpdate("bold")}
           aria-label="Bold"
         >
           <Bold className="h-4 w-4" />
@@ -61,7 +73,8 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
           type="button"
           variant="ghost"
           size="icon"
-          onClick={() => handleCommand("italic")}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => executeAndUpdate("italic")}
           aria-label="Italic"
         >
           <Italic className="h-4 w-4" />
@@ -73,12 +86,13 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
               variant="ghost"
               size="icon"
               aria-label="Text Color"
+              onMouseDown={(e) => e.preventDefault()}
             >
               <Palette className="h-4 w-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-2">
-            <div className="grid grid-cols-4 gap-1">
+            <div className="grid grid-cols-5 gap-1">
               {colors.map((color) => (
                 <Button
                   key={color}
@@ -86,8 +100,9 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full"
-                  style={{ backgroundColor: color }}
-                  onClick={() => handleCommand("foreColor", color)}
+                  style={{ backgroundColor: color, border: '1px solid #444' }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => executeAndUpdate("foreColor", color)}
                   aria-label={`Color ${color}`}
                 />
               ))}
@@ -99,7 +114,7 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        dangerouslySetInnerHTML={{ __html: value }}
+        // REMOVED dangerouslySetInnerHTML to prevent re-rendering and cursor jumps
         className={cn(
           "min-h-[250px] w-full bg-transparent p-4 text-base focus-visible:outline-none",
           !value && "text-muted-foreground"
