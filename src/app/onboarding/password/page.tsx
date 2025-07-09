@@ -146,9 +146,7 @@ export default function OnboardingPasswordPage() {
       let errorMessage = "An unknown error occurred during signup."
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = "This email is already in use. Please use a different email or log in."
-      } else if (error.code === 'auth/api-key-not-valid') {
-        errorMessage = "The API Key is not valid. Please check your .env file."
-      } else if (error instanceof Error) {
+      } else if (error instanceof Error && error.message.includes("Missing user data")) {
         errorMessage = error.message
       }
       toast({

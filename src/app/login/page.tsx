@@ -61,12 +61,14 @@ export default function LoginPage() {
       router.push("/dashboard")
     } catch (error: any) {
       console.error("Login error:", error)
-      let errorMessage = "Invalid email or password. Please try again.";
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        errorMessage = "Invalid email or password. Please check your credentials and try again.";
-      } else if (error.code === 'auth/api-key-not-valid') {
-        errorMessage = "The API Key is not valid. Please check your .env file."
-      }
+      const isInvalidCredential = error.code === 'auth/invalid-credential' || 
+                                  error.code === 'auth/user-not-found' || 
+                                  error.code === 'auth/wrong-password';
+      
+      const errorMessage = isInvalidCredential
+        ? "Invalid email or password. Please check your credentials and try again."
+        : "An unexpected error occurred during login. Please try again later.";
+
       toast({
         variant: "destructive",
         title: "Login Failed",
