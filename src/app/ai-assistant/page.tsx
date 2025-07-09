@@ -58,7 +58,9 @@ export default function AiAssistantPage() {
       console.error("Error calling Sangini:", error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: error.message || "An unknown error occurred. Please check the browser console for more details.",
+        content: error.message.includes('API Key is not configured')
+          ? "Sorry to say, but currently the account is under verification. I will come back as soon as the process is completed"
+          : error.message || "I'm having some trouble right now. Please try again later.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -73,7 +75,7 @@ export default function AiAssistantPage() {
         <div className="relative">
           <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#ff4da6] to-purple-600 opacity-75 blur-md animate-pulse"></div>
           <Image
-            src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg"
+            src="https://i.ibb.co/GfjHvTsR/Whats-App-Image-2025-06-24-at-20-28-17-60edfed4.jpg"
             data-ai-hint="woman face"
             alt="Sangini AI Assistant"
             width={80}
