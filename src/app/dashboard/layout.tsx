@@ -42,8 +42,10 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
+  SidebarClose,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useSidebar } from "@/components/ui/sidebar"
 
 function ThemeToggle() {
   const [mounted, setMounted] = React.useState(false)
@@ -53,6 +55,10 @@ function ThemeToggle() {
     setMounted(true)
   }, [])
 
+  const handleToggle = () => {
+    setTheme(theme === "light" ? "dark" : "light")
+  }
+  
   if (!mounted) {
     return (
       <SidebarMenuButton
@@ -69,24 +75,33 @@ function ThemeToggle() {
 
   return (
     <SidebarMenuButton
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      onClick={handleToggle}
       tooltip={{ children: "Toggle Theme" }}
       className="w-full justify-start text-sm"
     >
-      <Sun className={cn(
-        "h-[1.5rem] w-[1.5rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0",
-        theme === 'light' ? 'text-primary' : 'text-muted-foreground'
-      )} />
-      <Moon className={cn(
-        "absolute h-[1.5rem] w-[1.5rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100",
-        theme === 'dark' ? 'text-primary' : 'text-muted-foreground'
-      )} />
+      {theme === "light" ? (
+        <Sun className="h-[1.5rem] w-[1.5rem] text-primary" />
+      ) : (
+        <Moon className="h-[1.5rem] w-[1.5rem] text-primary" />
+      )}
       <span className="group-data-[collapsible=icon]:hidden ml-2">
         {theme === "light" ? "Dark" : "Light"} Mode
       </span>
       <span className="sr-only">Toggle theme</span>
     </SidebarMenuButton>
   )
+}
+
+function SidebarHeaderClose() {
+    const { state, toggleSidebar } = useSidebar();
+    
+    if (state === "collapsed") return null;
+
+    return (
+        <SidebarClose asChild>
+            <SidebarTrigger className="absolute right-2 top-3"/>
+        </SidebarClose>
+    )
 }
 
 export default function DashboardLayout({
@@ -184,6 +199,7 @@ export default function DashboardLayout({
                 </svg>
               </div>
            </div>
+           <SidebarHeaderClose/>
         </SidebarHeader>
         <SidebarContent className="p-2">
           <SidebarMenu>
