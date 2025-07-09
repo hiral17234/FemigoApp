@@ -8,6 +8,8 @@ import * as z from "zod"
 import Link from "next/link"
 import { useState } from "react"
 import { CheckCircle, Circle, Loader2, ShieldCheck, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +24,8 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { cn } from "@/lib/utils"
+import { auth, db } from "@/lib/firebase"
+
 
 const passwordValidation = new RegExp(
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{12,}$/
@@ -62,20 +66,90 @@ export default function OnboardingPasswordPage() {
   
   const password = form.watch("password")
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     
-    toast({
-      title: "Account Secured!",
-      description: "Your password has been set. Please log in to continue.",
-    })
-    
-    // Simulate API call
-    setTimeout(() => {
-      // After creating a password, the user is redirected to the login page
-      // to sign in with their new credentials.
+    try {
+      // Retrieve all user data from localStorage
+      const email = localStorage.getItem("userEmail")
+      const name = localStorage.getItem("userName")
+      const country = localStorage.getItem("userCountry")
+      const onboardingDetailsJSON = localStorage.getItem("onboardingDetails")
+
+      if (!email || !name || !country || !onboardingDetailsJSON) {
+        throw new Error("Missing user data from previous steps. Please start over.")
+      }
+      
+      const onboardingDetails = JSON.parse(onboardingDetailsJSON)
+
+      // 1. Create user with Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, values.password)
+      const user = userCredential.user
+
+      // 2. Update auth profile with name
+      const displayName = onboardingDetails.nickname || name
+      await updateProfile(user, { displayName })
+
+      // 3. Create user document in Firestore
+      const userDocRef = doc(db, "users", user.uid)
+      
+      const city = onboardingDetails.city === "Other" 
+        ? (onboardingDetails.otherCity || "")
+        : onboardingDetails.city;
+
+      const altPhone = (onboardingDetails.altCountryCode && onboardingDetails.altPhone)
+        ? `+${onboardingDetails.altCountryCode}${onboardingDetails.altPhone}`
+        : "";
+
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: user.email,
+        name: name, // Original full name
+        displayName: displayName, // Nickname if available, else full name
+        country: country,
+        age: onboardingDetails.age,
+        address1: onboardingDetails.address1,
+        address2: onboardingDetails.address2 || "",
+        address3: onboardingDetails.address3 || "",
+        state: onboardingDetails.state,
+        city: city,
+        altPhone: altPhone,
+        createdAt: new Date().toISOString(),
+      })
+
+      // 4. Clear localStorage and redirect
+      localStorage.removeItem("userEmail")
+      localStorage.removeItem("userName")
+      localStorage.removeItem("userCountry")
+      localStorage.removeItem("onboardingDetails")
+      localStorage.removeItem("userLivePhoto")
+      localStorage.removeItem("aadhaarImage")
+      localStorage.removeItem("userPhone")
+
+      toast({
+        title: "Account Created & Secured!",
+        description: "Your account is ready. Please log in to continue.",
+        className: "bg-green-500 text-white",
+      })
+
       router.push("/login")
-    }, 1000)
+
+    } catch (error: any) {
+      console.error("Signup Error:", error)
+      let errorMessage = "An unknown error occurred during signup."
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = "This email is already in use. Please use a different email or log in."
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      }
+      toast({
+        variant: "destructive",
+        title: "Signup Failed",
+        description: errorMessage,
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

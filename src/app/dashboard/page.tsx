@@ -13,8 +13,13 @@ import {
   Compass,
   BarChartBig,
   ShieldPlus,
+  Loader2,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { onAuthStateChanged, type User } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
+import { auth, db } from "@/lib/firebase"
+
 
 type Feature = {
   name: string
@@ -33,16 +38,47 @@ const features: Feature[] = [
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [userName, setUserName] = useState("Hiral Goyal")
-  const [userInitial, setUserInitial] = useState("H")
+  const [userName, setUserName] = useState<string | null>(null)
+  const [userInitial, setUserInitial] = useState("")
 
   useEffect(() => {
-    const storedName = localStorage.getItem("userName")
-    if (storedName) {
-      setUserName(storedName)
-      setUserInitial(storedName.charAt(0).toUpperCase())
-    }
-  }, [])
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
+      if (user) {
+        // User is signed in. Fetch their data.
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        let nameToDisplay = "User";
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          nameToDisplay = userData.displayName || userData.name || "User";
+        } else {
+          // Fallback to auth display name if Firestore doc doesn't exist
+          nameToDisplay = user.displayName || "User";
+        }
+        
+        setUserName(nameToDisplay);
+        setUserInitial(nameToDisplay.charAt(0).toUpperCase());
+
+      } else {
+        // User is signed out. Redirect to login.
+        router.push("/login");
+      }
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [router]);
+  
+  if (!userName) {
+    return (
+      <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] text-white">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4">Loading Dashboard...</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen w-full overflow-hidden bg-[#06010F] font-sans text-white">

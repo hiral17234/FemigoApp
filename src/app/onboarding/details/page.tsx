@@ -111,11 +111,8 @@ export default function OnboardingDetailsPage() {
     setIsSubmitting(true)
     
     if (typeof window !== "undefined") {
-      // If a nickname is provided, update the displayed name to be the nickname.
-      // Otherwise, the full name from signup will continue to be used.
-      if (values.nickname && values.nickname.trim() !== "") {
-        localStorage.setItem("userName", values.nickname.trim());
-      }
+      // Store all details to be used in the next step (password creation).
+      localStorage.setItem("onboardingDetails", JSON.stringify(values));
     }
 
     toast({

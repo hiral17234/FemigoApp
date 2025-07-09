@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { signInWithEmailAndPassword } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
+import { auth } from "@/lib/firebase"
 
 const formSchema = z.object({
   email: z.string().email({
@@ -46,19 +48,28 @@ export default function LoginPage() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
-
-    // Simulate network delay and always log in successfully for easier prototyping.
-    // This no longer modifies the user's name.
-    setTimeout(() => {
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password)
       toast({
         title: "Logged In!",
         description: "Welcome back.",
         className: "bg-green-500 text-white",
       })
       router.push("/dashboard")
-      
+    } catch (error: any) {
+      console.error("Login error:", error)
+      let errorMessage = "Invalid email or password. Please try again.";
+      if (error.code === 'auth/invalid-credential') {
+        errorMessage = "Invalid email or password. Please check your credentials and try again.";
+      }
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: errorMessage,
+      })
+    } finally {
       setIsSubmitting(false)
-    }, 1000)
+    }
   }
 
   return (
