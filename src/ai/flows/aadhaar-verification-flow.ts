@@ -48,7 +48,7 @@ const aadhaarVerificationFlow = ai.defineFlow(
             reason: "Aadhaar details verified successfully.",
             extractedName: input.userName,
             extractedGender: "Female",
-            extractedAadhaarNumber: `xxxx-xxxx-${Math.floor(1000 + Math.random() * 9000)}`,
+            extractedAadhaarNumber: `xxxx-xxxx-1208`,
         };
     }
 );

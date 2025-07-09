@@ -142,10 +142,6 @@ export default function VerifyAadhaarPage() {
     canvas.height = video.videoHeight
     const context = canvas.getContext("2d")
     if (context) {
-      if (facingMode === 'user') {
-          context.translate(video.videoWidth, 0)
-          context.scale(-1, 1)
-      }
       context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
       const dataUrl = canvas.toDataURL("image/jpeg")
       setCapturedImage(dataUrl);
@@ -257,7 +253,7 @@ export default function VerifyAadhaarPage() {
                     <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-lg bg-black text-center">
                         <video 
                             ref={videoRef} 
-                            className={cn("h-full w-full object-cover", facingMode === 'user' && "-scale-x-100")}
+                            className="h-full w-full object-cover"
                             autoPlay muted playsInline 
                         />
                         {hasCameraPermission && captureMode === 'camera' && (
