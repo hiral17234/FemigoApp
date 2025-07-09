@@ -192,7 +192,7 @@ export default function DashboardPage() {
               key={feature.name}
               className="group flex flex-col items-center justify-center gap-2 text-center transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="rounded-full bg-gradient-to-br from-pink-500/80 to-purple-500/80 p-px">
+              <div className="rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 p-px transition-all duration-300 group-hover:from-pink-500/80 group-hover:to-purple-500/80">
                   <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#110D1F] transition-colors duration-300 group-hover:bg-[#1f1a30]">
                     <feature.icon className="h-8 w-8 text-primary" />
                   </div>
