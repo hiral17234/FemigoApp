@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, FormEvent } from 'react';
 import Image from 'next/image';
-import { SendHoriz, Sparkles, Loader2 } from 'lucide-react';
+import { SendHorizontal, Sparkles, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -133,7 +133,7 @@ export default function AiAssistantPage() {
               className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-gradient-to-r from-[#ff4da6] to-[#c4328b] text-white transition-transform hover:scale-110 disabled:bg-gray-600"
               disabled={isLoading || !input.trim()}
             >
-              <SendHoriz className="h-5 w-5" />
+              <SendHorizontal className="h-5 w-5" />
               <span className="sr-only">Send</span>
             </Button>
           </div>
