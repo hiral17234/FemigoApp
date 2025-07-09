@@ -29,8 +29,8 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId || firebaseConfig.apiKey
             </div>
         `;
     }
-    // Stop further execution
-    throw new Error("Firebase configuration is missing or incomplete. Please check your .env file.");
+    // By not throwing an error here, we prevent the Next.js crash overlay.
+    // The client will see the message above, and subsequent Firebase calls will fail gracefully.
 }
 
 
