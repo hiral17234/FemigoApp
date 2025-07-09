@@ -174,7 +174,7 @@ export default function DashboardLayout({
     { href: "/dashboard", icon: Home, label: "Home" },
     { href: "/dashboard", icon: User, label: "My Profile" },
     { href: "/emergency", icon: Siren, label: "Emergency Contacts" },
-    { href: "/location", icon: Map, label: "Live Map" },
+    { href: "/location/fullscreen", icon: Map, label: "Live Map" },
     { href: "/verify", icon: Camera, label: "Camera & Uploads" },
     { href: "/verify-aadhaar", icon: FileText, label: "Aadhaar Verification" },
     { href: "/diary", icon: BookHeart, label: "My Diary" },
