@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef, ChangeEvent } from "react"
@@ -175,7 +174,10 @@ export default function EditDiaryEntryPage() {
               </div>
             </header>
 
-            <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden bg-card/80 dark:bg-background/80 backdrop-blur-sm">
+            <Card className={cn(
+                "rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden backdrop-blur-sm transition-colors duration-500",
+                selectedTheme ? "bg-card/40 dark:bg-background/40" : "bg-card/80 dark:bg-background/80"
+            )}>
               <CardContent className="p-6 space-y-6">
                 <div className="text-center">
                   <h2 className="text-lg font-semibold mb-3">How are you feeling?</h2>
