@@ -25,6 +25,9 @@ export type SanginiChatInput = z.infer<typeof SanginiChatInputSchema>;
 const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2";
 const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
 
+// Helper function to introduce a delay
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 const sanginiChatFlow = ai.defineFlow(
   {
     name: 'sanginiChatFlow',
@@ -54,7 +57,7 @@ const sanginiChatFlow = ai.defineFlow(
     fullPrompt += `[INST] ${prompt} [/INST]`;
 
     try {
-        const response = await fetch(API_URL, {
+        const fetchOptions = {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${HUGGINGFACE_API_KEY}`,
@@ -70,26 +73,37 @@ const sanginiChatFlow = ai.defineFlow(
                     do_sample: true,
                 }
             }),
-        });
+        };
 
-        if (!response.ok) {
-            const errorDetails = await response.text();
-            console.error("Hugging Face API Error:", errorDetails);
-            throw new Error(`Failed to get a response from the AI model. Status: ${response.status}.`);
+        // First attempt
+        let response = await fetch(API_URL, fetchOptions);
+        let result = await response.json();
+
+        // Handle "model is loading" error with a single automatic retry
+        if (result.error && result.error.includes("is currently loading")) {
+            const estimatedTime = (result.estimated_time || 20) * 1000; // wait time in ms
+            console.log(`Hugging Face model is loading. Retrying in ${estimatedTime / 1000} seconds...`);
+            await sleep(estimatedTime);
+
+            // Second attempt
+            response = await fetch(API_URL, fetchOptions);
+            result = await response.json();
         }
-
-        const result = await response.json();
+        
+        // Final response processing
+        if (!response.ok) {
+            const errorDetails = result.error || await response.text();
+            console.error("Hugging Face API Error:", errorDetails);
+            throw new Error(`The AI model failed to respond. Status: ${response.status}. Details: ${errorDetails}`);
+        }
         
         if (result && Array.isArray(result) && result[0] && result[0].generated_text) {
             return result[0].generated_text.trim();
         } else if (result.error) {
-            // Handle specific errors like the model loading
-            if (result.error.includes("is currently loading")) {
-                const estimatedTime = result.estimated_time || 20;
-                throw new Error(`The AI model is starting up. Please wait about ${Math.ceil(estimatedTime)} seconds and try again.`);
-            }
+            // This will catch other errors after the potential retry
             throw new Error(`Hugging Face Error: ${result.error}`);
         } else {
+            console.error("Unexpected Hugging Face response format:", result);
             throw new Error("Received an unexpected response format from the AI model.");
         }
 
