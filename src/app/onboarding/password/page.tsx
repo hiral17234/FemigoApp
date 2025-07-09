@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
 import { createUserWithEmailAndPassword } from "firebase/auth"
@@ -140,12 +140,9 @@ export default function OnboardingPasswordPage() {
   
   const watchedPassword = form.watch("password")
   
-  // This is a separate useEffect to avoid re-rendering the whole component on every password key press
-  // It debounces the password strength check
-  // But for simplicity in a hackathon, we can just update it directly.
-  useState(() => {
-      setPassword(watchedPassword);
-  })
+  useEffect(() => {
+    setPassword(watchedPassword || "")
+  }, [watchedPassword])
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
@@ -186,11 +183,7 @@ export default function OnboardingPasswordPage() {
                                 <Input 
                                     type={showPassword ? "text" : "password"} 
                                     placeholder="Enter a strong password" 
-                                    {...field} 
-                                    onChange={(e) => {
-                                        field.onChange(e);
-                                        setPassword(e.target.value);
-                                    }}
+                                    {...field}
                                     className="bg-transparent border-white/20 backdrop-blur-sm pr-10" />
                                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-200/70 hover:text-purple-200">
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
