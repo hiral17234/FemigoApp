@@ -1,10 +1,9 @@
-
 "use client"
 
 import { useState, useRef, ChangeEvent, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Folder, PaintBrush, Check } from "lucide-react"
+import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Folder, Paintbrush, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -211,7 +210,7 @@ export default function NewDiaryEntryPage() {
                     </Button>
                      <Popover open={themePopoverOpen} onOpenChange={setThemePopoverOpen}>
                         <PopoverTrigger asChild>
-                            <Button variant="outline"><PaintBrush className="mr-2" /> Theme</Button>
+                            <Button variant="outline"><Paintbrush className="mr-2" /> Theme</Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto">
                             <div className="grid grid-cols-3 gap-2">
