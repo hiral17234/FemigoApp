@@ -12,19 +12,64 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  TooltipProps,
 } from "recharts"
+import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { mockFolders, moods, type DiaryEntry, type Mood } from "@/lib/diary-data"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
+import { moods, type DiaryEntry, type Folder, placeholderFolders } from "@/lib/diary-data"
 import { format } from "date-fns"
 
+
+const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
+  if (active && payload && payload.length) {
+    const moodValue = payload[0].value as number
+    const moodName = Object.keys(moods).find(key => {
+        const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
+        return moodMap[key] === moodValue
+    }) || "Unknown"
+    const moodEmoji = moodName !== "Unknown" ? moods[moodName as keyof typeof moods].emoji : '🤔'
+
+    return (
+      <div className="rounded-lg border bg-background p-2 shadow-sm">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-col">
+            <span className="text-[0.70rem] uppercase text-muted-foreground">
+              Date
+            </span>
+            <span className="font-bold text-muted-foreground">{label}</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[0.70rem] uppercase text-muted-foreground">
+              Mood ({moodValue}/5)
+            </span>
+            <span className="font-bold">
+              {moodEmoji} {moodName.charAt(0).toUpperCase() + moodName.slice(1)}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+};
+
+
 export default function DiaryPage() {
+  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [entries, setEntries] = useState<DiaryEntry[]>([])
+  const [folders, setFolders] = useState<Folder[]>([])
   const [chartData, setChartData] = useState<any[]>([])
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [newJournalName, setNewJournalName] = useState("")
 
   useEffect(() => {
     try {
@@ -34,9 +79,15 @@ export default function DiaryPage() {
         : []
       setEntries(savedEntries)
 
+      const savedFoldersString = localStorage.getItem("diaryFolders")
+      const savedFolders: Folder[] = savedFoldersString
+        ? JSON.parse(savedFoldersString)
+        : []
+      setFolders(savedFolders)
+
       if (savedEntries.length > 0) {
         const recentEntries = savedEntries.slice(0, 7).reverse()
-        const moodMap: Record<Mood, number> = {
+        const moodMap: Record<string, number> = {
           happy: 5,
           calm: 4,
           love: 5,
@@ -55,7 +106,7 @@ export default function DiaryPage() {
         setChartData(generatedChartData)
       }
     } catch (error) {
-      console.error("Failed to load entries from localStorage", error)
+      console.error("Failed to load data from localStorage", error)
     }
   }, [])
 
@@ -64,6 +115,39 @@ export default function DiaryPage() {
       entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.content.toLowerCase().includes(searchTerm.toLowerCase())
   )
+
+  const handleCreateJournal = () => {
+    if (newJournalName.trim().length < 3) {
+      toast({
+        variant: "destructive",
+        title: "Invalid Name",
+        description: "Journal name must be at least 3 characters long.",
+      })
+      return
+    }
+
+    const randomPlaceholder = placeholderFolders[Math.floor(Math.random() * placeholderFolders.length)];
+
+    const newFolder: Folder = {
+      id: new Date().toISOString(),
+      name: newJournalName.trim(),
+      entryCount: 0,
+      imageUrl: randomPlaceholder.imageUrl,
+      imageHint: randomPlaceholder.imageHint,
+    }
+
+    const updatedFolders = [...folders, newFolder]
+    setFolders(updatedFolders)
+    localStorage.setItem("diaryFolders", JSON.stringify(updatedFolders))
+
+    toast({
+      title: "Journal Created!",
+      description: `"${newFolder.name}" has been added.`,
+    })
+
+    setNewJournalName("")
+    setIsDialogOpen(false)
+  }
 
   return (
     <div className="relative min-h-screen">
@@ -86,11 +170,39 @@ export default function DiaryPage() {
         </div>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Your Journals</h2>
-          {mockFolders.length > 0 ? (
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">Your Journals</h2>
+             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Plus className="mr-2 h-4 w-4" /> New Journal
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create a New Journal</DialogTitle>
+                  <DialogDescription>
+                    Give your new journal a name to categorize your entries.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <Input 
+                    value={newJournalName}
+                    onChange={(e) => setNewJournalName(e.target.value)}
+                    placeholder="e.g., Travel Diary, Daily Reflections..."
+                  />
+                </div>
+                <DialogFooter>
+                  <Button onClick={handleCreateJournal}>Create Journal</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+          
+          {folders.length > 0 ? (
             <ScrollArea className="w-full whitespace-nowrap">
               <div className="flex w-max space-x-4 pb-4">
-                {mockFolders.map((folder) => (
+                {folders.map((folder) => (
                   <Card
                     key={folder.id}
                     className="w-40 shrink-0 overflow-hidden group"
@@ -187,13 +299,13 @@ export default function DiaryPage() {
             <CardHeader>
               <CardTitle>Mood Tracker</CardTitle>
               <CardDescription>
-                Your emotional trends over the last 7 days.
+                Your emotional trends over the last 7 entries.
               </CardDescription>
             </CardHeader>
             <CardContent>
               {chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={chartData}>
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <XAxis
                       dataKey="name"
                       stroke="hsl(var(--muted-foreground))"
@@ -209,13 +321,11 @@ export default function DiaryPage() {
                       tickFormatter={(value) => `${value}`}
                       domain={[0, 5]}
                       allowDecimals={false}
+                      ticks={[0, 1, 2, 3, 4, 5]}
                     />
                     <Tooltip
                       cursor={{ fill: "hsl(var(--card))" }}
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--background))",
-                        borderColor: "hsl(var(--border))",
-                      }}
+                      content={<CustomTooltip />}
                     />
                     <Bar
                       dataKey="mood"

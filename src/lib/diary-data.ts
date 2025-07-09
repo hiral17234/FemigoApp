@@ -23,9 +23,26 @@ export type DiaryEntry = {
     photos: DiaryPhoto[];
 };
 
+export type Folder = {
+  id: string;
+  name: string;
+  entryCount: number;
+  imageUrl: string;
+  imageHint: string;
+};
+
+// Placeholder images for new journals
+export const placeholderFolders: Omit<Folder, 'id' | 'name' | 'entryCount'>[] = [
+    { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'abstract landscape' },
+    { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'serene nature' },
+    { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'mountain view' },
+    { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'calm water' },
+    { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'forest path' },
+];
+
 // Data is now empty to allow users to start fresh.
 // In a real app, this would be fetched from a database.
-export const mockFolders: any[] = [];
+export const mockFolders: Folder[] = [];
 
 export const mockEntries: DiaryEntry[] = [];
 
