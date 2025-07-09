@@ -3,13 +3,17 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Phone, UserPlus, Siren, ShieldCheck, Hospital, Flame } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft, Phone, UserPlus, Siren, ShieldCheck, Hospital, Flame, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
 
 type TrustedContact = {
   id: string;
@@ -26,26 +30,48 @@ const emergencyServices = [
 
 export default function EmergencyPage() {
   const { toast } = useToast();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const [trustedContacts, setTrustedContacts] = useState<TrustedContact[]>([]);
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    setIsClient(true);
-    try {
-      const storedContacts = localStorage.getItem('trustedContacts');
-      if (storedContacts) {
-        setTrustedContacts(JSON.parse(storedContacts));
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        try {
+          const userDocRef = doc(db, "users", currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            setTrustedContacts(userDoc.data().trustedContacts || []);
+          } else {
+            // This case should ideally not happen for a logged-in user
+            // as a user doc is created on signup.
+            setTrustedContacts([]);
+          }
+        } catch (error) {
+          console.error("Failed to fetch trusted contacts:", error);
+          toast({ variant: "destructive", title: "Error", description: "Could not load your contacts." });
+        }
+      } else {
+        router.push('/login');
       }
-    } catch (error) {
-      console.error("Failed to parse trusted contacts from localStorage", error);
-      setTrustedContacts([]);
-    }
-  }, []);
+      setLoading(false);
+    });
 
-  const handleSaveContact = () => {
+    return () => unsubscribe();
+  }, [router, toast]);
+
+  const handleSaveContact = async () => {
+    if (!user) {
+        toast({ variant: "destructive", title: "Not logged in", description: "You must be logged in to add contacts." });
+        return;
+    }
+
     if (newContactName.trim() === '' || !/^\d{5,15}$/.test(newContactPhone.trim())) {
       toast({
         variant: "destructive",
@@ -60,24 +86,32 @@ export default function EmergencyPage() {
       name: newContactName.trim(),
       phone: newContactPhone.trim(),
     };
-
-    const updatedContacts = [...trustedContacts, newContact];
-    setTrustedContacts(updatedContacts);
-    localStorage.setItem('trustedContacts', JSON.stringify(updatedContacts));
     
-    setNewContactName('');
-    setNewContactPhone('');
-    setIsDialogOpen(false);
-    toast({
-      title: "Contact Saved!",
-      description: `${newContact.name} has been added to your trusted contacts.`,
-    });
+    const userDocRef = doc(db, "users", user.uid);
+
+    try {
+        await updateDoc(userDocRef, {
+            trustedContacts: arrayUnion(newContact)
+        });
+
+        setTrustedContacts(prevContacts => [...prevContacts, newContact]);
+        setNewContactName('');
+        setNewContactPhone('');
+        setIsDialogOpen(false);
+        toast({
+            title: "Contact Saved!",
+            description: `${newContact.name} has been added to your trusted contacts.`,
+        });
+    } catch (error) {
+        console.error("Error saving contact:", error);
+        toast({ variant: "destructive", title: "Save Failed", description: "Could not save your contact. Please try again." });
+    }
   };
 
-  if (!isClient) {
+  if (loading) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-[#06010F]">
-            {/* Loading Skeleton can be added here */}
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
     );
   }
