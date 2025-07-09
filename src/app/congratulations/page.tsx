@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -33,7 +34,7 @@ export default function CongratulationsPage() {
 
     const steps: string[] = []
     if (typeof window !== "undefined") {
-      if (localStorage.getItem("userName")) steps.push("Account Created")
+      if (localStorage.getItem("userName")) steps.push("Profile Started")
       steps.push("Face Verified")
       if (localStorage.getItem("userCountry") === "india") steps.push("Aadhaar Verified")
       if (localStorage.getItem("userPhone")) steps.push("Phone Verified")
@@ -111,7 +112,7 @@ export default function CongratulationsPage() {
 
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground px-4">
-              Now let's fill some basic details to let the others know about you, pal.
+              You're doing great! Just a few more details to complete your profile and set up your password.
             </p>
             <Button
               onClick={() => router.push("/onboarding/details")}
