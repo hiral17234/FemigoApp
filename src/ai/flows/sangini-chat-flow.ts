@@ -80,7 +80,7 @@ const sanginiChatFlow = ai.defineFlow(
     inputSchema: SanginiChatInputSchema,
     outputSchema: z.string(),
   },
-  async ({ prompt }) => {
+  async ({ history, prompt }) => {
     // LOCAL SIMULATION FOR HACKATHON DEMO
     // This provides an instant, interactive experience while your Google Cloud account is under review.
     // It will be replaced with the live Gemini model call once verification is complete.
