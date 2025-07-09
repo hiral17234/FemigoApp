@@ -13,6 +13,7 @@ import {
   BarChartBig,
   ShieldPlus,
   Loader2,
+  HeartHandshake
 } from "lucide-react"
 import { onAuthStateChanged, type User } from "firebase/auth"
 import { getFirebaseServices } from "@/lib/firebase"
@@ -25,18 +26,19 @@ type Feature = {
 }
 
 const features: Feature[] = [
-  { name: "Location", icon: MapPin, href: "/location" },
+  { name: "Live Map", icon: MapPin, href: "/location" },
+  { name: "Emergency", icon: Siren, href: "/emergency" },
   { name: "SOS", icon: RadioTower, href: "#" },
   { name: "Check Safe", icon: ShieldCheck, href: "#" },
   { name: "Track Me", icon: Compass, href: "#" },
   { name: "Safety Score", icon: BarChartBig, href: "#" },
-  { name: "Safe Mode", icon: ShieldPlus, href: "#" },
 ]
 
 export default function DashboardPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null);
+  const [userName, setUserName] = useState<string | null>(null)
 
   const firebase = getFirebaseServices();
 
@@ -46,6 +48,7 @@ export default function DashboardPage() {
     const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser: User | null) => {
       if (currentUser) {
         setUser(currentUser);
+        setUserName(currentUser.displayName || "there");
         setLoading(false);
       } else {
         router.push("/login");
@@ -75,42 +78,50 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="flex-1 overflow-y-auto bg-[#06010F] text-white">
-      <div className="relative z-10 mx-auto flex h-full max-w-lg flex-col p-6 sm:p-8">
-        
-        <Link href="/emergency" className="relative my-8 block group">
-          <div className="absolute -inset-1.5 rounded-3xl bg-gradient-to-r from-[#FF0080] to-purple-900 opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-80"></div>
-          
-          <div className="relative rounded-3xl bg-gradient-to-r from-[#FF0080] to-purple-900 p-1 transition-transform duration-150 active:scale-95">
-            <div className="flex h-24 w-full items-center justify-center rounded-[20px] bg-[#0A0A0F] px-7 py-4">
-              <div className="flex items-center justify-center gap-4">
-                <Siren className="h-8 w-8 text-[#FF0080] drop-shadow-[0_0_8px_#FF0080]" />
-                <span className="text-2xl font-bold text-white">Emergency</span>
-              </div>
-            </div>
-          </div>
-        </Link>
-        
-        <section className="mt-12">
-          <div className="grid grid-cols-3 gap-x-4 gap-y-6">
-            {features.map((feature) => (
-              <Link
-                href={feature.href}
-                key={feature.name}
-                className="group flex cursor-pointer flex-col items-center justify-center gap-2 transition-transform duration-200 hover:-translate-y-1"
-              >
-                <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-black/30">
-                  <div className="absolute inset-0 rounded-full border-2 border-[#FF0080]/50 transition-all duration-300 group-hover:border-[#FF0080]/80 group-hover:shadow-[0_0_15px_#FF008066]" />
-                  <feature.icon className="relative z-10 h-10 w-10 text-[#FF0080] drop-shadow-[0_0_8px_#FF0080] transition-all duration-300 group-hover:text-[#FF0080] group-hover:scale-110" />
-                </div>
-                <span className="text-center text-sm font-medium text-white">
-                  {feature.name}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight text-white">
+          Welcome back, {userName}!
+        </h1>
+        <p className="text-muted-foreground">
+          Ready to take on the day? We've got your back.
+        </p>
       </div>
-    </main>
+
+      <div className="relative group rounded-2xl bg-gradient-to-r from-pink-500/80 to-purple-500/80 p-6 text-center overflow-hidden">
+        <div className="absolute -top-10 -right-10 text-white/10">
+          <HeartHandshake size={150} strokeWidth={1} />
+        </div>
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold text-white">Safety is a tap away</h2>
+          <p className="text-white/80 mt-2 max-w-md mx-auto">
+            Access emergency services, check your safety score, or start live tracking instantly.
+          </p>
+           <Button asChild className="mt-4 bg-white text-primary hover:bg-white/90">
+             <Link href="/emergency">View Emergency Contacts</Link>
+           </Button>
+        </div>
+      </div>
+      
+      <section>
+        <h2 className="text-xl font-semibold tracking-tight text-white mb-4">Your Tools</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {features.map((feature) => (
+            <Link
+              href={feature.href}
+              key={feature.name}
+              className="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-card p-4 transition-all duration-300 hover:bg-primary/10 hover:-translate-y-1 border-2 border-transparent hover:border-primary/50"
+            >
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20">
+                <feature.icon className="h-8 w-8" />
+              </div>
+              <span className="text-center text-sm font-medium text-white">
+                {feature.name}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </div>
   )
 }

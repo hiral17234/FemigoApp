@@ -228,7 +228,9 @@ export default function DashboardLayout({
              </div>
           )}
         </header>
-        {children}
+        <div className="flex-1 overflow-y-auto bg-[#06010F] text-white">
+            {children}
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
