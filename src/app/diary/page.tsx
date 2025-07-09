@@ -1,11 +1,10 @@
-
 "use client"
 
 import { useState, useEffect, useRef, ChangeEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Plus, Search, BookOpenText, AreaChart, Pencil, Trash2, MoreVertical, Folder as FolderIcon } from "lucide-react"
+import { Plus, Search, BookOpenText, AreaChart, Pencil, Trash2, MoreVertical, Folder as FolderIcon, ArrowLeft } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -223,6 +222,10 @@ export default function DiaryPage() {
     <div className="relative min-h-screen">
       <input type="file" ref={fileInputRef} onChange={handleCoverImageChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
       <div className="mx-auto max-w-2xl space-y-8 p-4 sm:p-6 md:p-8">
+        <Link href="/dashboard" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+        </Link>
         <header className="space-y-2">
           <h1 className="text-4xl font-bold tracking-tight">My Diary</h1>
           <p className="text-muted-foreground">Your personal space to reflect, grow, and remember.</p>
