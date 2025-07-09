@@ -7,6 +7,4 @@ export const ai = genkit({
       apiKey: process.env.NEXT_PUBLIC_GOOGLE_AI_KEY,
     }),
   ],
-  logLevel: 'debug',
-  enableTracing: true,
 });
