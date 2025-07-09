@@ -29,7 +29,7 @@ export async function sanginiChat(input: SanginiChatInput): Promise<string> {
   const { output } = await ai.generate({
     model: 'googleai/gemini-1.5-flash',
     history: history,
-    prompt: `You are Sangini, an AI assistant for the Femigo app. Femigo is a platform dedicated to women's safety, empowerment, and community.
+    system: `You are Sangini, an AI assistant for the Femigo app. Femigo is a platform dedicated to women's safety, empowerment, and community.
 Your personality is friendly, empathetic, supportive, and empowering. You are a good listener and provide helpful, non-judgmental advice.
 Your name, Sangini, means 'female companion' or 'friend' in Hindi. Always embody this meaning.
 Keep your responses concise and easy to read on a mobile screen. Use emojis where appropriate to convey warmth and friendliness.
@@ -42,3 +42,4 @@ Your goal is to be a trusted digital companion for the user.`,
 
   return output?.text ?? "I'm sorry, I'm having trouble responding right now. Please try again in a moment.";
 }
+
