@@ -12,13 +12,26 @@ import {
   Compass,
   BarChartBig,
   ShieldPlus,
-  Loader2
+  Loader2,
+  CalendarDays,
+  Quote
 } from "lucide-react"
 import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
+import { format } from "date-fns"
+
 import { getFirebaseServices } from "@/lib/firebase"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+
+const dailyQuotes = [
+  { quote: "A strong woman looks a challenge in the eye and gives it a wink.", author: "Gina Carey" },
+  { quote: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
+  { quote: "She believed she could, so she did.", author: "R.S. Grey" },
+  { quote: "The most effective way to do it, is to do it.", author: "Amelia Earhart" },
+  { quote: "Well-behaved women seldom make history.", author: "Laurel Thatcher Ulrich" },
+  { quote: "You are more powerful than you know; you are beautiful just as you are.", author: "Melissa Etheridge" },
+  { quote: "A woman with a voice is, by definition, a strong woman.", author: "Melinda Gates" }
+];
 
 type Feature = {
   name: string
@@ -34,6 +47,54 @@ const features: Feature[] = [
   { name: "Safety Score", icon: BarChartBig, href: "#" },
   { name: "Safe Mode", icon: ShieldPlus, href: "#" },
 ]
+
+function DailyThought() {
+  const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
+  const [dailyQuote, setDailyQuote] = useState({ quote: "", author: "" });
+
+  useEffect(() => {
+    // Set daily quote based on the day of the year
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 0);
+    const diff = now.getTime() - startOfYear.getTime();
+    const oneDay = 1000 * 60 * 60 * 24;
+    const dayOfYear = Math.floor(diff / oneDay);
+    const quoteIndex = dayOfYear % dailyQuotes.length;
+    setDailyQuote(dailyQuotes[quoteIndex]);
+
+    // Set initial time and then update every second
+    setCurrentDateTime(new Date());
+    const timerId = setInterval(() => setCurrentDateTime(new Date()), 1000);
+
+    return () => clearInterval(timerId);
+  }, []);
+
+  if (!currentDateTime) {
+    return (
+        <div className="w-full max-w-sm mx-auto h-[164px] rounded-2xl bg-[#110D1F] animate-pulse" />
+    );
+  }
+  
+  return (
+    <div className="group w-full max-w-sm mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700">
+        <div className="rounded-2xl bg-gradient-to-r from-pink-500/30 to-purple-500/30 p-px shadow-lg shadow-pink-500/10 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20">
+            <div className="rounded-[15px] bg-[#110D1F] p-4 text-center space-y-3">
+                <div className="flex items-center justify-center gap-2 text-sm text-purple-300">
+                    <CalendarDays className="h-4 w-4" />
+                    <p>{format(currentDateTime, "eeee, MMMM d, yyyy 'at' hh:mm:ss a")}</p>
+                </div>
+                <div className="relative text-white/90 italic pt-2">
+                    <Quote className="absolute -left-2 -top-1 h-5 w-5 text-primary/50" />
+                    <p className="text-base">{dailyQuote.quote}</p>
+                    <Quote className="absolute -right-2 -bottom-1 h-5 w-5 text-primary/50 rotate-180" />
+                </div>
+                 <p className="text-right text-xs text-muted-foreground font-medium">- {dailyQuote.author}</p>
+            </div>
+        </div>
+    </div>
+  );
+}
+
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -108,6 +169,8 @@ export default function DashboardPage() {
           Your safety is our priority.
         </p>
       </div>
+      
+      <DailyThought />
 
       <Link href="/emergency" className="w-full max-w-sm mx-auto">
         <div className="group rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 p-px shadow-lg shadow-pink-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/30">
