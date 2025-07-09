@@ -21,16 +21,12 @@ import {
   Settings,
   LogOut,
   Loader2,
-  PanelLeft,
-  PanelLeftClose,
-  PanelRightOpen
+  PanelLeftClose
 } from "lucide-react"
 
 import { onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 import { getFirebaseServices } from "@/lib/firebase"
-import { cn } from "@/lib/utils"
-import { useToast } from "@/hooks/use-toast"
 import {
   Sidebar,
   SidebarProvider,
@@ -249,8 +245,8 @@ export default function DashboardLayout({
           <div className="flex items-center gap-4">
             <SidebarTrigger className="text-white hover:bg-sidebar-accent hover:text-sidebar-primary transition-colors duration-300" />
             <div>
-              <h1 className="text-2xl font-bold text-white">Femigo</h1>
-              <p className="text-xs text-muted-foreground -mt-1">Safety. Strength. Solidarity.</p>
+              <h1 className="text-3xl font-bold text-white">Femigo</h1>
+              <p className="text-sm text-purple-300 -mt-1">Safety. Strength. Solidarity.</p>
             </div>
           </div>
           {isLoadingUser ? (
