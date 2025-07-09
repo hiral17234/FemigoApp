@@ -103,6 +103,8 @@ export default function OnboardingPasswordPage() {
 
       toast({ title: "Step 3/3: Saving your details..." });
       const userDocRef = doc(firebase.db, "users", user.uid);
+
+      const state = onboardingDetails.state === "Other" ? (onboardingDetails.otherState || "") : onboardingDetails.state;
       const city = onboardingDetails.city === "Other" ? (onboardingDetails.otherCity || "") : onboardingDetails.city;
       const altPhone = (onboardingDetails.altCountryCode && onboardingDetails.altPhone) ? `+${onboardingDetails.altCountryCode}${onboardingDetails.altPhone}` : "";
 
@@ -116,7 +118,7 @@ export default function OnboardingPasswordPage() {
         address1: onboardingDetails.address1,
         address2: onboardingDetails.address2 || "",
         address3: onboardingDetails.address3 || "",
-        state: onboardingDetails.state,
+        state: state,
         city: city,
         altPhone: altPhone,
         trustedContacts: [],

@@ -34,6 +34,7 @@ const formSchema = z.object({
   address2: z.string().optional(),
   address3: z.string().optional(),
   state: z.string().optional(),
+  otherState: z.string().optional(),
   city: z.string().min(1, { message: "City is required." }),
   otherCity: z.string().optional(),
   altCountryCode: z.string().optional(),
@@ -66,6 +67,14 @@ const formSchema = z.object({
         });
     }
     
+    if (data.state === 'Other' && (!data.otherState || data.otherState.trim().length < 2)) {
+        ctx.addIssue({
+            path: ['otherState'],
+            message: 'Please specify your region (at least 2 characters).',
+            code: z.ZodIssueCode.custom
+        });
+    }
+
     if (data.city === 'Other' && (!data.otherCity || data.otherCity.trim().length < 2)) {
         ctx.addIssue({
             path: ['otherCity'],
@@ -95,6 +104,8 @@ export default function OnboardingDetailsPage() {
       address1: "",
       address2: "",
       address3: "",
+      state: "",
+      otherState: "",
       city: "",
       otherCity: "",
       altCountryCode: "",
@@ -108,7 +119,7 @@ export default function OnboardingDetailsPage() {
     const config = locationData[country || "default"] || locationData["default"];
     setCountryConfig(config);
     if (config?.regions) {
-      setRegions(config.regions.map(r => ({ name: r.name })));
+      setRegions([...config.regions.map(r => ({ name: r.name })), { name: "Other" }]);
     }
   }, []);
 
@@ -119,6 +130,10 @@ export default function OnboardingDetailsPage() {
       const regionData = countryConfig.regions.find(r => r.name === selectedState);
       setCities(regionData ? [...regionData.cities, "Other"] : ["Other"]);
       form.setValue("city", ""); // Reset city when state changes
+    }
+
+    if (selectedState !== "Other") {
+      form.setValue("otherState", "");
     }
   }, [selectedState, countryConfig, form]);
 
@@ -246,7 +261,7 @@ export default function OnboardingDetailsPage() {
                                                 <CommandGroup>
                                                 {regions.map((region) => (
                                                     <CommandItem value={region.name} key={region.name} onSelect={(currentValue) => {
-                                                        form.setValue("state", currentValue === field.value ? "" : currentValue)
+                                                        form.setValue("state", currentValue === field.value ? "" : region.name)
                                                         setStatePopoverOpen(false)
                                                     }}>
                                                     <Check className={cn("mr-2 h-4 w-4", region.name === field.value ? "opacity-100" : "opacity-0")} />
@@ -310,6 +325,18 @@ export default function OnboardingDetailsPage() {
                                 )} />
                             )}
                         </div>
+
+                        {form.watch("state") === "Other" && (
+                           <FormField control={form.control} name="otherState" render={({ field }) => (
+                               <FormItem>
+                                   <FormLabel>Please specify your {countryConfig?.regionLabel || 'region'}</FormLabel>
+                                   <FormControl>
+                                       <Input placeholder={`Enter ${countryConfig?.regionLabel || 'region'}`} {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
+                                   </FormControl>
+                                   <FormMessage />
+                               </FormItem>
+                           )} />
+                        )}
 
                         {form.watch("city") === "Other" && (
                              <FormField control={form.control} name="otherCity" render={({ field }) => (
