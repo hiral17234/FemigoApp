@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -13,8 +14,10 @@ import {
   ShieldPlus,
   Loader2
 } from "lucide-react"
-import { onAuthStateChanged, type User } from "firebase/auth"
+import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
 import { getFirebaseServices } from "@/lib/firebase"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 type Feature = {
   name: string
@@ -33,23 +36,40 @@ const features: Feature[] = [
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userName, setUserName] = useState<string | null>(null)
+  const [userInitial, setUserInitial] = useState("")
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
 
   const firebase = getFirebaseServices();
 
   useEffect(() => {
     if (!firebase.auth || !firebase.db) {
-        setLoading(false);
+        setIsLoadingUser(false);
         return;
     }
 
-    const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser: User | null) => {
+    const unsubscribe = onAuthStateChanged(firebase.auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        setUserName(currentUser.displayName || "User");
-        setLoading(false);
+        try {
+          const userDocRef = doc(firebase.db, "users", currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          let nameToDisplay = "User";
+          if (userDoc.exists()) {
+            nameToDisplay = userDoc.data().displayName || "User";
+          } else {
+            nameToDisplay = currentUser.displayName || "User";
+          }
+          setUserName(nameToDisplay);
+          setUserInitial(nameToDisplay.charAt(0).toUpperCase());
+        } catch (error) {
+            console.error("Failed to fetch user data:", error);
+            setUserName(currentUser.displayName || "User");
+        } finally {
+            setIsLoadingUser(false);
+        }
       } else {
         router.push("/login");
       }
@@ -69,7 +89,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (loading || !user) {
+  if (isLoadingUser || !user) {
     return (
       <main className="flex flex-1 items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -78,8 +98,22 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col items-center p-4 sm:p-6 lg:p-8 space-y-12">
-      <div className="text-center space-y-2 mt-8">
+    <div className="flex flex-1 flex-col p-4 sm:p-6 lg:p-8 space-y-8">
+      <header className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Femigo</h1>
+          <p className="text-sm text-muted-foreground">Safety. Strength. Solidarity.</p>
+        </div>
+        <div className="relative">
+            <Avatar className="h-12 w-12 border-2 border-primary/50">
+              <AvatarImage data-ai-hint="logo abstract" src="https://i.imgur.com/DFegeIc.jpeg" alt="User Avatar" />
+              <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
+            </Avatar>
+            <div className="absolute -inset-1 rounded-full bg-primary/70 blur-lg animate-pulse" style={{ animationDuration: '3s' }}/>
+        </div>
+      </header>
+
+      <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight text-white">
           Welcome, <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">{userName}!</span>
         </h1>
@@ -88,7 +122,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <Link href="/emergency" className="w-full max-w-sm">
+      <Link href="/emergency" className="w-full max-w-sm mx-auto">
         <div className="group rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 p-px shadow-lg shadow-pink-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/30">
           <div className="flex h-16 items-center justify-center gap-4 rounded-[15px] bg-[#110D1F]">
             <Siren className="h-7 w-7 text-primary transition-transform duration-300 group-hover:scale-110" />
@@ -99,7 +133,7 @@ export default function DashboardPage() {
         </div>
       </Link>
       
-      <section className="w-full max-w-sm">
+      <section className="w-full max-w-sm mx-auto">
         <div className="grid grid-cols-3 gap-6 sm:gap-8">
           {features.map((feature) => (
             <Link
