@@ -57,7 +57,7 @@ export default function AiAssistantPage() {
       console.error("Error calling Sangini:", error);
       const errorMessage: Message = {
         role: 'assistant',
-        content: "I'm having some trouble right now. Please try again later.",
+        content: "Sorry to say , but currently account is under verification. I will come back as soon as the process is completed",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
