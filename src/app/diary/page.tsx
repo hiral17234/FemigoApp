@@ -1,10 +1,9 @@
-
 "use client"
 
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Plus, Search, ChevronRight } from "lucide-react"
+import { Plus, Search, ChevronRight, BookOpenText, AreaChart } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -23,6 +22,7 @@ import { mockFolders, mockEntries, mockChartData, moods } from "@/lib/diary-data
 export default function DiaryPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
+  // Since mockEntries is now empty, this will also be empty.
   const filteredEntries = mockEntries.filter(entry =>
     entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     entry.content.toLowerCase().includes(searchTerm.toLowerCase())
@@ -48,25 +48,33 @@ export default function DiaryPage() {
 
         <section>
           <h2 className="text-2xl font-semibold mb-4">Your Journals</h2>
-          <ScrollArea className="w-full whitespace-nowrap">
-            <div className="flex w-max space-x-4 pb-4">
-              {mockFolders.map((folder) => (
-                <Card key={folder.id} className="w-40 shrink-0 overflow-hidden group">
-                  <Link href="#">
-                    <div className="relative h-24">
-                       <Image src={folder.imageUrl} data-ai-hint={folder.imageHint} alt={folder.name} layout="fill" objectFit="cover" className="transition-transform group-hover:scale-105" />
-                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    </div>
-                    <div className="p-3">
-                      <h3 className="font-semibold truncate">{folder.name}</h3>
-                      <p className="text-xs text-muted-foreground">{folder.entryCount} Entries</p>
-                    </div>
-                  </Link>
-                </Card>
-              ))}
+          {mockFolders.length > 0 ? (
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex w-max space-x-4 pb-4">
+                  {mockFolders.map((folder) => (
+                    <Card key={folder.id} className="w-40 shrink-0 overflow-hidden group">
+                      <Link href="#">
+                        <div className="relative h-24">
+                          <Image src={folder.imageUrl} data-ai-hint={folder.imageHint} alt={folder.name} layout="fill" objectFit="cover" className="transition-transform group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        </div>
+                        <div className="p-3">
+                          <h3 className="font-semibold truncate">{folder.name}</h3>
+                          <p className="text-xs text-muted-foreground">{folder.entryCount} Entries</p>
+                        </div>
+                      </Link>
+                    </Card>
+                  ))}
+                </div>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+          ) : (
+            <div className="flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/20 p-8 rounded-lg">
+                <BookOpenText className="h-12 w-12 mb-4" />
+                <h3 className="text-lg font-semibold">Your Journals Will Appear Here</h3>
+                <p className="text-sm mt-1">Create different journals for travel, thoughts, or anything you like!</p>
             </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          )}
         </section>
 
         <section>
@@ -76,23 +84,30 @@ export default function DiaryPage() {
               View All <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
-          <div className="space-y-4">
-            {filteredEntries.slice(0, 3).map((entry) => (
-              <Card key={entry.id} className="flex items-start gap-4 p-4 hover:bg-card/80 transition-colors">
-                <div className="text-4xl">{moods[entry.mood].sticker}</div>
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">{entry.date}</p>
-                  <h3 className="font-semibold text-lg">{entry.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2">{entry.content}</p>
-                </div>
-                {entry.photoUrl && (
-                  <div className="relative h-20 w-20 shrink-0">
-                    <Image src={entry.photoUrl} data-ai-hint={entry.imageHint} alt="Diary photo" layout="fill" objectFit="cover" className="rounded-md" />
-                  </div>
-                )}
-              </Card>
-            ))}
-          </div>
+           {filteredEntries.length > 0 ? (
+              <div className="space-y-4">
+                {filteredEntries.slice(0, 3).map((entry) => (
+                  <Card key={entry.id} className="flex items-start gap-4 p-4 hover:bg-card/80 transition-colors">
+                    <div className="text-4xl">{moods[entry.mood].sticker}</div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">{entry.date}</p>
+                      <h3 className="font-semibold text-lg">{entry.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{entry.content}</p>
+                    </div>
+                    {entry.photoUrl && (
+                      <div className="relative h-20 w-20 shrink-0">
+                        <Image src={entry.photoUrl} data-ai-hint={entry.imageHint} alt="Diary photo" layout="fill" objectFit="cover" className="rounded-md" />
+                      </div>
+                    )}
+                  </Card>
+                ))}
+              </div>
+           ) : (
+            <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg">
+                <p className="font-semibold">You haven't written anything yet.</p>
+                <p className="text-sm mt-1">Click the '+' button below to start your first entry.</p>
+            </div>
+           )}
         </section>
 
         <section>
@@ -102,32 +117,40 @@ export default function DiaryPage() {
                     <CardDescription>Your emotional trends over the last 7 days.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={mockChartData}>
-                            <XAxis
-                                dataKey="name"
-                                stroke="hsl(var(--muted-foreground))"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                            />
-                            <YAxis
-                                stroke="hsl(var(--muted-foreground))"
-                                fontSize={12}
-                                tickLine={false}
-                                axisLine={false}
-                                tickFormatter={(value) => `${value}`}
-                            />
-                            <Tooltip
-                                cursor={{ fill: "hsl(var(--card))" }}
-                                contentStyle={{ 
-                                    backgroundColor: "hsl(var(--background))",
-                                    borderColor: "hsl(var(--border))"
-                                }}
-                            />
-                            <Bar dataKey="mood" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    {mockChartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={mockChartData}>
+                                <XAxis
+                                    dataKey="name"
+                                    stroke="hsl(var(--muted-foreground))"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                />
+                                <YAxis
+                                    stroke="hsl(var(--muted-foreground))"
+                                    fontSize={12}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tickFormatter={(value) => `${value}`}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: "hsl(var(--card))" }}
+                                    contentStyle={{ 
+                                        backgroundColor: "hsl(var(--background))",
+                                        borderColor: "hsl(var(--border))"
+                                    }}
+                                />
+                                <Bar dataKey="mood" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground">
+                            <AreaChart className="h-12 w-12 mb-4" />
+                            <h3 className="font-semibold">No Mood Data Yet</h3>
+                            <p className="text-sm mt-1">Write entries with moods to see your trends here.</p>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         </section>
