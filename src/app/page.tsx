@@ -12,7 +12,7 @@ export default function WelcomePage() {
     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4 text-white">
       <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-black/20 p-8 text-center shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
         <Image
-          src="https://i.imgur.com/DFegeIc.jpeg"
+          src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg"
           data-ai-hint="logo abstract"
           alt="Femigo Logo"
           width={120}

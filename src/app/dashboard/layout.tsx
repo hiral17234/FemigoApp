@@ -254,7 +254,7 @@ export default function DashboardLayout({
             <div className="relative">
                 <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 opacity-75 blur"></div>
                 <Avatar className="relative h-10 w-10 border-2 border-white/20">
-                    <AvatarImage data-ai-hint="logo" src="https://i.imgur.com/DFegeIc.jpeg" alt="Femigo Logo" />
+                    <AvatarImage data-ai-hint="logo" src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg" alt="Femigo Logo" />
                     <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
                 </Avatar>
             </div>
