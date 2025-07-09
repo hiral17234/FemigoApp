@@ -194,7 +194,7 @@ export default function DashboardPage() {
             >
               <div className="rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 p-px transition-all duration-300 group-hover:from-pink-500/80 group-hover:to-purple-500/80">
                   <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#110D1F] transition-colors duration-300 group-hover:bg-[#1f1a30]">
-                    <feature.icon className="h-8 w-8 text-primary" />
+                    <feature.icon className="h-8 w-8 text-primary [filter:drop-shadow(0_0_4px_hsl(var(--primary)))]" />
                   </div>
               </div>
               <span className="text-sm font-medium text-white">
