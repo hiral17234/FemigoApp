@@ -144,19 +144,23 @@ export default function DashboardLayout({
             setIsLoadingUser(false);
         }
       } else {
+        // User is logged out
+        setUser(null);
+        setUserName(null);
+        setIsLoadingUser(false);
         router.push("/login");
       }
     });
 
     return () => unsubscribe();
-  }, [router, toast]);
+  }, [router]);
 
   const handleLogout = async () => {
     if (!auth) return;
     try {
       await signOut(auth)
+      // The onAuthStateChanged listener will handle the redirect.
       toast({ title: "Logged Out", description: "You have been successfully logged out." })
-      router.push("/login")
     } catch (error) {
       toast({
         variant: "destructive",
