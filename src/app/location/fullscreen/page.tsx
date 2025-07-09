@@ -282,13 +282,13 @@ export default function FullscreenMapPage() {
     return (
         <main className="h-screen w-screen flex flex-col bg-[#06010F]">
             <APIProvider apiKey={GOOGLE_MAPS_API_KEY} libraries={['maps', 'marker', 'places', 'geocoding']}>
-                <div className="absolute top-0 left-0 right-0 z-10 p-4 flex items-start gap-4">
+                <div className="absolute top-0 left-0 z-10 p-4 flex items-start gap-4">
                     <Link href="/location">
                         <Button variant="outline" size="icon" className="bg-background/80 hover:bg-background text-foreground backdrop-blur-sm rounded-full shrink-0">
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     </Link>
-                    <form onSubmit={handleSearch} className="flex-1 flex gap-2">
+                    <form onSubmit={handleSearch} className="w-full max-w-sm flex gap-2">
                         <Input 
                             placeholder="Search for a location or coordinates..." 
                             className="bg-background/80 border-gray-500" 
