@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -12,13 +11,10 @@ import {
   Compass,
   BarChartBig,
   ShieldPlus,
-  Loader2,
-  HeartHandshake
+  Loader2
 } from "lucide-react"
 import { onAuthStateChanged, type User } from "firebase/auth"
 import { getFirebaseServices } from "@/lib/firebase"
-import { Button } from "@/components/ui/button"
-
 
 type Feature = {
   name: string
@@ -27,12 +23,12 @@ type Feature = {
 }
 
 const features: Feature[] = [
-  { name: "Live Map", icon: MapPin, href: "/location" },
-  { name: "Emergency", icon: Siren, href: "/emergency" },
+  { name: "Location", icon: MapPin, href: "/location" },
   { name: "SOS", icon: RadioTower, href: "#" },
   { name: "Check Safe", icon: ShieldCheck, href: "#" },
   { name: "Track Me", icon: Compass, href: "#" },
   { name: "Safety Score", icon: BarChartBig, href: "#" },
+  { name: "Safe Mode", icon: ShieldPlus, href: "#" },
 ]
 
 export default function DashboardPage() {
@@ -44,12 +40,15 @@ export default function DashboardPage() {
   const firebase = getFirebaseServices();
 
   useEffect(() => {
-    if (!firebase.auth || !firebase.db) return;
+    if (!firebase.auth || !firebase.db) {
+        setLoading(false);
+        return;
+    }
 
     const unsubscribe = onAuthStateChanged(firebase.auth, (currentUser: User | null) => {
       if (currentUser) {
         setUser(currentUser);
-        setUserName(currentUser.displayName || "there");
+        setUserName(currentUser.displayName || "User");
         setLoading(false);
       } else {
         router.push("/login");
@@ -58,7 +57,7 @@ export default function DashboardPage() {
 
     return () => unsubscribe();
   }, [router, firebase.auth, firebase.db]);
-
+  
   if (firebase.error) {
     return (
       <main className="flex flex-1 items-center justify-center p-4 text-center">
@@ -69,7 +68,7 @@ export default function DashboardPage() {
       </main>
     );
   }
-  
+
   if (loading || !user) {
     return (
       <main className="flex flex-1 items-center justify-center">
@@ -79,44 +78,41 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-white">
-          Welcome back, {userName}!
+    <div className="flex flex-1 flex-col items-center p-4 sm:p-6 lg:p-8 space-y-12">
+      <div className="text-center space-y-2 mt-8">
+        <h1 className="text-4xl font-bold tracking-tight text-white">
+          Welcome, <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">{userName}!</span>
         </h1>
         <p className="text-muted-foreground">
-          Ready to take on the day? We've got your back.
+          Your safety is our priority.
         </p>
       </div>
 
-      <div className="relative group rounded-2xl bg-gradient-to-r from-pink-500/80 to-purple-500/80 p-6 text-center overflow-hidden">
-        <div className="absolute -top-10 -right-10 text-white/10">
-          <HeartHandshake size={150} strokeWidth={1} />
+      <Link href="/emergency" className="w-full max-w-sm">
+        <div className="group rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 p-px shadow-lg shadow-pink-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/30">
+          <div className="flex h-16 items-center justify-center gap-4 rounded-[15px] bg-[#110D1F]">
+            <Siren className="h-7 w-7 text-primary transition-transform duration-300 group-hover:scale-110" />
+            <span className="text-2xl font-semibold text-primary">
+              Emergency
+            </span>
+          </div>
         </div>
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold text-white">Safety is a tap away</h2>
-          <p className="text-white/80 mt-2 max-w-md mx-auto">
-            Access emergency services, check your safety score, or start live tracking instantly.
-          </p>
-           <Button asChild className="mt-4 bg-white text-primary hover:bg-white/90">
-             <Link href="/emergency">View Emergency Contacts</Link>
-           </Button>
-        </div>
-      </div>
+      </Link>
       
-      <section>
-        <h2 className="text-xl font-semibold tracking-tight text-white mb-4">Your Tools</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+      <section className="w-full max-w-sm">
+        <div className="grid grid-cols-3 gap-6 sm:gap-8">
           {features.map((feature) => (
             <Link
               href={feature.href}
               key={feature.name}
-              className="group flex flex-col items-center justify-center gap-3 rounded-2xl bg-card p-4 transition-all duration-300 hover:bg-primary/10 hover:-translate-y-1 border-2 border-transparent hover:border-primary/50"
+              className="group flex flex-col items-center justify-center gap-2 text-center transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/20">
-                <feature.icon className="h-8 w-8" />
+              <div className="rounded-full bg-gradient-to-br from-pink-500/80 to-purple-500/80 p-px">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#110D1F] transition-colors duration-300 group-hover:bg-[#1f1a30]">
+                    <feature.icon className="h-8 w-8 text-primary" />
+                  </div>
               </div>
-              <span className="text-center text-sm font-medium text-white">
+              <span className="text-sm font-medium text-white">
                 {feature.name}
               </span>
             </Link>
