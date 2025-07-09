@@ -11,6 +11,29 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Check for missing configuration and display a user-friendly message
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId || firebaseConfig.apiKey === 'YOUR_API_KEY') {
+    if (typeof window !== 'undefined') {
+        // This stops the app and shows a clear error message instead of a generic crash.
+        document.body.innerHTML = `
+            <div style="font-family: sans-serif; padding: 2rem; text-align: center; background-color: #1a1a1a; color: white; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
+                <h1 style="color: #ff4757; font-size: 2rem; margin-bottom: 1rem;">Firebase Configuration Error</h1>
+                <p style="font-size: 1.2rem; max-width: 600px; line-height: 1.6;">
+                    Your Firebase API Key or Project ID is missing or incorrect.
+                </p>
+                <p style="margin-top: 1.5rem; font-size: 1rem;">
+                    Please copy the necessary keys from your <strong>Firebase project settings</strong> into the
+                    <code style="background-color: #333; padding: 0.2em 0.5em; border-radius: 4px; font-family: monospace; margin: 0 4px;">.env</code>
+                    file in your project's root directory and then <strong>restart the development server</strong>.
+                </p>
+            </div>
+        `;
+    }
+    // Stop further execution
+    throw new Error("Firebase configuration is missing or incomplete. Please check your .env file.");
+}
+
+
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
