@@ -5,6 +5,9 @@ import { useState, useEffect, useRef, ChangeEvent } from "react"
 import { useRouter, useParams } from "next/navigation"
 import Image from "next/image"
 import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Loader2, Folder } from "lucide-react"
+import { onAuthStateChanged, type User } from "firebase/auth"
+import { doc, getDoc, updateDoc, collection, getDocs, query } from "firebase/firestore"
+import { auth, db } from "@/lib/firebase"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,47 +24,60 @@ export default function EditDiaryEntryPage() {
     const entryId = params.id as string
     const { toast } = useToast()
     
+    const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true)
+
     const [selectedMood, setSelectedMood] = useState<Mood | null>(null)
     const [title, setTitle] = useState("")
     const [content, setContent] = useState("")
     const [photos, setPhotos] = useState<DiaryPhoto[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [isLoading, setIsLoading] = useState(true)
-
+    
     const [folders, setFolders] = useState<JournalFolder[]>([]);
     const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
     const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
 
     useEffect(() => {
         if (!entryId) return;
-        try {
-            const savedFoldersString = localStorage.getItem("diaryFolders");
-            if (savedFoldersString) {
-                setFolders(JSON.parse(savedFoldersString));
-            }
 
-            const savedEntriesString = localStorage.getItem('diaryEntries');
-            if (savedEntriesString) {
-                const savedEntries: DiaryEntry[] = JSON.parse(savedEntriesString);
-                const foundEntry = savedEntries.find(e => e.id === entryId);
-                if (foundEntry) {
-                    setTitle(foundEntry.title);
-                    setContent(foundEntry.content);
-                    setSelectedMood(foundEntry.mood);
-                    setPhotos(foundEntry.photos || []);
-                    setSelectedFolderId(foundEntry.folderId || 'uncategorized');
-                    setSelectedTheme(foundEntry.themeUrl || null);
-                } else {
-                   toast({ variant: "destructive", title: "Entry not found" });
-                   router.push("/diary");
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                setUser(currentUser);
+                try {
+                    // Fetch folders
+                    const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
+                    const foldersSnapshot = await getDocs(foldersQuery);
+                    const foldersData = foldersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalFolder));
+                    setFolders(foldersData);
+
+                    // Fetch the specific entry
+                    const entryDocRef = doc(db, "users", currentUser.uid, "diaryEntries", entryId);
+                    const entryDoc = await getDoc(entryDocRef);
+
+                    if (entryDoc.exists()) {
+                        const foundEntry = entryDoc.data() as Omit<DiaryEntry, 'id'>;
+                        setTitle(foundEntry.title);
+                        setContent(foundEntry.content);
+                        setSelectedMood(foundEntry.mood);
+                        setPhotos(foundEntry.photos || []);
+                        setSelectedFolderId(foundEntry.folderId || 'uncategorized');
+                        setSelectedTheme(foundEntry.themeUrl || null);
+                    } else {
+                       toast({ variant: "destructive", title: "Entry not found" });
+                       router.push("/diary");
+                    }
+                } catch (error) {
+                    console.error("Failed to load entry", error);
+                    toast({ variant: "destructive", title: "Error loading entry" });
+                } finally {
+                    setIsLoading(false);
                 }
+            } else {
+                router.push("/login");
             }
-        } catch (error) {
-            console.error("Failed to load entry", error);
-            toast({ variant: "destructive", title: "Error loading entry" });
-        } finally {
-            setIsLoading(false);
-        }
+        });
+        
+        return () => unsubscribe();
     }, [entryId, router, toast]);
 
     const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -71,19 +87,18 @@ export default function EditDiaryEntryPage() {
                 return;
             }
             const newFiles = Array.from(e.target.files);
-            const newPhotos = newFiles.map(file => ({
-                url: URL.createObjectURL(file),
-                caption: ""
-            }));
-            setPhotos(prev => [...prev, ...newPhotos]);
+            newFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const dataUrl = e.target?.result as string;
+                    setPhotos(prev => [...prev, { url: dataUrl, caption: "" }]);
+                };
+                reader.readAsDataURL(file);
+            });
         }
     }
 
     const handleRemovePhoto = (index: number) => {
-        const photoToRemove = photos[index];
-        if (photoToRemove.url.startsWith('blob:')) {
-            URL.revokeObjectURL(photoToRemove.url);
-        }
         setPhotos(prev => prev.filter((_, i) => i !== index));
     }
     
@@ -91,37 +106,25 @@ export default function EditDiaryEntryPage() {
         setPhotos(prev => prev.map((photo, i) => i === index ? { ...photo, caption } : photo));
     }
   
-    const handleSave = () => {
+    const handleSave = async () => {
+        if (!user) return;
         if (!selectedMood || !title.trim() || !content.trim() || content === '<p><br></p>') {
             toast({ variant: "destructive", title: "Please fill all required fields" });
             return;
         }
 
+        const updatedEntryData = {
+            mood: selectedMood,
+            title: title.trim(),
+            content: content,
+            photos: photos,
+            folderId: selectedFolderId === 'uncategorized' ? '' : selectedFolderId,
+            themeUrl: selectedTheme || '',
+        };
+        
         try {
-            const existingEntriesString = localStorage.getItem('diaryEntries');
-            let existingEntries: DiaryEntry[] = existingEntriesString ? JSON.parse(existingEntriesString) : [];
-            
-            const entryIndex = existingEntries.findIndex(e => e.id === entryId);
-
-            if (entryIndex === -1) {
-                toast({ variant: "destructive", title: "Could not find original entry to update." });
-                return;
-            }
-            
-            const updatedEntry: DiaryEntry = {
-                ...existingEntries[entryIndex],
-                mood: selectedMood,
-                title: title.trim(),
-                content: content,
-                photos: photos,
-                folderId: selectedFolderId === 'uncategorized' ? undefined : selectedFolderId,
-                themeUrl: selectedTheme || undefined,
-            };
-            
-            existingEntries[entryIndex] = updatedEntry;
-
-            localStorage.setItem('diaryEntries', JSON.stringify(existingEntries));
-
+            const entryDocRef = doc(db, "users", user.uid, "diaryEntries", entryId);
+            await updateDoc(entryDocRef, updatedEntryData);
             toast({ title: "Entry Updated!", description: "Your changes have been saved." });
             router.push(`/diary/${entryId}`);
         } catch (error) {
@@ -246,5 +249,3 @@ export default function EditDiaryEntryPage() {
         </main>
     )
 }
-
-    

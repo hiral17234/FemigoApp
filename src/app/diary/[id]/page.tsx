@@ -4,9 +4,12 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic, Trash2 } from 'lucide-react'
+import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic, Trash2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import Image from "next/image"
+import { onAuthStateChanged, type User } from "firebase/auth"
+import { doc, getDoc, deleteDoc } from "firebase/firestore"
+import { auth, db } from "@/lib/firebase"
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -66,40 +69,45 @@ export default function ViewDiaryEntryPage() {
     const entryId = params.id as string
     const { toast } = useToast()
 
+    const [user, setUser] = useState<User | null>(null);
     const [entry, setEntry] = useState<DiaryEntry | null>(null)
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
         if (!entryId) return;
-        try {
-            const savedEntriesString = localStorage.getItem('diaryEntries');
-            if (savedEntriesString) {
-                const savedEntries: DiaryEntry[] = JSON.parse(savedEntriesString);
-                const foundEntry = savedEntries.find(e => e.id === entryId);
-                if (foundEntry) {
-                    setEntry(foundEntry);
-                } else {
-                    toast({ variant: 'destructive', title: "Not Found", description: "The diary entry could not be found." });
-                    router.push('/diary');
+
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                setUser(currentUser);
+                try {
+                    const entryDocRef = doc(db, "users", currentUser.uid, "diaryEntries", entryId);
+                    const docSnap = await getDoc(entryDocRef);
+                    if (docSnap.exists()) {
+                        setEntry({ id: docSnap.id, ...docSnap.data() } as DiaryEntry);
+                    } else {
+                        toast({ variant: 'destructive', title: "Not Found", description: "The diary entry could not be found." });
+                        router.push('/diary');
+                    }
+                } catch (error) {
+                    console.error("Failed to load entry", error)
+                    toast({ variant: 'destructive', title: "Error", description: "Failed to load entry from the database." });
+                } finally {
+                    setIsLoading(false);
                 }
+            } else {
+                router.push('/login');
             }
-        } catch (error) {
-            console.error("Failed to load entry", error)
-        } finally {
-            setIsLoading(false)
-        }
+        });
+        
+        return () => unsubscribe();
     }, [entryId, router, toast])
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
+        if (!user || !entryId) return;
         try {
-            const savedEntriesString = localStorage.getItem('diaryEntries');
-            if (savedEntriesString) {
-                let savedEntries: DiaryEntry[] = JSON.parse(savedEntriesString);
-                savedEntries = savedEntries.filter(e => e.id !== entryId);
-                localStorage.setItem('diaryEntries', JSON.stringify(savedEntries));
-                toast({ title: "Entry Deleted" });
-                router.push('/diary');
-            }
+            await deleteDoc(doc(db, "users", user.uid, "diaryEntries", entryId));
+            toast({ title: "Entry Deleted" });
+            router.push('/diary');
         } catch (error) {
             console.error("Failed to delete entry", error);
             toast({ variant: 'destructive', title: "Error", description: "Could not delete the entry." });
@@ -233,5 +241,3 @@ export default function ViewDiaryEntryPage() {
         </main>
     )
 }
-
-    

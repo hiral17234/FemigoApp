@@ -4,7 +4,10 @@
 import { useState, useRef, ChangeEvent, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Folder } from "lucide-react"
+import { ArrowLeft, Camera, ImagePlus, Send, X, Mic, Folder, Loader2 } from "lucide-react"
+import { onAuthStateChanged, type User } from "firebase/auth"
+import { collection, addDoc, getDocs, query } from "firebase/firestore"
+import { auth, db } from "@/lib/firebase"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -23,21 +26,36 @@ export default function NewDiaryEntryPage() {
   const [content, setContent] = useState("")
   const [photos, setPhotos] = useState<DiaryPhoto[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [folders, setFolders] = useState<JournalFolder[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>("uncategorized");
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
 
   useEffect(() => {
-    try {
-      const savedFoldersString = localStorage.getItem("diaryFolders");
-      if (savedFoldersString) {
-        setFolders(JSON.parse(savedFoldersString));
-      }
-    } catch (error) {
-        console.error("Could not load folders", error);
-    }
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        if (currentUser) {
+            setUser(currentUser);
+            try {
+                const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
+                const querySnapshot = await getDocs(foldersQuery);
+                const foldersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as JournalFolder));
+                setFolders(foldersData);
+            } catch (error) {
+                console.error("Could not load folders", error);
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load your journals.' });
+            } finally {
+                setIsLoading(false);
+            }
+        } else {
+            router.push('/login');
+        }
+    });
+
+    return () => unsubscribe();
+  }, [router, toast]);
 
   const handlePhotoUpload = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -49,20 +67,19 @@ export default function NewDiaryEntryPage() {
         })
         return
       }
-      const newFiles = Array.from(e.target.files)
-      const newPhotos = newFiles.map(file => ({
-        url: URL.createObjectURL(file),
-        caption: ""
-      }));
-      setPhotos(prev => [...prev, ...newPhotos]);
+      const newFiles = Array.from(e.target.files);
+      newFiles.forEach(file => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+              const dataUrl = e.target?.result as string;
+              setPhotos(prev => [...prev, { url: dataUrl, caption: "" }]);
+          };
+          reader.readAsDataURL(file);
+      });
     }
   }
 
   const handleRemovePhoto = (index: number) => {
-    const photoToRemove = photos[index];
-    if (photoToRemove.url.startsWith('blob:')) {
-        URL.revokeObjectURL(photoToRemove.url);
-    }
     setPhotos(prev => prev.filter((_, i) => i !== index));
   }
   
@@ -77,7 +94,8 @@ export default function NewDiaryEntryPage() {
     })
   }
   
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!user) return;
     if (!selectedMood) {
         toast({ variant: "destructive", title: "Please select a mood" });
         return;
@@ -91,32 +109,33 @@ export default function NewDiaryEntryPage() {
         return;
     }
 
-    const newEntry: DiaryEntry = {
-      id: crypto.randomUUID(),
+    const newEntry = {
       date: new Date().toISOString(),
       mood: selectedMood,
       title: title.trim(),
       content: content,
       photos: photos,
       voiceNotes: [],
-      folderId: selectedFolderId === 'uncategorized' ? undefined : selectedFolderId,
-      themeUrl: selectedTheme || undefined,
+      folderId: selectedFolderId === 'uncategorized' ? '' : selectedFolderId,
+      themeUrl: selectedTheme || '',
     };
 
     try {
-      const existingEntriesString = localStorage.getItem('diaryEntries') || '[]';
-      const existingEntries: DiaryEntry[] = JSON.parse(existingEntriesString);
-      
-      const updatedEntries = [newEntry, ...existingEntries];
-
-      localStorage.setItem('diaryEntries', JSON.stringify(updatedEntries));
-
+      await addDoc(collection(db, "users", user.uid, "diaryEntries"), newEntry);
       toast({ title: "Entry Saved!", description: "Your thoughts are safe with us." });
       router.push("/diary");
     } catch (error) {
-        console.error("Failed to save entry to localStorage", error);
+        console.error("Failed to save entry to Firestore", error);
         toast({ variant: "destructive", title: "Save Failed", description: "Could not save your entry." });
     }
+  }
+
+  if (isLoading) {
+    return (
+        <div className="flex h-screen items-center justify-center bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
   }
 
   return (
@@ -244,5 +263,3 @@ export default function NewDiaryEntryPage() {
     </main>
   )
 }
-
-    

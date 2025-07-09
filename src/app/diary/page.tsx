@@ -1,10 +1,11 @@
+
 "use client"
 
 import { useState, useEffect, useRef, ChangeEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Plus, Search, BookOpenText, AreaChart, Pencil, Trash2, MoreVertical, Folder as FolderIcon, ArrowLeft } from "lucide-react"
+import { Plus, Search, BookOpenText, AreaChart, Pencil, Trash2, MoreVertical, Folder as FolderIcon, ArrowLeft, Loader2 } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -27,6 +28,9 @@ import { useToast } from "@/hooks/use-toast"
 import { moods, type DiaryEntry, type Folder, placeholderFolders } from "@/lib/diary-data"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
+import { auth, db } from "@/lib/firebase"
+import { onAuthStateChanged, type User } from "firebase/auth"
+import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, orderBy } from "firebase/firestore"
 
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
@@ -73,6 +77,9 @@ export default function DiaryPage() {
   const [chartData, setChartData] = useState<any[]>([])
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
 
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [isNewJournalDialogOpen, setIsNewJournalDialogOpen] = useState(false)
   const [isRenameJournalDialogOpen, setIsRenameJournalDialogOpen] = useState(false)
   const [newJournalName, setNewJournalName] = useState("")
@@ -81,27 +88,53 @@ export default function DiaryPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        // Set up listeners for folders and entries
+        const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
+        const entriesQuery = query(collection(db, "users", currentUser.uid, "diaryEntries"), orderBy("date", "desc"));
+        
+        const unsubscribeFolders = onSnapshot(foldersQuery, (querySnapshot) => {
+            const foldersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
+            setFolders(foldersData);
+        });
 
-  const loadData = () => {
-    try {
-      const savedEntriesString = localStorage.getItem("diaryEntries") || '[]';
-      const savedEntries: DiaryEntry[] = JSON.parse(savedEntriesString);
-      setEntries(savedEntries);
+        const unsubscribeEntries = onSnapshot(entriesQuery, (querySnapshot) => {
+            const entriesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiaryEntry));
+            setEntries(entriesData);
+            updateChartData(entriesData);
+            setIsLoading(false);
+        });
 
-      const savedFoldersString = localStorage.getItem("diaryFolders") || '[]';
-      let savedFolders: Folder[] = JSON.parse(savedFoldersString);
+        return () => {
+          unsubscribeFolders();
+          unsubscribeEntries();
+        };
 
-      savedFolders = savedFolders.map(folder => ({
-        ...folder,
-        entryCount: savedEntries.filter(entry => entry.folderId === folder.id).length
-      }));
-      setFolders(savedFolders);
+      } else {
+        router.push("/login");
+      }
+    });
 
-      if (savedEntries.length > 0) {
-        const recentEntries = savedEntries.slice(0, 7).reverse();
+    return () => unsubscribe();
+  }, [router]);
+
+  // Update folder entry counts when entries or folders change
+  useEffect(() => {
+      if (folders.length > 0 || entries.length > 0) {
+        const updatedFolders = folders.map(folder => ({
+            ...folder,
+            entryCount: entries.filter(entry => entry.folderId === folder.id).length
+        }));
+        setFolders(updatedFolders);
+      }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries]);
+
+  const updateChartData = (currentEntries: DiaryEntry[]) => {
+      if (currentEntries.length > 0) {
+        const recentEntries = currentEntries.slice(0, 7).reverse();
         const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
         const generatedChartData = recentEntries.map((entry) => ({
           name: new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -111,10 +144,6 @@ export default function DiaryPage() {
       } else {
         setChartData([]);
       }
-    } catch (error) {
-      console.error("Failed to load data from localStorage", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not load diary data.' });
-    }
   }
 
   const filteredEntries = entries.filter((entry) => {
@@ -125,72 +154,86 @@ export default function DiaryPage() {
     }
   );
 
-  const handleCreateJournal = () => {
+  const handleCreateJournal = async () => {
+    if (!user) return;
     if (newJournalName.trim().length < 3) {
       toast({ variant: "destructive", title: "Invalid Name", description: "Journal name must be at least 3 characters long." });
       return;
     }
     const randomPlaceholder = placeholderFolders[Math.floor(Math.random() * placeholderFolders.length)];
-    const newFolder: Folder = {
-      id: crypto.randomUUID(),
+    const newFolder = {
       name: newJournalName.trim(),
       entryCount: 0,
       imageUrl: randomPlaceholder.imageUrl,
       imageHint: randomPlaceholder.imageHint,
     };
-    const updatedFolders = [...folders, newFolder];
-    setFolders(updatedFolders);
-    localStorage.setItem("diaryFolders", JSON.stringify(updatedFolders));
-    toast({ title: "Journal Created!", description: `"${newFolder.name}" has been added.` });
-    setNewJournalName("");
-    setIsNewJournalDialogOpen(false);
+    try {
+        await addDoc(collection(db, "users", user.uid, "diaryFolders"), newFolder);
+        toast({ title: "Journal Created!", description: `"${newFolder.name}" has been added.` });
+        setNewJournalName("");
+        setIsNewJournalDialogOpen(false);
+    } catch(e) {
+        toast({ variant: "destructive", title: "Error", description: "Could not create journal." });
+    }
   }
 
-  const handleRenameJournal = () => {
-    if (!folderToEdit || newJournalName.trim().length < 3) {
+  const handleRenameJournal = async () => {
+    if (!user || !folderToEdit || newJournalName.trim().length < 3) {
       toast({ variant: "destructive", title: "Invalid Name", description: "Journal name must be at least 3 characters long." });
       return;
     }
-    const updatedFolders = folders.map(f => f.id === folderToEdit.id ? { ...f, name: newJournalName.trim() } : f);
-    setFolders(updatedFolders);
-    localStorage.setItem("diaryFolders", JSON.stringify(updatedFolders));
-    toast({ title: "Journal Renamed!" });
-    setNewJournalName("");
-    setFolderToEdit(null);
-    setIsRenameJournalDialogOpen(false);
-    if(selectedFolder?.id === folderToEdit.id){
-      setSelectedFolder(updatedFolders.find(f => f.id === folderToEdit.id) || null)
+    const folderDocRef = doc(db, "users", user.uid, "diaryFolders", folderToEdit.id);
+    try {
+        await updateDoc(folderDocRef, { name: newJournalName.trim() });
+        toast({ title: "Journal Renamed!" });
+        setNewJournalName("");
+        setFolderToEdit(null);
+        setIsRenameJournalDialogOpen(false);
+    } catch(e) {
+        toast({ variant: "destructive", title: "Error", description: "Could not rename journal." });
     }
-    loadData(); // Reload to reflect changes
   }
 
-  const handleDeleteJournal = (folderId: string) => {
-    const updatedEntries = entries.map(entry => {
-        if (entry.folderId === folderId) {
-            return { ...entry, folderId: undefined };
+  const handleDeleteJournal = async (folderId: string) => {
+    if(!user) return;
+
+    try {
+        // Find all entries in this folder
+        const entriesQuery = query(collection(db, 'users', user.uid, 'diaryEntries'), where('folderId', '==', folderId));
+        const entriesSnapshot = await getDocs(entriesQuery);
+
+        const batch = writeBatch(db);
+
+        // Remove folderId from each entry
+        entriesSnapshot.forEach(entryDoc => {
+            const entryRef = doc(db, 'users', user.uid, 'diaryEntries', entryDoc.id);
+            batch.update(entryRef, { folderId: "" });
+        });
+        
+        // Delete the folder itself
+        const folderRef = doc(db, 'users', user.uid, 'diaryFolders', folderId);
+        batch.delete(folderRef);
+
+        await batch.commit();
+
+        toast({ title: "Journal Deleted" });
+        if (selectedFolder?.id === folderId) {
+            setSelectedFolder(null); 
         }
-        return entry;
-    });
-    setEntries(updatedEntries);
-    localStorage.setItem("diaryEntries", JSON.stringify(updatedEntries));
-
-    const updatedFolders = folders.filter(f => f.id !== folderId);
-    setFolders(updatedFolders);
-    localStorage.setItem("diaryFolders", JSON.stringify(updatedFolders));
-
-    toast({ title: "Journal Deleted" });
-    if (selectedFolder?.id === folderId) {
-        setSelectedFolder(null); 
+    } catch (e) {
+        console.error("Error deleting journal: ", e);
+        toast({ variant: "destructive", title: "Error", description: "Could not delete journal and update entries." });
     }
-    loadData();
   }
 
-  const handleDeleteEntry = (entryId: string) => {
-    const updatedEntries = entries.filter(e => e.id !== entryId);
-    setEntries(updatedEntries);
-    localStorage.setItem("diaryEntries", JSON.stringify(updatedEntries));
-    toast({ title: "Entry Deleted" });
-    loadData(); 
+  const handleDeleteEntry = async (entryId: string) => {
+    if (!user) return;
+    try {
+        await deleteDoc(doc(db, "users", user.uid, "diaryEntries", entryId));
+        toast({ title: "Entry Deleted" });
+    } catch(e) {
+        toast({ variant: "destructive", title: "Error", description: "Could not delete entry." });
+    }
   }
   
   const handleEditCoverClick = (folder: Folder) => {
@@ -199,22 +242,35 @@ export default function DiaryPage() {
   }
 
   const handleCoverImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0] && folderToEdit) {
-      const file = e.target.files[0];
-      const newImageUrl = URL.createObjectURL(file);
-      const updatedFolders = folders.map(f => {
-        if (f.id === folderToEdit.id) {
-          if (f.imageUrl && f.imageUrl.startsWith('blob:')) URL.revokeObjectURL(f.imageUrl);
-          return { ...f, imageUrl: newImageUrl, imageHint: 'custom cover' };
-        }
-        return f;
-      });
-      setFolders(updatedFolders);
-      localStorage.setItem("diaryFolders", JSON.stringify(updatedFolders));
-      toast({ title: "Cover Photo Updated!" });
-      setFolderToEdit(null);
+    if (!user || !e.target.files || e.target.files.length === 0 || !folderToEdit) {
+      return;
     }
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+        const imageUrl = event.target?.result as string;
+        if (!imageUrl) return;
+
+        const folderRef = doc(db, "users", user.uid, "diaryFolders", folderToEdit.id);
+        try {
+            await updateDoc(folderRef, { imageUrl, imageHint: 'custom cover' });
+            toast({ title: "Cover Photo Updated!" });
+            setFolderToEdit(null);
+        } catch(err) {
+            toast({ variant: "destructive", title: "Error", description: "Could not update cover photo." });
+        }
+    };
+    reader.readAsDataURL(file);
     if(fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  if (isLoading) {
+    return (
+        <div className="flex h-screen items-center justify-center bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
   }
 
 
@@ -261,7 +317,7 @@ export default function DiaryPage() {
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex w-max space-x-4 pb-4">
                 <div onClick={() => setSelectedFolder(null)} className={cn("group cursor-pointer rounded-lg border-2", !selectedFolder ? "border-primary" : "border-transparent")}>
-                  <Card className="w-40 shrink-0 overflow-hidden"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">Uncategorized</h3><p className="text-xs text-muted-foreground">{entries.filter(e => !e.folderId).length} Entries</p></div></Card>
+                  <Card className="w-40 shrink-0 overflow-hidden"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">Uncategorized</h3><p className="text-xs text-muted-foreground">{entries.filter(e => !e.folderId || e.folderId === '').length} Entries</p></div></Card>
                 </div>
               {folders.map((folder) => (
                 <div key={folder.id} onClick={() => setSelectedFolder(folder)} className={cn("relative group cursor-pointer rounded-lg border-2", selectedFolder?.id === folder.id ? "border-primary" : "border-transparent")}>
