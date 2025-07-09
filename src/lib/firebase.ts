@@ -12,18 +12,32 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+const keyMapping = {
+    apiKey: "NEXT_PUBLIC_FIREBASE_API_KEY",
+    authDomain: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
+    projectId: "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
+    storageBucket: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
+    messagingSenderId: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+    appId: "NEXT_PUBLIC_FIREBASE_APP_ID"
+};
+
 let app: FirebaseApp | null = null;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
 let firebaseError: string | null = null;
 
 try {
-  const isConfigValid = firebaseConfig.apiKey &&
-                        typeof firebaseConfig.apiKey === 'string' &&
-                        !firebaseConfig.apiKey.includes('YOUR_');
+  const missingOrInvalidKeys: string[] = [];
+  for (const [key, value] of Object.entries(firebaseConfig)) {
+      if (!value || typeof value !== 'string' || value.includes('YOUR_')) {
+          missingOrInvalidKeys.push(keyMapping[key as keyof typeof keyMapping]);
+      }
+  }
 
-  if (!isConfigValid) {
-    throw new Error("Firebase configuration is missing or incomplete. Please check your .env file and restart the server.");
+  if (missingOrInvalidKeys.length > 0) {
+    const errorIntro = "Firebase configuration failed. The following required variable(s) are missing or invalid in your .env file:";
+    const errorDetails = missingOrInvalidKeys.join(", ");
+    throw new Error(`${errorIntro}\n\n- ${errorDetails}`);
   }
 
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
@@ -31,8 +45,8 @@ try {
   db = getFirestore(app);
 
 } catch (e: any) {
-   firebaseError = `Firebase initialization failed: ${e.message}. Please verify your credentials in the .env file.`;
-   console.error(firebaseError, e);
+   firebaseError = e.message; // Use the direct message from the error we just threw
+   console.error("Firebase Initialization Failed:", firebaseError);
 }
 
 export { app, auth, db, firebaseError };
