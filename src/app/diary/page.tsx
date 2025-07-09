@@ -30,7 +30,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { auth, db } from "@/lib/firebase"
 import { onAuthStateChanged, type User } from "firebase/auth"
-import { collection, query, where, onSnapshot, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs, orderBy } from "firebase/firestore"
+import { collection, query, where, doc, addDoc, updateDoc, deleteDoc, writeBatch, getDocs } from "firebase/firestore"
 
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps<ValueType, NameType>) => {
@@ -87,52 +87,9 @@ export default function DiaryPage() {
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        // Set up listeners for folders and entries
-        const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
-        const entriesQuery = query(collection(db, "users", currentUser.uid, "diaryEntries"));
-        
-        const unsubscribeFolders = onSnapshot(foldersQuery, (querySnapshot) => {
-            const foldersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
-            setFolders(foldersData);
-        }, (error) => {
-            console.error("Error fetching folders:", error);
-            toast({ variant: 'destructive', title: "Error", description: "Could not load journals." });
-            setIsLoading(false);
-        });
-
-        const unsubscribeEntries = onSnapshot(entriesQuery, (querySnapshot) => {
-            const entriesData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiaryEntry));
-            // Sort client-side to avoid needing a composite index
-            entriesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            setEntries(entriesData);
-            updateChartData(entriesData);
-            setIsLoading(false);
-        }, (error) => {
-            console.error("Error fetching entries:", error);
-            toast({ variant: 'destructive', title: "Error", description: "Could not load diary entries." });
-            setIsLoading(false);
-        });
-
-        return () => {
-          unsubscribeFolders();
-          unsubscribeEntries();
-        };
-
-      } else {
-        router.push("/login");
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router, toast]);
-
   const updateChartData = (currentEntries: DiaryEntry[]) => {
       if (currentEntries.length > 0) {
-        const recentEntries = currentEntries.slice(0, 7).reverse();
+        const recentEntries = [...currentEntries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7).reverse();
         const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
         const generatedChartData = recentEntries.map((entry) => ({
           name: new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -143,6 +100,51 @@ export default function DiaryPage() {
         setChartData([]);
       }
   }
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        
+        const fetchData = async () => {
+            if (!currentUser) return;
+            setIsLoading(true);
+            try {
+                // Fetch folders
+                const foldersQuery = query(collection(db, "users", currentUser.uid, "diaryFolders"));
+                const foldersSnapshot = await getDocs(foldersQuery);
+                const foldersData = foldersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Folder));
+                setFolders(foldersData);
+
+                // Fetch entries
+                const entriesQuery = query(collection(db, "users", currentUser.uid, "diaryEntries"));
+                const entriesSnapshot = await getDocs(entriesQuery);
+                const entriesData = entriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as DiaryEntry));
+                
+                // Sort client-side
+                entriesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                
+                setEntries(entriesData);
+                updateChartData(entriesData);
+
+            } catch (error) {
+                console.error("Error fetching diary data:", error);
+                toast({ variant: 'destructive', title: "Error", description: "Could not load diary entries." });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+
+      } else {
+        router.push("/login");
+      }
+    });
+
+    return () => unsubscribeAuth();
+  }, [router, toast]);
+
 
   const filteredEntries = entries.filter((entry) => {
       const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -159,14 +161,15 @@ export default function DiaryPage() {
       return;
     }
     const randomPlaceholder = placeholderFolders[Math.floor(Math.random() * placeholderFolders.length)];
-    const newFolder = {
+    const newFolderData = {
       name: newJournalName.trim(),
       imageUrl: randomPlaceholder.imageUrl,
       imageHint: randomPlaceholder.imageHint,
     };
     try {
-        await addDoc(collection(db, "users", user.uid, "diaryFolders"), newFolder);
-        toast({ title: "Journal Created!", description: `"${newFolder.name}" has been added.` });
+        const docRef = await addDoc(collection(db, "users", user.uid, "diaryFolders"), newFolderData);
+        setFolders(prev => [...prev, {id: docRef.id, ...newFolderData}]);
+        toast({ title: "Journal Created!", description: `"${newFolderData.name}" has been added.` });
         setNewJournalName("");
         setIsNewJournalDialogOpen(false);
     } catch(e) {
@@ -182,6 +185,10 @@ export default function DiaryPage() {
     const folderDocRef = doc(db, "users", user.uid, "diaryFolders", folderToEdit.id);
     try {
         await updateDoc(folderDocRef, { name: newJournalName.trim() });
+        setFolders(prev => prev.map(f => f.id === folderToEdit.id ? { ...f, name: newJournalName.trim() } : f));
+        if (selectedFolder?.id === folderToEdit.id) {
+            setSelectedFolder(prev => prev ? { ...prev, name: newJournalName.trim() } : null);
+        }
         toast({ title: "Journal Renamed!" });
         setNewJournalName("");
         setFolderToEdit(null);
@@ -213,6 +220,9 @@ export default function DiaryPage() {
 
         await batch.commit();
 
+        setFolders(prev => prev.filter(f => f.id !== folderId));
+        setEntries(prev => prev.map(e => e.folderId === folderId ? { ...e, folderId: "" } : e));
+        
         toast({ title: "Journal Deleted" });
         if (selectedFolder?.id === folderId) {
             setSelectedFolder(null); 
@@ -227,6 +237,7 @@ export default function DiaryPage() {
     if (!user) return;
     try {
         await deleteDoc(doc(db, "users", user.uid, "diaryEntries", entryId));
+        setEntries(prev => prev.filter(entry => entry.id !== entryId));
         toast({ title: "Entry Deleted" });
     } catch(e) {
         toast({ variant: "destructive", title: "Error", description: "Could not delete entry." });
@@ -252,6 +263,7 @@ export default function DiaryPage() {
         const folderRef = doc(db, "users", user.uid, "diaryFolders", folderToEdit.id);
         try {
             await updateDoc(folderRef, { imageUrl, imageHint: 'custom cover' });
+            setFolders(prev => prev.map(f => f.id === folderToEdit.id ? { ...f, imageUrl, imageHint: 'custom cover' } : f));
             toast({ title: "Cover Photo Updated!" });
             setFolderToEdit(null);
         } catch(err) {
@@ -261,6 +273,10 @@ export default function DiaryPage() {
     reader.readAsDataURL(file);
     if(fileInputRef.current) fileInputRef.current.value = "";
   }
+
+  useEffect(() => {
+    updateChartData(entries);
+  }, [entries]);
 
   if (isLoading) {
     return (
@@ -347,7 +363,7 @@ export default function DiaryPage() {
 
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">{selectedFolder ? selectedFolder.name : "Uncategorized Entries"}</h2>
+            <h2 className="text-2xl font-semibold">{selectedFolder ? selectedFolder.name : "All Entries"}</h2>
           </div>
           {filteredEntries.length > 0 ? (
             <div className="space-y-4">
@@ -415,3 +431,5 @@ export default function DiaryPage() {
     </div>
   )
 }
+
+    
