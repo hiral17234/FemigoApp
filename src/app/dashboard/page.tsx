@@ -174,10 +174,10 @@ export default function DashboardPage() {
       <DailyThought />
 
       <Link href="/emergency" className="w-full max-w-md mx-auto">
-        <div className="group rounded-2xl bg-gradient-to-r from-pink-500 to-purple-500 p-px shadow-lg shadow-pink-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/30">
-          <div className="flex h-16 items-center justify-center gap-4 rounded-[15px] bg-[#110D1F]">
-            <Siren className="h-7 w-7 text-primary transition-transform duration-300 group-hover:scale-110" />
-            <span className="text-2xl font-semibold text-primary">
+        <div className="group rounded-3xl bg-gradient-to-r from-pink-500 to-purple-500 p-px shadow-lg shadow-pink-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/30">
+          <div className="flex h-24 items-center justify-center gap-4 rounded-[23px] bg-[#110D1F]">
+            <Siren className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+            <span className="text-2xl font-bold text-white">
               Emergency
             </span>
           </div>
