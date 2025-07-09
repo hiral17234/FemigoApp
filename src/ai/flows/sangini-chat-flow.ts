@@ -3,22 +3,21 @@
  * @fileOverview A friendly AI chat assistant named Sangini, connected to Hugging Face.
  *
  * - askSangini - The main function to interact with the assistant.
- * - SanginiChatInput - The input type for the chat flow.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'model']),
   content: z.string(),
 });
 
-export const SanginiChatInputSchema = z.object({
+const SanginiChatInputSchema = z.object({
   history: z.array(MessageSchema),
   prompt: z.string().describe('The latest message from the user.'),
 });
-export type SanginiChatInput = z.infer<typeof SanginiChatInputSchema>;
+type SanginiChatInput = z.infer<typeof SanginiChatInputSchema>;
 
 const MODEL_ID = "mistralai/Mistral-7B-Instruct-v0.2";
 const API_URL = `https://api-inference.huggingface.co/models/${MODEL_ID}`;
