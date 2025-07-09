@@ -18,6 +18,7 @@ import { onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
 import { getFirebaseServices } from "@/lib/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
 
 type Feature = {
   name: string
@@ -99,20 +100,6 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col p-4 sm:p-6 lg:p-8 space-y-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Femigo</h1>
-          <p className="text-sm text-muted-foreground">Safety. Strength. Solidarity.</p>
-        </div>
-        <div className="relative">
-            <Avatar className="h-12 w-12 border-2 border-primary/50">
-              <AvatarImage data-ai-hint="logo abstract" src="https://i.imgur.com/DFegeIc.jpeg" alt="User Avatar" />
-              <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
-            </Avatar>
-            <div className="absolute -inset-1 rounded-full bg-primary/70 blur-lg animate-pulse" style={{ animationDuration: '3s' }}/>
-        </div>
-      </header>
-
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight text-white">
           Welcome, <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">{userName}!</span>
