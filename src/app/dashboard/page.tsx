@@ -17,6 +17,7 @@ import {
 } from "lucide-react"
 import { onAuthStateChanged, type User } from "firebase/auth"
 import { getFirebaseServices } from "@/lib/firebase"
+import { Button } from "@/components/ui/button"
 
 
 type Feature = {
