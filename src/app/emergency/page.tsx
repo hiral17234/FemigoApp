@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { getFirebaseServices } from '@/lib/firebase';
+import { emergencyContacts, type EmergencyService } from '@/lib/emergency-contacts';
 
 type TrustedContact = {
   id: string;
@@ -21,19 +22,13 @@ type TrustedContact = {
   phone: string;
 };
 
-const emergencyServices = [
-  { name: 'Police', number: '100', icon: Siren },
-  { name: 'Ambulance', number: '108', icon: Hospital },
-  { name: 'Fire Brigade', number: '101', icon: Flame },
-  { name: 'Security', number: '192', icon: ShieldCheck },
-];
-
 export default function EmergencyPage() {
   const { toast } = useToast();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const [emergencyServices, setEmergencyServices] = useState<EmergencyService[]>([]);
   const [trustedContacts, setTrustedContacts] = useState<TrustedContact[]>([]);
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
@@ -50,16 +45,26 @@ export default function EmergencyPage() {
         try {
           const userDocRef = doc(firebase.db, "users", currentUser.uid);
           const userDoc = await getDoc(userDocRef);
+          
+          let countryCode = 'default';
+
           if (userDoc.exists()) {
-            setTrustedContacts(userDoc.data().trustedContacts || []);
+            const userData = userDoc.data();
+            setTrustedContacts(userData.trustedContacts || []);
+            // Get country from the user's Firestore document
+            countryCode = userData.country || 'default';
           } else {
-            // This case should ideally not happen for a logged-in user
-            // as a user doc is created on signup.
             setTrustedContacts([]);
           }
+
+          // Set the country-specific emergency services
+          setEmergencyServices(emergencyContacts[countryCode] || emergencyContacts.default);
+
         } catch (error) {
-          console.error("Failed to fetch trusted contacts:", error);
+          console.error("Failed to fetch user data:", error);
           toast({ variant: "destructive", title: "Error", description: "Could not load your contacts." });
+          // Fallback to default on error
+          setEmergencyServices(emergencyContacts.default);
         }
       } else {
         router.push('/login');
@@ -149,8 +154,8 @@ export default function EmergencyPage() {
 
         <main className="p-4 space-y-8">
           <section>
-            <h1 className="text-2xl font-bold text-white">Emergency Contact</h1>
-            <p className="text-gray-400 mt-1">In an emergency, call an appropriate number for help</p>
+            <h1 className="text-2xl font-bold text-white">Emergency Services</h1>
+            <p className="text-gray-400 mt-1">In an emergency, call an appropriate number for help.</p>
             <div className="space-y-3 mt-4">
               {emergencyServices.map(service => (
                 <div key={service.name} className="flex items-center justify-between p-3 bg-gray-900/70 rounded-xl shadow-lg shadow-black/20">
@@ -173,7 +178,7 @@ export default function EmergencyPage() {
 
           <section>
             <h1 className="text-2xl font-bold text-white">Trusted Contacts</h1>
-            <p className="text-gray-400 mt-1">You can trust your trustworthy contacts for help</p>
+            <p className="text-gray-400 mt-1">You can trust your trustworthy contacts for help.</p>
             <div className="space-y-3 mt-4">
               {trustedContacts.length > 0 ? trustedContacts.map(contact => (
                 <div key={contact.id} className="flex items-center justify-between p-3 bg-gray-900/70 rounded-xl shadow-lg shadow-black/20">
