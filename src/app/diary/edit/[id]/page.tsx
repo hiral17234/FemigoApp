@@ -52,7 +52,7 @@ export default function EditDiaryEntryPage() {
                     setSelectedMood(foundEntry.mood);
                     setPhotos(foundEntry.photos || []);
                     setSelectedTheme(foundEntry.themeUrl || null);
-                    setSelectedFolderId(foundEntry.folderId || undefined);
+                    setSelectedFolderId(foundEntry.folderId || 'uncategorized');
                 } else {
                    toast({ variant: "destructive", title: "Entry not found" });
                    router.push("/diary");
@@ -83,7 +83,6 @@ export default function EditDiaryEntryPage() {
 
     const handleRemovePhoto = (index: number) => {
         const photoToRemove = photos[index];
-        // If it's a blob URL, revoke it to prevent memory leaks
         if (photoToRemove.url.startsWith('blob:')) {
             URL.revokeObjectURL(photoToRemove.url);
         }
@@ -153,7 +152,7 @@ export default function EditDiaryEntryPage() {
     return (
         <main className={cn("min-h-screen w-full bg-background transition-colors duration-700")}>
             {selectedTheme ? (
-                <Image src={selectedTheme} layout="fill" objectFit="cover" alt="Selected theme" className="fixed inset-0 z-[-1] opacity-60 dark:opacity-40" />
+                <Image src={selectedTheme} layout="fill" objectFit="cover" alt="Selected theme" className="fixed inset-0 z-[-1] opacity-40 dark:opacity-20" />
             ) : (
                 moodDetails && <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
             )}

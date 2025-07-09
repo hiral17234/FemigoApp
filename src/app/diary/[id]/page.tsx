@@ -75,6 +75,9 @@ export default function ViewDiaryEntryPage() {
                 const foundEntry = savedEntries.find(e => e.id === entryId);
                 if (foundEntry) {
                     setEntry(foundEntry);
+                } else {
+                    toast({ variant: 'destructive', title: "Not Found", description: "The diary entry could not be found." });
+                    router.push('/diary');
                 }
             }
         } catch (error) {
@@ -82,7 +85,7 @@ export default function ViewDiaryEntryPage() {
         } finally {
             setIsLoading(false)
         }
-    }, [entryId])
+    }, [entryId, router, toast])
 
     const handleDelete = () => {
         try {
@@ -166,7 +169,10 @@ export default function ViewDiaryEntryPage() {
                     </div>
                 </header>
 
-                <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden bg-card/80 dark:bg-background/80 backdrop-blur-sm">
+                <Card className={cn(
+                    "rounded-2xl shadow-lg overflow-hidden transition-colors duration-500",
+                    entry.themeUrl ? "bg-transparent border-none shadow-none" : "bg-card/80 dark:bg-background/80 backdrop-blur-sm border-black/10 dark:border-white/10"
+                )}>
                     <CardHeader>
                         <div className="flex justify-between items-start">
                             <div>
@@ -183,7 +189,7 @@ export default function ViewDiaryEntryPage() {
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <Separator />
-                        <div className="prose dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: entry.content }} />
+                        <div className="prose dark:prose-invert max-w-none prose-p:text-foreground prose-strong:text-foreground" dangerouslySetInnerHTML={{ __html: entry.content }} />
                         
                         {entry.photos && entry.photos.length > 0 && (
                             <div>

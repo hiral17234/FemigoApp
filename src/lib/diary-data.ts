@@ -51,7 +51,6 @@ export type Folder = {
   imageHint: string;
 };
 
-// Placeholder images for new journals
 export const placeholderFolders: Omit<Folder, 'id' | 'name' | 'entryCount'>[] = [
     { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'abstract landscape' },
     { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'serene nature' },
@@ -60,10 +59,6 @@ export const placeholderFolders: Omit<Folder, 'id' | 'name' | 'entryCount'>[] = 
     { imageUrl: 'https://placehold.co/600x400.png', imageHint: 'forest path' },
 ];
 
-// Data is now empty to allow users to start fresh.
-// In a real app, this would be fetched from a database.
 export const mockFolders: Folder[] = [];
-
 export const mockEntries: DiaryEntry[] = [];
-
 export const mockChartData: any[] = [];

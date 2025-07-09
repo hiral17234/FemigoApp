@@ -14,8 +14,8 @@ interface RichTextEditorProps {
 }
 
 const colors = [
-  "#ffffff", // White
   "#000000", // Black
+  "#ffffff", // White
   "#868e96", // Gray
   "#fa5252", // Red
   "#e64980", // Pink
@@ -34,9 +34,6 @@ const colors = [
 export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) => {
   const editorRef = useRef<HTMLDivElement>(null)
 
-  // This effect syncs the editor's content with the `value` prop
-  // ONLY when the internal HTML doesn't match the external state.
-  // This prevents React from resetting the cursor position on every keystroke.
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value
@@ -48,22 +45,21 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
   }
 
   const executeAndUpdate = (command: string, val?: string) => {
-    document.execCommand(command, false, val);
     if (editorRef.current) {
       editorRef.current.focus();
-      // Manually trigger onChange to ensure React state is in sync after a command.
+      document.execCommand(command, false, val);
       onChange(editorRef.current.innerHTML);
     }
   };
 
   return (
-    <div className="rounded-md border border-input">
+    <div className="rounded-md border border-input bg-background/50">
       <div className="flex flex-wrap items-center gap-1 border-b p-2">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          onMouseDown={(e) => e.preventDefault()} // Prevent editor from losing focus
+          onMouseDown={(e) => e.preventDefault()}
           onClick={() => executeAndUpdate("bold")}
           aria-label="Bold"
         >
@@ -114,9 +110,8 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        // REMOVED dangerouslySetInnerHTML to prevent re-rendering and cursor jumps
         className={cn(
-          "min-h-[250px] w-full bg-transparent p-4 text-base focus-visible:outline-none",
+          "min-h-[250px] w-full bg-transparent p-4 text-base focus-visible:outline-none prose-p:my-0",
           !value && "text-muted-foreground"
         )}
         data-placeholder={placeholder}

@@ -87,21 +87,19 @@ export default function DiaryPage() {
 
   const loadData = () => {
     try {
-      const savedEntriesString = localStorage.getItem("diaryEntries");
-      const savedEntries: DiaryEntry[] = savedEntriesString ? JSON.parse(savedEntriesString) : [];
+      const savedEntriesString = localStorage.getItem("diaryEntries") || '[]';
+      const savedEntries: DiaryEntry[] = JSON.parse(savedEntriesString);
       setEntries(savedEntries);
 
-      const savedFoldersString = localStorage.getItem("diaryFolders");
-      let savedFolders: Folder[] = savedFoldersString ? JSON.parse(savedFoldersString) : [];
+      const savedFoldersString = localStorage.getItem("diaryFolders") || '[]';
+      let savedFolders: Folder[] = JSON.parse(savedFoldersString);
 
-      // Update entry counts for each folder
       savedFolders = savedFolders.map(folder => ({
         ...folder,
         entryCount: savedEntries.filter(entry => entry.folderId === folder.id).length
       }));
       setFolders(savedFolders);
 
-      // Generate chart data
       if (savedEntries.length > 0) {
         const recentEntries = savedEntries.slice(0, 7).reverse();
         const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
@@ -122,7 +120,7 @@ export default function DiaryPage() {
   const filteredEntries = entries.filter((entry) => {
       const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             entry.content.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFolder = !selectedFolder || entry.folderId === selectedFolder.id;
+      const matchesFolder = !selectedFolder ? !entry.folderId || entry.folderId === 'uncategorized' : entry.folderId === selectedFolder.id;
       return matchesSearch && matchesFolder;
     }
   );
@@ -160,10 +158,10 @@ export default function DiaryPage() {
     setNewJournalName("");
     setFolderToEdit(null);
     setIsRenameJournalDialogOpen(false);
+    loadData(); // Reload to reflect changes
   }
 
   const handleDeleteJournal = (folderId: string) => {
-    // Un-assign entries from the folder being deleted
     const updatedEntries = entries.map(entry => {
         if (entry.folderId === folderId) {
             return { ...entry, folderId: undefined };
@@ -173,15 +171,15 @@ export default function DiaryPage() {
     setEntries(updatedEntries);
     localStorage.setItem("diaryEntries", JSON.stringify(updatedEntries));
 
-    // Delete the folder itself
     const updatedFolders = folders.filter(f => f.id !== folderId);
     setFolders(updatedFolders);
     localStorage.setItem("diaryFolders", JSON.stringify(updatedFolders));
 
     toast({ title: "Journal Deleted" });
     if (selectedFolder?.id === folderId) {
-        setSelectedFolder(null); // Deselect if the current folder was deleted
+        setSelectedFolder(null); 
     }
+    loadData();
   }
 
   const handleDeleteEntry = (entryId: string) => {
@@ -189,7 +187,7 @@ export default function DiaryPage() {
     setEntries(updatedEntries);
     localStorage.setItem("diaryEntries", JSON.stringify(updatedEntries));
     toast({ title: "Entry Deleted" });
-    loadData(); // Reload to update folder counts and chart
+    loadData(); 
   }
   
   const handleEditCoverClick = (folder: Folder) => {
@@ -257,7 +255,7 @@ export default function DiaryPage() {
             <ScrollArea className="w-full whitespace-nowrap">
               <div className="flex w-max space-x-4 pb-4">
                  <div onClick={() => setSelectedFolder(null)} className={cn("relative group cursor-pointer border-2 rounded-lg", !selectedFolder ? "border-primary" : "border-transparent")}>
-                    <Card className="w-40 shrink-0 overflow-hidden"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">All Entries</h3><p className="text-xs text-muted-foreground">{entries.length} Entries</p></div></Card>
+                    <Card className="w-40 shrink-0 overflow-hidden"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">All Entries</h3><p className="text-xs text-muted-foreground">{entries.filter(e => !e.folderId || e.folderId === 'uncategorized').length} Entries</p></div></Card>
                 </div>
                 {folders.map((folder) => (
                   <div key={folder.id} onClick={() => setSelectedFolder(folder)} className={cn("relative group cursor-pointer border-2 rounded-lg", selectedFolder?.id === folder.id ? "border-primary" : "border-transparent")}>
@@ -296,18 +294,17 @@ export default function DiaryPage() {
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold">{selectedFolder ? selectedFolder.name : "Recent Entries"}</h2>
-            {filteredEntries.length > 3 && (<Button variant="ghost" size="sm" onClick={() => router.push('#')}>View All <ChevronRight className="ml-1 h-4 w-4" /></Button>)}
           </div>
           {filteredEntries.length > 0 ? (
             <div className="space-y-4">
-              {filteredEntries.slice(0, 3).map((entry) => (
+              {filteredEntries.map((entry) => (
                 <div key={entry.id} className="relative group">
                     <Card onClick={() => router.push(`/diary/${entry.id}`)} className="flex items-start gap-4 p-4 hover:bg-card/80 transition-colors cursor-pointer pr-12">
                         <div className="text-4xl">{moods[entry.mood].sticker}</div>
                         <div className="flex-1 overflow-hidden">
                             <p className="text-xs text-muted-foreground">{format(new Date(entry.date), "MMMM d, yyyy")}</p>
                             <h3 className="font-semibold text-lg truncate">{entry.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2">{entry.content.replace(/<[^>]*>?/gm, '')}</p>
+                            <p className="text-sm text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: entry.content }} />
                         </div>
                         {entry.photos && entry.photos.length > 0 && (
                             <div className="relative h-20 w-20 shrink-0"><Image src={entry.photos[0].url} data-ai-hint="diary photo" alt="Diary photo" layout="fill" objectFit="cover" className="rounded-md" /></div>

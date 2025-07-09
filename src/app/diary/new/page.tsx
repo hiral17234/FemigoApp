@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
-import { moods, themesList, type Mood, type DiaryEntry, type Folder as JournalFolder } from "@/lib/diary-data"
+import { moods, themesList, type Mood, type DiaryEntry, type Folder as JournalFolder, type DiaryPhoto } from "@/lib/diary-data"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -23,13 +23,13 @@ export default function NewDiaryEntryPage() {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null)
   const [title, setTitle] = useState("")
   const [content, setContent] = useState("")
-  const [photos, setPhotos] = useState<{ url: string; file: File; caption: string }[]>([])
+  const [photos, setPhotos] = useState<DiaryPhoto[]>([])
   const [selectedTheme, setSelectedTheme] = useState<string | null>(null)
   const [themePopoverOpen, setThemePopoverOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [folders, setFolders] = useState<JournalFolder[]>([]);
-  const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>();
+  const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>("uncategorized");
 
   useEffect(() => {
     try {
@@ -55,14 +55,17 @@ export default function NewDiaryEntryPage() {
       const newFiles = Array.from(e.target.files)
       const newPhotos = newFiles.map(file => ({
         url: URL.createObjectURL(file),
-        file: file,
         caption: ""
       }));
-      setPhotos(prev => [...prev, ...newPhotos])
+      setPhotos(prev => [...prev, ...newPhotos]);
     }
   }
 
   const handleRemovePhoto = (index: number) => {
+    const photoToRemove = photos[index];
+    if (photoToRemove.url.startsWith('blob:')) {
+        URL.revokeObjectURL(photoToRemove.url);
+    }
     setPhotos(prev => prev.filter((_, i) => i !== index));
   }
   
@@ -86,13 +89,10 @@ export default function NewDiaryEntryPage() {
         toast({ variant: "destructive", title: "Please add a title" });
         return;
     }
-    // Check if content is empty by checking for the placeholder empty state from the editor
     if (!content.trim() || content === '<p><br></p>') {
         toast({ variant: "destructive", title: "Please write something in your journal" });
         return;
     }
-
-    const photosToSave = photos.map(p => ({ url: p.url, caption: p.caption }));
 
     const newEntry: DiaryEntry = {
       id: crypto.randomUUID(),
@@ -100,15 +100,15 @@ export default function NewDiaryEntryPage() {
       mood: selectedMood,
       title: title.trim(),
       content: content,
-      photos: photosToSave,
+      photos: photos,
       voiceNotes: [],
       themeUrl: selectedTheme || undefined,
-      folderId: selectedFolderId
+      folderId: selectedFolderId === 'uncategorized' ? undefined : selectedFolderId,
     };
 
     try {
-      const existingEntriesString = localStorage.getItem('diaryEntries');
-      const existingEntries: DiaryEntry[] = existingEntriesString ? JSON.parse(existingEntriesString) : [];
+      const existingEntriesString = localStorage.getItem('diaryEntries') || '[]';
+      const existingEntries: DiaryEntry[] = JSON.parse(existingEntriesString);
       
       const updatedEntries = [newEntry, ...existingEntries];
 
@@ -127,7 +127,7 @@ export default function NewDiaryEntryPage() {
   return (
     <main className={cn( "min-h-screen w-full bg-background transition-colors duration-700" )}>
       {selectedTheme ? (
-        <Image src={selectedTheme} layout="fill" objectFit="cover" alt="Selected theme" className="fixed inset-0 z-[-1] opacity-60 dark:opacity-40" />
+        <Image src={selectedTheme} layout="fill" objectFit="cover" alt="Selected theme" className="fixed inset-0 z-[-1] opacity-40 dark:opacity-20" />
       ) : (
         moodDetails && <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
       )}
@@ -249,9 +249,7 @@ export default function NewDiaryEntryPage() {
                                 className="rounded-lg"
                             />
                             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col p-2">
-                                <button onClick={() => handleRemovePhoto(index)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1">
-                                    <X className="h-4 w-4" />
-                                </button>
+                                <button onClick={() => handleRemovePhoto(index)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1"><X className="h-4 w-4" /></button>
                                 <Input 
                                     placeholder="Caption..."
                                     value={photo.caption}
