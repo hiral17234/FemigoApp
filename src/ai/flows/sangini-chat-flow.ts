@@ -32,7 +32,7 @@ export async function sanginiChat(input: SanginiChatInput): Promise<string> {
   
   const history: Message[] = [...input.history, { role: 'user', content: input.message }];
 
-  const { output } = await ai.generate({
+  const response = await ai.generate({
     model: 'googleai/gemini-1.5-flash',
     history: history,
     system: `You are Sangini, an AI assistant for the Femigo app. Femigo is a platform dedicated to women's safety, empowerment, and community.
@@ -43,9 +43,26 @@ Do not provide medical, legal, or financial advice. Instead, suggest the user co
 Your goal is to be a trusted digital companion for the user.`,
     config: {
         temperature: 0.7,
+        safetySettings: [
+            {
+                category: 'HARM_CATEGORY_HATE_SPEECH',
+                threshold: 'BLOCK_NONE',
+            },
+            {
+                category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+                threshold: 'BLOCK_NONE',
+            },
+            {
+                category: 'HARM_CATEGORY_HARASSMENT',
+                threshold: 'BLOCK_NONE',
+            },
+            {
+                category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+                threshold: 'BLOCK_NONE',
+            },
+        ],
     }
   });
 
-  return output?.text ?? "I'm sorry, I'm having trouble responding right now. Please try again in a moment.";
+  return response.text ?? "I'm sorry, I'm having trouble responding right now. Please try again in a moment.";
 }
-
