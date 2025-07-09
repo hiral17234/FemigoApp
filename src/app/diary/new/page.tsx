@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useRef, ChangeEvent, useEffect } from "react"
@@ -118,8 +119,6 @@ export default function NewDiaryEntryPage() {
     }
   }
 
-  const moodDetails = selectedMood ? moods[selectedMood] : null;
-
   return (
     <main className={cn( "min-h-screen w-full bg-background transition-colors duration-700" )}>
       <div className="mx-auto max-w-2xl p-4 sm:p-6 md:p-8">
@@ -135,7 +134,7 @@ export default function NewDiaryEntryPage() {
           </div>
         </header>
 
-        <Card className="rounded-2xl shadow-lg overflow-hidden transition-colors duration-500 bg-card/80 dark:bg-background/80 backdrop-blur-sm border-black/10 dark:border-white/10">
+        <Card className="rounded-2xl shadow-lg overflow-hidden bg-card border-border">
           <CardContent className="p-6 space-y-6">
             <div className="flex justify-between items-center gap-4 flex-wrap">
               <div className="text-center">
@@ -245,3 +244,5 @@ export default function NewDiaryEntryPage() {
     </main>
   )
 }
+
+    

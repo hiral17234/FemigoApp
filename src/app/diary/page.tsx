@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, ChangeEvent } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Plus, Search, ChevronRight, BookOpenText, AreaChart, Pencil, Trash2, MoreVertical, Folder as FolderIcon, X } from "lucide-react"
+import { Plus, Search, BookOpenText, AreaChart, Pencil, Trash2, MoreVertical, Folder as FolderIcon } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -18,7 +18,7 @@ import {
 import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
@@ -83,6 +83,7 @@ export default function DiaryPage() {
 
   useEffect(() => {
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = () => {
@@ -120,7 +121,7 @@ export default function DiaryPage() {
   const filteredEntries = entries.filter((entry) => {
       const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             entry.content.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFolder = !selectedFolder ? !entry.folderId || entry.folderId === 'uncategorized' : entry.folderId === selectedFolder.id;
+      const matchesFolder = !selectedFolder ? !entry.folderId : entry.folderId === selectedFolder.id;
       return matchesSearch && matchesFolder;
     }
   );
@@ -158,6 +159,9 @@ export default function DiaryPage() {
     setNewJournalName("");
     setFolderToEdit(null);
     setIsRenameJournalDialogOpen(false);
+    if(selectedFolder?.id === folderToEdit.id){
+      setSelectedFolder(updatedFolders.find(f => f.id === folderToEdit.id) || null)
+    }
     loadData(); // Reload to reflect changes
   }
 
@@ -201,7 +205,7 @@ export default function DiaryPage() {
       const newImageUrl = URL.createObjectURL(file);
       const updatedFolders = folders.map(f => {
         if (f.id === folderToEdit.id) {
-          if (f.imageUrl.startsWith('blob:')) URL.revokeObjectURL(f.imageUrl);
+          if (f.imageUrl && f.imageUrl.startsWith('blob:')) URL.revokeObjectURL(f.imageUrl);
           return { ...f, imageUrl: newImageUrl, imageHint: 'custom cover' };
         }
         return f;
@@ -251,49 +255,43 @@ export default function DiaryPage() {
             </Dialog>
           </div>
           
-          {folders.length > 0 ? (
-            <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex w-max space-x-4 pb-4">
-                 <div onClick={() => setSelectedFolder(null)} className={cn("relative group cursor-pointer border-2 rounded-lg", !selectedFolder ? "border-primary" : "border-transparent")}>
-                    <Card className="w-40 shrink-0 overflow-hidden"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">All Entries</h3><p className="text-xs text-muted-foreground">{entries.filter(e => !e.folderId || e.folderId === 'uncategorized').length} Entries</p></div></Card>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <div className="flex w-max space-x-4 pb-4">
+                <div onClick={() => setSelectedFolder(null)} className={cn("group cursor-pointer rounded-lg border-2", !selectedFolder ? "border-primary" : "border-transparent")}>
+                  <Card className="w-40 shrink-0 overflow-hidden"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">Uncategorized</h3><p className="text-xs text-muted-foreground">{entries.filter(e => !e.folderId).length} Entries</p></div></Card>
                 </div>
-                {folders.map((folder) => (
-                  <div key={folder.id} onClick={() => setSelectedFolder(folder)} className={cn("relative group cursor-pointer border-2 rounded-lg", selectedFolder?.id === folder.id ? "border-primary" : "border-transparent")}>
-                     <Card className="w-40 shrink-0 overflow-hidden">
-                        <div className="relative h-24"><Image src={folder.imageUrl} data-ai-hint={folder.imageHint} alt={folder.name} layout="fill" objectFit="cover" className="transition-transform group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" /></div>
-                        <div className="p-3"><h3 className="font-semibold truncate">{folder.name}</h3><p className="text-xs text-muted-foreground">{folder.entryCount} Entries</p></div>
-                      </Card>
-                       <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="absolute top-1 right-1 bg-black/50 text-white rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity z-10"><MoreVertical className="h-4 w-4" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => { setFolderToEdit(folder); setNewJournalName(folder.name); setIsRenameJournalDialogOpen(true); }}><Pencil className="mr-2 h-4 w-4" />Rename</DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleEditCoverClick(folder)}><FolderIcon className="mr-2 h-4 w-4" />Change Cover</DropdownMenuItem>
-                                <AlertDialog>
-                                    <AlertDialogTrigger asChild><DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem></AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                        <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will delete the "{folder.name}" journal. Entries in this journal will not be deleted but will become uncategorized. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
-                                        <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteJournal(folder.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
-                                    </AlertDialogContent>
-                                </AlertDialog>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                  </div>
-                ))}
-              </div>
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-center text-muted-foreground bg-muted/20 p-8 rounded-lg">
-              <BookOpenText className="h-12 w-12 mb-4" /><h3 className="text-lg font-semibold">Your Journals Will Appear Here</h3><p className="text-sm mt-1">Create different journals for travel, thoughts, or anything you like!</p>
+              {folders.map((folder) => (
+                <div key={folder.id} onClick={() => setSelectedFolder(folder)} className={cn("relative group cursor-pointer rounded-lg border-2", selectedFolder?.id === folder.id ? "border-primary" : "border-transparent")}>
+                    <Card className="w-40 shrink-0 overflow-hidden">
+                      <div className="relative h-24"><Image src={folder.imageUrl} data-ai-hint={folder.imageHint} alt={folder.name} layout="fill" objectFit="cover" className="transition-transform group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" /></div>
+                      <div className="p-3"><h3 className="font-semibold truncate">{folder.name}</h3><p className="text-xs text-muted-foreground">{folder.entryCount} Entries</p></div>
+                    </Card>
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="absolute top-1 right-1 bg-black/50 text-white rounded-full h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity z-10"><MoreVertical className="h-4 w-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                              <DropdownMenuItem onSelect={() => { setFolderToEdit(folder); setNewJournalName(folder.name); setIsRenameJournalDialogOpen(true); }}><Pencil className="mr-2 h-4 w-4" />Rename</DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => handleEditCoverClick(folder)}><FolderIcon className="mr-2 h-4 w-4" />Change Cover</DropdownMenuItem>
+                              <AlertDialog>
+                                  <AlertDialogTrigger asChild><DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem></AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                      <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will delete the "{folder.name}" journal. Entries in this journal will not be deleted but will become uncategorized. This action cannot be undone.</AlertDialogDescription></AlertDialogHeader>
+                                      <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteJournal(folder.id)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
+                                  </AlertDialogContent>
+                              </AlertDialog>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                </div>
+              ))}
             </div>
-          )}
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </section>
 
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold">{selectedFolder ? selectedFolder.name : "Recent Entries"}</h2>
+            <h2 className="text-2xl font-semibold">{selectedFolder ? selectedFolder.name : "Uncategorized Entries"}</h2>
           </div>
           {filteredEntries.length > 0 ? (
             <div className="space-y-4">
@@ -304,7 +302,7 @@ export default function DiaryPage() {
                         <div className="flex-1 overflow-hidden">
                             <p className="text-xs text-muted-foreground">{format(new Date(entry.date), "MMMM d, yyyy")}</p>
                             <h3 className="font-semibold text-lg truncate">{entry.title}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: entry.content }} />
+                            <div className="text-sm text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: entry.content }} />
                         </div>
                         {entry.photos && entry.photos.length > 0 && (
                             <div className="relative h-20 w-20 shrink-0"><Image src={entry.photos[0].url} data-ai-hint="diary photo" alt="Diary photo" layout="fill" objectFit="cover" className="rounded-md" /></div>
@@ -323,9 +321,10 @@ export default function DiaryPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg">
-              <p className="font-semibold">{selectedFolder ? `No entries in "${selectedFolder.name}" yet.` : "You haven't written anything yet."}</p>
-              <p className="text-sm mt-1">Click the '+' button below to start your first entry.</p>
+            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
+                <BookOpenText className="mx-auto h-12 w-12 mb-4" />
+                <p className="font-semibold">{selectedFolder ? `No entries in "${selectedFolder.name}" yet.` : "You haven't written anything yet."}</p>
+                <p className="text-sm mt-1">Click the '+' button below to start a new entry.</p>
             </div>
           )}
         </section>
@@ -357,3 +356,5 @@ export default function DiaryPage() {
     </div>
   )
 }
+
+    

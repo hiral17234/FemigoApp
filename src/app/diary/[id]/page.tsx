@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Edit, Calendar, Image as ImageIcon, Mic, Trash2 } from 'lucide-react'
 import { format } from 'date-fns'
+import Image from "next/image"
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -16,7 +17,6 @@ import { moods, type DiaryEntry } from '@/lib/diary-data'
 import { cn } from '@/lib/utils'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
-import Image from 'next/image'
 
 function ViewDiaryEntrySkeleton() {
     return (
@@ -24,7 +24,10 @@ function ViewDiaryEntrySkeleton() {
         <header className="flex items-center justify-between mb-6">
             <Skeleton className="h-10 w-10 rounded-full" />
             <Skeleton className="h-6 w-32" />
-            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-10 rounded-full" />
+              <Skeleton className="h-10 w-10 rounded-full" />
+            </div>
         </header>
         <Card className="rounded-2xl shadow-lg border-black/10 dark:border-white/10 overflow-hidden">
             <CardHeader>
@@ -133,7 +136,7 @@ export default function ViewDiaryEntryPage() {
             <div className={cn("fixed inset-0 -z-10", moodDetails.bg)} />
             <div className="mx-auto max-w-2xl p-4 sm:p-6 md:p-8">
                 <header className="flex items-center justify-between mb-6">
-                    <Button variant="ghost" size="icon" onClick={() => router.push('/diary')}>
+                    <Button variant="ghost" size="icon" className="text-foreground/70 hover:text-foreground" onClick={() => router.push('/diary')}>
                         <ArrowLeft />
                     </Button>
                     <h1 className="text-2xl font-bold">Diary Entry</h1>
@@ -165,7 +168,7 @@ export default function ViewDiaryEntryPage() {
                     </div>
                 </header>
 
-                <Card className="rounded-2xl shadow-lg overflow-hidden transition-colors duration-500 bg-card/80 dark:bg-background/80 backdrop-blur-sm border-black/10 dark:border-white/10">
+                <Card className="rounded-2xl shadow-lg overflow-hidden transition-colors duration-500 bg-card border-border">
                     <CardHeader>
                         <div className="flex justify-between items-start">
                             <div>
@@ -193,7 +196,7 @@ export default function ViewDiaryEntryPage() {
                         >
                             <div
                                 className={cn(
-                                    "prose dark:prose-invert max-w-none prose-p:text-foreground prose-strong:text-foreground",
+                                    "prose dark:prose-invert max-w-none prose-p:my-0 prose-p:text-foreground prose-strong:text-foreground",
                                     entry.themeUrl ? 'bg-background/80 backdrop-blur-sm p-4' : 'p-4'
                                 )}
                                 dangerouslySetInnerHTML={{ __html: entry.content }}
@@ -230,3 +233,5 @@ export default function ViewDiaryEntryPage() {
         </main>
     )
 }
+
+    

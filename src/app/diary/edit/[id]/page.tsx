@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef, ChangeEvent } from "react"
@@ -136,8 +137,6 @@ export default function EditDiaryEntryPage() {
         })
     }
 
-    const moodDetails = selectedMood ? moods[selectedMood] : null;
-
     if (isLoading) {
         return (
             <div className="flex h-screen items-center justify-center bg-background">
@@ -161,7 +160,7 @@ export default function EditDiaryEntryPage() {
               </div>
             </header>
 
-            <Card className="rounded-2xl shadow-lg overflow-hidden transition-colors duration-500 bg-card/80 dark:bg-background/80 backdrop-blur-sm border-black/10 dark:border-white/10">
+            <Card className="rounded-2xl shadow-lg overflow-hidden bg-card border-border">
               <CardContent className="p-6 space-y-6">
                  <div className="flex justify-between items-center gap-4 flex-wrap">
                     <div className="text-center">
@@ -182,7 +181,7 @@ export default function EditDiaryEntryPage() {
                         </div>
                     </div>
                      <div className="w-full sm:w-auto">
-                        <Select value={selectedFolderId} onValueChange={setSelectedFolderId}>
+                        <Select value={selectedFolderId || 'uncategorized'} onValueChange={setSelectedFolderId}>
                             <SelectTrigger className="w-full sm:w-[180px]">
                                 <Folder className="mr-2 h-4 w-4" />
                                 <SelectValue placeholder="Select a journal" />
@@ -247,3 +246,5 @@ export default function EditDiaryEntryPage() {
         </main>
     )
 }
+
+    
