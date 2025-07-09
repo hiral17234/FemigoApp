@@ -9,45 +9,60 @@ export default function WelcomePage() {
   const router = useRouter()
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFE1E9] to-white p-6 text-center dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <div className="flex w-full max-w-sm flex-col items-center">
-        {/* Illustration */}
-        <Image
-          src="https://placehold.co/600x400.png"
-          data-ai-hint="women empowerment"
-          alt="Illustration of women supporting each other"
-          width={300}
-          height={200}
-          className="mb-8 rounded-lg"
-        />
+    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 z-0 h-full w-full object-cover opacity-30"
+        src="https://videos.pexels.com/video-files/5661979/5661979-hd_1920_1080_30fps.mp4"
+      />
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
-        {/* Header */}
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-white">
-          Femigo
-        </h1>
-        <p className="mt-2 text-lg text-gray-600 dark:text-gray-400">
-          Your trusted companion for safety and empowerment.
-        </p>
+      <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
+        <div className="w-full max-w-sm text-center">
+            {/* Logo */}
+            <Image
+              src="https://i.imgur.com/DFegeIc.jpeg"
+              data-ai-hint="logo"
+              alt="Femigo Logo"
+              width={120}
+              height={120}
+              className="mx-auto mb-6 rounded-full border-4 border-white/20 shadow-lg"
+            />
+            
+            {/* Header */}
+            <h1 className="text-5xl font-bold tracking-tight text-white">
+              Femigo
+            </h1>
+            <p className="mt-4 text-lg text-purple-200/80">
+              Your trusted companion for safety and empowerment.
+            </p>
 
-        <div className="mt-12 w-full space-y-4">
-          {/* Get Started Button */}
-          <button
-            onClick={() => router.push('/signup')}
-            className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#EC008C] to-[#FF55A5] py-4 text-lg font-semibold text-white shadow-lg transition-transform hover:scale-105"
-          >
-            Get Started
-            <ArrowRight className="h-5 w-5" />
-          </button>
+            {/* Action Buttons */}
+            <div className="mt-12 w-full space-y-4">
+              <button
+                onClick={() => router.push('/signup')}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 py-4 text-lg font-semibold text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-pink-500/50 focus:outline-none"
+              >
+                Get Started
+                <ArrowRight className="h-5 w-5" />
+              </button>
 
-          {/* Existing User Link */}
-          <Link
-            href="/login"
-            className="inline-block text-sm text-gray-600 hover:underline dark:text-gray-400"
-          >
-            I already have an account
-          </Link>
+              <p className="pt-4 text-sm text-purple-200/70">
+                Already have an account?{" "}
+                <Link
+                  href="/login"
+                  className="font-semibold text-pink-400 hover:underline"
+                >
+                  Log in
+                </Link>
+              </p>
+            </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </div>
   )
 }
