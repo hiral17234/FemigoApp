@@ -121,6 +121,8 @@ export default function NewDiaryEntryPage() {
 
             <Textarea
               placeholder="What's on your mind today?"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               className="min-h-[250px] w-full bg-transparent text-base border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0"
             />
 
