@@ -69,47 +69,48 @@ export default function OnboardingPasswordPage() {
   const password = form.watch("password")
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firebase.auth || !firebase.db) return; // Should not happen if firebase.error is null
+    if (!firebase.auth || !firebase.db) {
+        toast({ variant: "destructive", title: "Firebase Not Initialized", description: "Please check your configuration." });
+        return;
+    }
 
-    setIsSubmitting(true)
-    
+    setIsSubmitting(true);
+    let user;
+
     try {
-      // Retrieve all user data from localStorage
-      const email = localStorage.getItem("userEmail")
-      const name = localStorage.getItem("userName")
-      const country = localStorage.getItem("userCountry")
-      const onboardingDetailsJSON = localStorage.getItem("onboardingDetails")
+      toast({ title: "Step 1/3: Creating your account..." });
+      console.log("Attempting to retrieve data from localStorage...");
+      const email = localStorage.getItem("userEmail");
+      const name = localStorage.getItem("userName");
+      const country = localStorage.getItem("userCountry");
+      const onboardingDetailsJSON = localStorage.getItem("onboardingDetails");
 
       if (!email || !name || !country || !onboardingDetailsJSON) {
-        throw new Error("Missing user data from previous steps. Please start over.")
+        throw new Error("Missing user data from previous steps. Please start over.");
       }
+      console.log("LocalStorage data retrieved successfully.");
       
-      const onboardingDetails = JSON.parse(onboardingDetailsJSON)
+      const onboardingDetails = JSON.parse(onboardingDetailsJSON);
 
-      // 1. Create user with Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(firebase.auth, email, values.password)
-      const user = userCredential.user
+      const userCredential = await createUserWithEmailAndPassword(firebase.auth, email, values.password);
+      user = userCredential.user;
+      console.log("Firebase user created successfully:", user.uid);
 
-      // 2. Update auth profile with name
-      const displayName = onboardingDetails.nickname || name
-      await updateProfile(user, { displayName })
+      toast({ title: "Step 2/3: Setting up your profile..." });
+      const displayName = onboardingDetails.nickname || name;
+      await updateProfile(user, { displayName });
+      console.log("Firebase profile updated successfully.");
 
-      // 3. Create user document in Firestore
-      const userDocRef = doc(firebase.db, "users", user.uid)
-      
-      const city = onboardingDetails.city === "Other" 
-        ? (onboardingDetails.otherCity || "")
-        : onboardingDetails.city;
-
-      const altPhone = (onboardingDetails.altCountryCode && onboardingDetails.altPhone)
-        ? `+${onboardingDetails.altCountryCode}${onboardingDetails.altPhone}`
-        : "";
+      toast({ title: "Step 3/3: Saving your details..." });
+      const userDocRef = doc(firebase.db, "users", user.uid);
+      const city = onboardingDetails.city === "Other" ? (onboardingDetails.otherCity || "") : onboardingDetails.city;
+      const altPhone = (onboardingDetails.altCountryCode && onboardingDetails.altPhone) ? `+${onboardingDetails.altCountryCode}${onboardingDetails.altPhone}` : "";
 
       await setDoc(userDocRef, {
         uid: user.uid,
         email: user.email,
-        name: name, // Original full name from step 1
-        displayName: displayName, // Use nickname if provided, otherwise the full name
+        name: name,
+        displayName: displayName,
         country: country,
         age: onboardingDetails.age,
         address1: onboardingDetails.address1,
@@ -118,46 +119,72 @@ export default function OnboardingPasswordPage() {
         state: onboardingDetails.state,
         city: city,
         altPhone: altPhone,
-        trustedContacts: [], // Initialize trusted contacts
+        trustedContacts: [],
         createdAt: new Date().toISOString(),
-      })
-
-      // 4. Clear all temporary localStorage items
-      localStorage.removeItem("userEmail")
-      localStorage.removeItem("userName")
-      localStorage.removeItem("userCountry")
-      localStorage.removeItem("onboardingDetails")
-      localStorage.removeItem("userLivePhoto")
-      localStorage.removeItem("aadhaarImage")
-      localStorage.removeItem("userPhone")
-      localStorage.removeItem("femigo-location-planner")
-
+      });
+      console.log("Firestore document created successfully.");
 
       toast({
         title: "Account Created & Secured!",
         description: "Your account is ready. Please log in to continue.",
         className: "bg-green-500 text-white",
-      })
+        duration: 5000,
+      });
 
-      router.push("/login")
+      console.log("Cleaning up localStorage...");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userName");
+      localStorage.removeItem("userCountry");
+      localStorage.removeItem("onboardingDetails");
+      localStorage.removeItem("userLivePhoto");
+      localStorage.removeItem("aadhaarImage");
+      localStorage.removeItem("userPhone");
+      localStorage.removeItem("femigo-location-planner");
+      
+      console.log("Redirecting to login page...");
+      router.push("/login");
 
     } catch (error: any) {
-      console.error("Signup Error:", error)
-      let errorMessage = "An unknown error occurred during signup."
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email is already in use. Please use a different email or log in."
-      } else if (error instanceof Error && error.message.includes("Missing user data")) {
-        errorMessage = error.message
+      console.error("SIGNUP FAILED:", error);
+      let errorMessage = "An unknown error occurred during signup.";
+      let errorTitle = "Signup Failed";
+
+      if (error.code) {
+        switch (error.code) {
+          case 'auth/email-already-in-use':
+            errorMessage = "This email is already in use. Please use a different email or log in.";
+            break;
+          case 'auth/weak-password':
+            errorMessage = "The password is too weak. Please choose a stronger password.";
+            break;
+          case 'auth/operation-not-allowed':
+            errorTitle = "Configuration Error";
+            errorMessage = "Email/Password sign-in is not enabled in your Firebase project. Please enable it in the Firebase console under Authentication > Sign-in method.";
+            break;
+          case 'permission-denied':
+            errorTitle = "Database Error";
+            errorMessage = "Could not save user data. Please check your Firestore security rules to allow writes for authenticated users.";
+            break;
+          default:
+            errorMessage = `An unexpected error occurred. Code: ${error.code}`;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+
       toast({
         variant: "destructive",
-        title: "Signup Failed",
+        title: errorTitle,
         description: errorMessage,
-      })
+        duration: 10000,
+      });
+
     } finally {
-      setIsSubmitting(false)
+      console.log("`finally` block executed. Resetting submitting state.");
+      setIsSubmitting(false);
     }
   }
+
 
   if (firebase.error) {
     return (
@@ -262,8 +289,14 @@ export default function OnboardingPasswordPage() {
                 )} />
                 
                 <Button type="submit" disabled={isSubmitting || !form.formState.isValid} className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 text-lg font-semibold text-white py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/50 hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 disabled:hover:shadow-none">
-                  {isSubmitting ? <Loader2 className="animate-spin" /> : "Finish Setup"}
-                  <ShieldCheck />
+                  {isSubmitting ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <>
+                      Finish Setup
+                      <ShieldCheck />
+                    </>
+                  )}
                 </Button>
               </form>
             </Form>
