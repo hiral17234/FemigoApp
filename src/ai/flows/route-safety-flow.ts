@@ -31,29 +31,6 @@ const RouteSafetyOutputSchema = z.object({
 });
 export type RouteSafetyOutput = z.infer<typeof RouteSafetyOutputSchema>;
 
-const routeSafetyPrompt = ai.definePrompt({
-    name: 'routeSafetyPrompt',
-    model: 'googleai/gemini-1.5-flash',
-    inputSchema: RouteSafetyInputSchema,
-    outputSchema: RouteSafetyOutputSchema,
-    prompt: `You are a route safety analyst for a women's safety app called Femigo.
-    Your task is to generate a realistic but simulated safety profile for a given driving, walking, or cycling route.
-    Do not state that the data is simulated. Present it as factual information.
-    Based on the provided route summary, distance, and duration, generate a plausible safety assessment.
-    Consider factors like urban vs. rural roads, time of travel implied by duration, etc. to make the data feel authentic.
-
-    Route Summary: {{summary}}
-    Distance: {{distance}}
-    Duration: {{duration}}
-
-    Generate the safety data in the required JSON format.
-    - For reviewsCount, pick a number that seems reasonable for a route of this type.
-    - For incidents, provide a short string like "0-2 incidents" or "1 minor accident reported".
-    - For crowdedness, use "Low", "Medium", or "High" and consider the context (e.g., a long highway route might have high traffic).
-    - For safetySummary, crimeSummary, policeInfo, and weatherInfo, provide a concise, plausible sentence for each.
-    `
-});
-
 const routeSafetyFlow = ai.defineFlow(
     {
       name: 'routeSafetyFlow',
@@ -61,11 +38,24 @@ const routeSafetyFlow = ai.defineFlow(
       outputSchema: RouteSafetyOutputSchema,
     },
     async (input) => {
-      const { output } = await routeSafetyPrompt(input);
-      if (!output) {
-        throw new Error("The AI failed to generate a valid safety profile.");
-      }
-      return output;
+      // DEMO MODE: Bypass live AI call and return hardcoded data.
+      console.log("Route Safety in DEMO MODE");
+      
+      const qualities: ('Good' | 'Moderate' | 'Poor')[] = ['Good', 'Moderate', 'Poor'];
+      const lightings: ('Well-lit' | 'Partially-lit' | 'Poorly-lit')[] = ['Well-lit', 'Partially-lit', 'Poorly-lit'];
+      const crowds: ('Low' | 'Medium' | 'High')[] = ['Low', 'Medium', 'High'];
+
+      return {
+        roadQuality: qualities[Math.floor(Math.random() * qualities.length)],
+        incidents: `${Math.floor(Math.random() * 3)} minor incidents`,
+        reviewsCount: Math.floor(Math.random() * 200) + 50,
+        lighting: lightings[Math.floor(Math.random() * lightings.length)],
+        crowdedness: crowds[Math.floor(Math.random() * crowds.length)],
+        safetySummary: 'A popular and generally safe route used by many commuters.',
+        crimeSummary: 'Crime rates are lower than the city average in this area.',
+        policeInfo: 'Regular police patrols are common along this route.',
+        weatherInfo: 'Current weather is clear with good visibility.',
+      };
     }
 );
 
