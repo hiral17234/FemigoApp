@@ -4,7 +4,7 @@
 import { useState, useRef, ChangeEvent } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Camera, ImagePlus, Send, X } from "lucide-react"
+import { ArrowLeft, Camera, ImagePlus, Send, X, Mic } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -51,6 +51,13 @@ export default function NewDiaryEntryPage() {
   const handleCaptionChange = (index: number, caption: string) => {
     setPhotos(prev => prev.map((photo, i) => i === index ? { ...photo, caption } : photo));
   }
+
+  const handleAddVoiceNote = () => {
+    toast({
+        title: "Feature Coming Soon!",
+        description: "Voice note recording will be available in a future update.",
+    })
+  }
   
   const handleSave = () => {
     if (!selectedMood) {
@@ -75,6 +82,7 @@ export default function NewDiaryEntryPage() {
       title: title.trim(),
       content: content.trim(),
       photos: photosToSave,
+      voiceNotes: [],
     };
 
     try {
@@ -149,9 +157,14 @@ export default function NewDiaryEntryPage() {
             />
 
             <div className="space-y-4">
-                <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                    <ImagePlus className="mr-2" /> Add Photos
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                        <ImagePlus className="mr-2" /> Add Photos
+                    </Button>
+                    <Button variant="outline" onClick={handleAddVoiceNote}>
+                        <Mic className="mr-2" /> Add Voice Note
+                    </Button>
+                </div>
                 <input 
                     type="file" 
                     ref={fileInputRef} 

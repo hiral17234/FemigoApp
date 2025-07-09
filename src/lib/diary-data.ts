@@ -14,6 +14,11 @@ export type DiaryPhoto = {
   caption: string;
 }
 
+export type VoiceNote = {
+  url: string;
+  name: string;
+}
+
 export type DiaryEntry = {
     id: string;
     date: string;
@@ -21,6 +26,7 @@ export type DiaryEntry = {
     title: string;
     content: string;
     photos: DiaryPhoto[];
+    voiceNotes?: VoiceNote[];
 };
 
 export type Folder = {

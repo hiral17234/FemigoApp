@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Plus, Search, ChevronRight, BookOpenText, AreaChart } from "lucide-react"
+import { Plus, Search, ChevronRight, BookOpenText, AreaChart, Pencil } from "lucide-react"
 import {
   Bar,
   BarChart,
@@ -203,30 +203,36 @@ export default function DiaryPage() {
             <ScrollArea className="w-full whitespace-nowrap">
               <div className="flex w-max space-x-4 pb-4">
                 {folders.map((folder) => (
-                  <Card
-                    key={folder.id}
-                    className="w-40 shrink-0 overflow-hidden group"
-                  >
-                    <Link href="#">
-                      <div className="relative h-24">
-                        <Image
-                          src={folder.imageUrl}
-                          data-ai-hint={folder.imageHint}
-                          alt={folder.name}
-                          layout="fill"
-                          objectFit="cover"
-                          className="transition-transform group-hover:scale-105"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      </div>
-                      <div className="p-3">
-                        <h3 className="font-semibold truncate">{folder.name}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {folder.entryCount} Entries
-                        </p>
-                      </div>
-                    </Link>
-                  </Card>
+                  <div key={folder.id} className="relative group">
+                     <Card className="w-40 shrink-0 overflow-hidden">
+                        <Link href="#">
+                          <div className="relative h-24">
+                            <Image
+                              src={folder.imageUrl}
+                              data-ai-hint={folder.imageHint}
+                              alt={folder.name}
+                              layout="fill"
+                              objectFit="cover"
+                              className="transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          </div>
+                          <div className="p-3">
+                            <h3 className="font-semibold truncate">{folder.name}</h3>
+                            <p className="text-xs text-muted-foreground">
+                              {folder.entryCount} Entries
+                            </p>
+                          </div>
+                        </Link>
+                      </Card>
+                      <button 
+                        onClick={() => toast({ title: "Feature coming soon!"})}
+                        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        aria-label="Edit Journal Cover"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                  </div>
                 ))}
               </div>
               <ScrollBar orientation="horizontal" />
@@ -255,33 +261,34 @@ export default function DiaryPage() {
           {filteredEntries.length > 0 ? (
             <div className="space-y-4">
               {filteredEntries.slice(0, 3).map((entry) => (
-                <Card
-                  key={entry.id}
-                  className="flex items-start gap-4 p-4 hover:bg-card/80 transition-colors"
-                >
-                  <div className="text-4xl">{moods[entry.mood].sticker}</div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">
-                      {format(new Date(entry.date), "MMMM d, yyyy")}
-                    </p>
-                    <h3 className="font-semibold text-lg">{entry.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {entry.content}
-                    </p>
-                  </div>
-                  {entry.photos && entry.photos.length > 0 && (
-                    <div className="relative h-20 w-20 shrink-0">
-                      <Image
-                        src={entry.photos[0].url}
-                        data-ai-hint="diary photo"
-                        alt="Diary photo"
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-md"
-                      />
+                <Link href={`/diary/${entry.id}`} key={entry.id}>
+                    <Card
+                    className="flex items-start gap-4 p-4 hover:bg-card/80 transition-colors cursor-pointer"
+                    >
+                    <div className="text-4xl">{moods[entry.mood].sticker}</div>
+                    <div className="flex-1">
+                        <p className="text-xs text-muted-foreground">
+                        {format(new Date(entry.date), "MMMM d, yyyy")}
+                        </p>
+                        <h3 className="font-semibold text-lg">{entry.title}</h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        {entry.content}
+                        </p>
                     </div>
-                  )}
-                </Card>
+                    {entry.photos && entry.photos.length > 0 && (
+                        <div className="relative h-20 w-20 shrink-0">
+                        <Image
+                            src={entry.photos[0].url}
+                            data-ai-hint="diary photo"
+                            alt="Diary photo"
+                            layout="fill"
+                            objectFit="cover"
+                            className="rounded-md"
+                        />
+                        </div>
+                    )}
+                    </Card>
+                </Link>
               ))}
             </div>
           ) : (
