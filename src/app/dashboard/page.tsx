@@ -80,9 +80,9 @@ function DailyThought() {
             </div>
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-[#4b0e9c]/10 p-6 shadow-inner-lg border border-border/10 relative">
-            <Quote className="absolute top-4 left-2 h-8 w-8 text-primary/30" />
-            <Quote className="absolute bottom-4 right-2 h-8 w-8 text-primary/30 rotate-180" />
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-[#4b0e9c]/10 p-8 shadow-inner-lg border border-border/10 relative">
+            <Quote className="absolute top-3 left-3 h-8 w-8 text-primary/30" />
+            <Quote className="absolute bottom-3 right-3 h-8 w-8 text-primary/30 rotate-180" />
             <p className="text-lg italic text-foreground/90">"{dailyQuote.quote}"</p>
             <p className="text-right text-sm text-muted-foreground font-medium mt-4">- {dailyQuote.author}</p>
         </div>
