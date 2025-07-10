@@ -67,23 +67,23 @@ function DailyThought() {
 
   if (!currentDateTime) {
     return (
-        <div className="w-full max-w-md mx-auto h-[230px] rounded-2xl bg-[#110D1F]/50 animate-pulse" />
+        <div className="w-full max-w-md mx-auto h-[230px] rounded-2xl bg-card/50 animate-pulse" />
     );
   }
   
   return (
     <div className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700 space-y-6 text-center">
-        <div className="inline-block rounded-full bg-gradient-to-r from-pink-500/30 to-purple-500/30 p-px shadow-lg shadow-pink-500/10">
-            <div className="rounded-full bg-[#110D1F] px-4 py-2 flex items-center justify-center gap-2 text-sm text-purple-300">
+        <div className="inline-block rounded-full bg-gradient-to-r from-primary/30 to-secondary/30 p-px shadow-lg shadow-primary/10">
+            <div className="rounded-full bg-card px-4 py-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <CalendarDays className="h-4 w-4" />
                 <p>{format(currentDateTime, "eeee, MMMM d, yyyy 'at' hh:mm:ss a")}</p>
             </div>
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-br from-pink-500/10 to-purple-500/10 p-6 shadow-inner-lg border border-white/10 relative">
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 p-6 shadow-inner-lg border border-border/10 relative">
             <Quote className="absolute top-4 left-2 h-8 w-8 text-primary/30" />
             <Quote className="absolute bottom-4 right-2 h-8 w-8 text-primary/30 rotate-180" />
-            <p className="text-lg italic text-white/90">"{dailyQuote.quote}"</p>
+            <p className="text-lg italic text-foreground/90">"{dailyQuote.quote}"</p>
             <p className="text-right text-sm text-muted-foreground font-medium mt-4">- {dailyQuote.author}</p>
         </div>
     </div>
@@ -167,8 +167,8 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight text-white">
-          Welcome, <span className="bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">{userName}!</span>
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">
+          Welcome, <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{userName}!</span>
         </h1>
         <p className="text-muted-foreground">
           Your safety is our priority.
@@ -178,10 +178,10 @@ export default function DashboardPage() {
       <DailyThought />
 
       <Link href="/emergency" className="w-full max-w-md mx-auto">
-        <div className="group rounded-3xl bg-gradient-to-r from-[#FF0080] to-[#7928CA] p-0.5 shadow-lg shadow-[#FF0080]/20 transition-all duration-300 hover:shadow-xl hover:shadow-[#FF0080]/30">
-          <div className="flex h-24 items-center justify-center gap-4 rounded-[22px] bg-[#0A0A0F]">
-            <Siren className="h-8 w-8 text-[#FF0080] transition-transform duration-300 group-hover:scale-110" />
-            <span className="text-2xl font-bold text-white">
+        <div className="group rounded-3xl bg-gradient-to-r from-primary to-secondary p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30">
+          <div className="flex h-24 items-center justify-center gap-4 rounded-[22px] bg-card">
+            <Siren className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
+            <span className="text-2xl font-bold text-foreground">
               Emergency
             </span>
           </div>
@@ -196,12 +196,12 @@ export default function DashboardPage() {
               key={feature.name}
               className="group flex flex-col items-center justify-center gap-2 text-center transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="rounded-full bg-gradient-to-br from-pink-500/30 to-purple-500/30 p-px transition-all duration-300 group-hover:from-pink-500/80 group-hover:to-purple-500/80">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#110D1F] transition-colors duration-300 group-hover:bg-[#1f1a30]">
+              <div className="rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 p-px transition-all duration-300 group-hover:from-primary/80 group-hover:to-secondary/80">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-card transition-colors duration-300 group-hover:bg-accent">
                     <feature.icon className="h-8 w-8 text-primary [filter:drop-shadow(0_0_4px_hsl(var(--primary)))]" />
                   </div>
               </div>
-              <span className="text-sm font-medium text-white">
+              <span className="text-sm font-medium text-foreground">
                 {feature.name}
               </span>
             </Link>

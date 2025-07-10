@@ -10,8 +10,6 @@ import {
   User,
   Siren,
   Map,
-  Camera,
-  FileText,
   BookHeart,
   Sparkles,
   Flower2,
@@ -110,6 +108,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
+  const { theme } = useTheme();
 
   const [user, setUser] = React.useState<FirebaseUser | null>(null);
   const [userName, setUserName] = React.useState<string | null>(null)
@@ -187,10 +186,10 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <Sidebar side="left" collapsible="offcanvas" className="border-r border-purple-900/50">
+      <Sidebar side="left" collapsible="offcanvas" className="border-r border-border">
         <SidebarHeader>
            <div className="flex items-center justify-between p-2">
-              <div className="flex items-center gap-1 text-2xl font-bold text-white">
+              <div className="flex items-center gap-1 text-2xl font-bold text-foreground">
                 Femigo
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
                     <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
@@ -242,27 +241,27 @@ export default function DashboardLayout({
       </Sidebar>
 
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-purple-900/50 bg-[#06010F]/80 px-4 backdrop-blur-sm sm:px-6">
+        <header className="sticky top-0 z-10 flex h-20 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur-sm sm:px-6">
           <div className="flex items-center gap-4">
-            <SidebarTrigger className="text-white hover:bg-sidebar-accent hover:text-sidebar-primary transition-colors duration-300" />
+            <SidebarTrigger className="text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300" />
             <div>
-              <h1 className="text-3xl font-bold text-white">Femigo</h1>
-              <p className="text-sm text-purple-300">Safety. Strength. Solidarity.</p>
+              <h1 className="text-3xl font-bold text-foreground">Femigo</h1>
+              <p className="text-sm text-muted-foreground">Safety. Strength. Solidarity.</p>
             </div>
           </div>
           {isLoadingUser ? (
              <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
             <div className="relative">
-                <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 opacity-75 blur"></div>
-                <Avatar className="relative h-10 w-10 border-2 border-white/20">
-                    <AvatarImage data-ai-hint="logo" src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg" alt="Femigo Logo" />
+                <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-primary to-primary/50 opacity-75 blur"></div>
+                <Avatar className="relative h-10 w-10 border-2 border-background">
+                    <AvatarImage data-ai-hint="logo" src={theme === 'light' ? 'https://i.ibb.co/hxw67qkn/Whats-App-Image-2025-07-01-at-15-37-58-9a9d376f.jpg' : 'https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg'} alt="Femigo Logo" />
                     <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
                 </Avatar>
             </div>
           )}
         </header>
-        <div className="flex-1 overflow-y-auto bg-[#06010F] text-white">
+        <div className="flex-1 overflow-y-auto bg-background text-foreground">
             {children}
         </div>
       </SidebarInset>

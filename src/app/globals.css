@@ -4,30 +4,34 @@
 
 @layer base {
   :root {
-    --background: 260 10% 8%; /* #1E1B1E Charcoal Black */
-    --foreground: 0 0% 100%; /* #FFFFFF White */
-    --card: 260 5% 15%; /* #2A262A */
-    --card-foreground: 0 0% 100%; /* #FFFFFF */
+    --background: 260 10% 8%; /* #131114 dark background */
+    --foreground: 0 0% 100%; /* White */
+    
+    --card: 260 5% 15%; /* Darker card */
+    --card-foreground: 0 0% 100%;
+
     --popover: 260 5% 15%;
     --popover-foreground: 0 0% 100%;
-    --primary: 326 100% 74%; /* #FF79C6 Blush Pink */
-    --primary-foreground: 326 100% 10%;
-    --secondary: 345 90% 90%; /* #FEC8D8 Soft Rose */
-    --secondary-foreground: 326 100% 10%;
-    --muted: 275 9% 75%; /* #C7B8C4 */
+
+    --primary: 326 100% 74%; /* Neon Pink */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 270 85% 65%; /* Neon Purple */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 275 9% 75%;
     --muted-foreground: 275 9% 55%;
-    --accent: 326 100% 74%;
-    --accent-foreground: 326 100% 10%;
+
+    --accent: 326 100% 74%; /* Neon Pink */
+    --accent-foreground: 0 0% 100%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
+
     --border: 260 5% 22%;
     --input: 260 5% 22%;
-    --ring: 326 100% 74%;
-    --chart-1: 326 100% 74%;
-    --chart-2: 345 90% 80%;
-    --chart-3: 15 85% 65%; /* Orange from sad mood */
-    --chart-4: 0 85% 65%; /* Red from angry mood */
-    --chart-5: 270 85% 65%; /* Violet from calm mood */
+    --ring: 326 100% 74%; /* Neon Pink */
+
     --radius: 0.75rem;
 
     --sidebar-background: 260 8% 10%;
@@ -39,41 +43,46 @@
     --sidebar-border: 260 5% 20%;
     --sidebar-ring: 326 100% 74%;
   }
-  .dark {
-    --background: 260 10% 8%; /* #1E1B1E Charcoal Black */
-    --foreground: 0 0% 100%; /* #FFFFFF White */
-    --card: 260 5% 15%; /* #2A262A */
-    --card-foreground: 0 0% 100%; /* #FFFFFF */
-    --popover: 260 5% 15%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 326 100% 74%; /* #FF79C6 Blush Pink */
-    --primary-foreground: 326 100% 10%;
-    --secondary: 345 90% 90%; /* #FEC8D8 Soft Rose */
-    --secondary-foreground: 326 100% 10%;
-    --muted: 275 9% 75%; /* #C7B8C4 */
-    --muted-foreground: 275 9% 55%;
-    --accent: 326 100% 74%;
-    --accent-foreground: 326 100% 10%;
+
+  .light {
+    --background: 140 52% 97%; /* #F5FDF7 Very light mint green */
+    --foreground: 120 40% 11%; /* #1B1B1B Almost black */
+    
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 120 40% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 120 40% 11%;
+
+    --primary: 122 49% 34%; /* #2E7D32 Primary green */
+    --primary-foreground: 0 0% 100%; /* White */
+    
+    --secondary: 122 39% 55%; /* #66BB6A Soft green highlight */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 152 14% 34%; /* #4B6355 Soft grey-green */
+    --muted-foreground: 152 14% 44%;
+
+    --accent: 141 53% 96%; /* #E9F7EF Light mint */
+    --accent-foreground: 123 57% 19%; /* #1E4620 Dark green heading */
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 260 5% 22%;
-    --input: 260 5% 22%;
-    --ring: 326 100% 74%;
-    --chart-1: 326 100% 74%;
-    --chart-2: 345 90% 80%;
-    --chart-3: 15 85% 65%; /* Orange from sad mood */
-    --chart-4: 0 85% 65%; /* Red from angry mood */
-    --chart-5: 270 85% 65%; /* Violet from calm mood */
+
+    --border: 141 53% 90%;
+    --input: 141 53% 90%;
+    --ring: 122 49% 34%; /* Primary green */
+
     --radius: 0.75rem;
 
-    --sidebar-background: 260 8% 10%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 326 100% 74%;
+    --sidebar-background: 141 53% 96%; /* #E9F7EF Light mint */
+    --sidebar-foreground: 123 57% 19%; /* Dark green heading */
+    --sidebar-primary: 122 49% 34%; /* Primary green */
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 5% 15%;
-    --sidebar-accent-foreground: 326 100% 74%;
-    --sidebar-border: 260 5% 20%;
-    --sidebar-ring: 326 100% 74%;
+    --sidebar-accent: 0 0% 100%; /* White */
+    --sidebar-accent-foreground: 122 49% 34%;
+    --sidebar-border: 141 53% 90%;
+    --sidebar-ring: 122 49% 34%;
   }
 
   * {
@@ -81,6 +90,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    transition-property: color, background-color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
   }
   .bg-happy-gradient { @apply bg-gradient-to-br from-pink-400/80 via-orange-300/80 to-yellow-300/80; }
   .bg-calm-gradient { @apply bg-gradient-to-br from-purple-400/80 via-indigo-400/80 to-blue-300/80; }
