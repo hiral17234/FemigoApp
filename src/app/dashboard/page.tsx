@@ -179,9 +179,9 @@ export default function DashboardPage() {
 
       <Link href="/emergency" className="w-full max-w-md mx-auto">
         <div className="group rounded-3xl bg-gradient-to-r from-primary to-secondary p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30">
-          <div className="flex h-24 items-center justify-center gap-4 rounded-[22px] bg-card">
-            <Siren className="h-8 w-8 text-primary transition-transform duration-300 group-hover:scale-110" />
-            <span className="text-2xl font-bold text-foreground">
+          <div className="flex h-20 items-center justify-center gap-6 rounded-[22px] bg-card px-8">
+            <Siren className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
+            <span className="text-3xl font-bold text-foreground">
               Emergency
             </span>
           </div>
