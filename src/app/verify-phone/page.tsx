@@ -75,18 +75,18 @@ export default function VerifyPhonePage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-4 text-white">
       <div className="w-full max-w-sm">
-        <Link href={backUrl} className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
+        <Link href={backUrl} className="mb-4 flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-primary">
             <ArrowLeft className="h-4 w-4" />
             Back
         </Link>
-        <Card className="w-full rounded-2xl p-6 shadow-xl">
+        <Card className="w-full rounded-2xl bg-gray-900/70 border border-purple-900/50 p-6 shadow-2xl backdrop-blur-lg">
           <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold tracking-tight">
+              <CardTitle className="text-3xl font-bold tracking-tight text-white">
                 Step 4: Phone Verification
               </CardTitle>
-              <CardDescription className="pt-2">
+              <CardDescription className="pt-2 text-gray-400">
                   Enter your phone number to receive a verification code.
               </CardDescription>
           </CardHeader>
@@ -107,7 +107,7 @@ export default function VerifyPhonePage() {
                            <Popover open={open} onOpenChange={setOpen}>
                             <PopoverTrigger asChild>
                               <FormControl>
-                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
+                                <Button variant="outline" role="combobox" className={cn("w-full justify-between bg-gray-800 border-gray-700", !field.value && "text-muted-foreground")}>
                                   {field.value ? `+${field.value}` : "Code"}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -115,7 +115,6 @@ export default function VerifyPhonePage() {
                             </PopoverTrigger>
                             <PopoverContent
                               className="w-[250px] p-0"
-                              onPointerDownOutside={(e) => e.preventDefault()}
                             >
                               <Command>
                                 <CommandInput placeholder="Search country..." />
@@ -162,6 +161,7 @@ export default function VerifyPhonePage() {
                                   placeholder="Enter number"
                                   type="tel"
                                   {...field}
+                                  className="bg-gray-800 border-gray-700"
                                   disabled={isSubmitting}
                               />
                           </FormControl>
@@ -178,7 +178,7 @@ export default function VerifyPhonePage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-xl bg-primary py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105"
+                  className="w-full rounded-xl bg-[#FF2DAF] hover:bg-[#ff2daf]/90 text-white py-3 text-lg font-semibold shadow-lg transition-transform duration-300 hover:scale-105"
                 >
                   {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                   Continue <ChevronRight className="h-5 w-5" />
