@@ -5,49 +5,52 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight } from "lucide-react"
-import { useTheme } from "next-themes"
 
 export default function WelcomePage() {
   const router = useRouter()
-  const { theme } = useTheme();
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4 text-foreground">
-      <div className="w-full max-w-sm rounded-2xl bg-card/80 p-8 text-center shadow-2xl backdrop-blur-lg">
-        <Image
-          src={theme === 'light' ? 'https://i.ibb.co/hxw67qkn/Whats-App-Image-2025-07-01-at-15-37-58-9a9d376f.jpg' : 'https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg'}
-          data-ai-hint="logo abstract"
-          alt="Femigo Logo"
-          width={120}
-          height={120}
-          className="mx-auto mb-6 rounded-full border-4 border-card shadow-lg"
-        />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#0C0C0C] p-4 text-white">
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 z-0 h-96 w-[150%] max-w-4xl rounded-full bg-purple-900/30 blur-3xl" />
+      
+      <div className="relative z-10 w-full max-w-sm animate-in fade-in zoom-in-95 duration-700">
+        <div className="rounded-2xl border border-white/10 bg-[#161616]/80 p-8 text-center shadow-2xl shadow-primary/10 backdrop-blur-lg">
+          <Image
+            src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg"
+            data-ai-hint="woman illustration"
+            alt="Femigo Logo"
+            width={120}
+            height={120}
+            className="mx-auto mb-6 rounded-full border-2 border-white/10 shadow-lg"
+            priority
+          />
 
-        <h1 className="text-5xl font-bold tracking-tight">
-          Femigo
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Your trusted companion for safety and empowerment.
-        </p>
-
-        <div className="mt-12 w-full space-y-4">
-          <button
-            onClick={() => router.push('/signup')}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 text-lg font-semibold text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105"
-          >
-            Get Started
-            <ArrowRight className="h-5 w-5" />
-          </button>
-
-          <p className="pt-4 text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-semibold text-primary hover:underline"
-            >
-              Log in
-            </Link>
+          <h1 className="text-5xl font-bold tracking-tight text-white">
+            Femigo
+          </h1>
+          <p className="mt-4 text-lg text-white/70">
+            Your trusted companion for safety and empowerment.
           </p>
+
+          <div className="mt-12 w-full space-y-4">
+            <button
+              onClick={() => router.push('/signup')}
+              className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#EC008C] to-[#BF55E6] py-4 text-lg font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              Get Started
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+            </button>
+
+            <p className="pt-4 text-sm text-white/50">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-primary/90 transition-colors hover:text-primary hover:underline"
+              >
+                Log in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </main>

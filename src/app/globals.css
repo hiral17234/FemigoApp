@@ -45,45 +45,45 @@
     --sidebar-ring: 326 100% 74%;
   }
 
-  .light {
-    --background: 140 52% 97%;
-    --foreground: 120 40% 11%;
+  .dark {
+    --background: 260 10% 8%;
+    --foreground: 0 0% 100%;
     
-    --card: 0 0% 100%;
-    --card-foreground: 120 40% 11%;
+    --card: 260 5% 15%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 120 40% 11%;
+    --popover: 260 5% 15%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 122 49% 34%;
+    --primary: 326 100% 74%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 122 39% 55%;
+    --secondary: 270 85% 65%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 152 14% 34%;
-    --muted-foreground: 152 14% 44%;
+    --muted: 275 9% 75%;
+    --muted-foreground: 275 9% 55%;
 
-    --accent: 141 53% 96%;
-    --accent-foreground: 123 57% 19%;
+    --accent: 326 100% 74%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 141 53% 90%;
-    --input: 141 53% 90%;
-    --ring: 122 49% 34%;
+    --border: 260 5% 22%;
+    --input: 260 5% 22%;
+    --ring: 326 100% 74%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 141 53% 96%;
-    --sidebar-foreground: 123 57% 19%;
-    --sidebar-primary: 122 49% 34%;
+    --sidebar-background: 260 8% 10%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 326 100% 74%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 100%;
-    --sidebar-accent-foreground: 122 49% 34%;
-    --sidebar-border: 141 53% 90%;
-    --sidebar-ring: 122 49% 34%;
+    --sidebar-accent: 260 5% 15%;
+    --sidebar-accent-foreground: 326 100% 74%;
+    --sidebar-border: 260 5% 20%;
+    --sidebar-ring: 326 100% 74%;
   }
 
   * {
@@ -95,9 +95,4 @@
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
   }
-  .bg-happy-gradient { @apply bg-gradient-to-br from-pink-400/80 via-orange-300/80 to-yellow-300/80; }
-  .bg-calm-gradient { @apply bg-gradient-to-br from-purple-400/80 via-indigo-400/80 to-blue-300/80; }
-  .bg-sad-gradient { @apply bg-gradient-to-br from-slate-500/80 via-gray-600/80 to-zinc-700/80; }
-  .bg-angry-gradient { @apply bg-gradient-to-br from-red-500/80 via-rose-500/80 to-orange-400/80; }
-  .bg-love-gradient { @apply bg-gradient-to-br from-primary/80 via-rose-500/80 to-fuchsia-500/80; }
 }
