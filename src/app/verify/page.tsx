@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle, CheckCircle, UserCheck } from "lucide-react"
+import { ArrowLeft, Camera, Loader2, RefreshCcw, AlertTriangle, CheckCircle, UserCheck, CameraOff } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
@@ -123,6 +123,7 @@ export default function VerifyIdentityPage() {
                 title: "Verification Failed",
                 description: result.reason,
             });
+            retakePhoto();
         }
     } catch (error) {
         console.error('Verification failed:', error);
@@ -141,8 +142,8 @@ export default function VerifyIdentityPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
-      <div className="w-full max-w-lg">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-4">
+      <div className="w-full max-w-md">
         <Link
           href="/signup"
           className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -150,14 +151,15 @@ export default function VerifyIdentityPage() {
           <ArrowLeft className="h-4 w-4" />
           Back to Account Details
         </Link>
-        <Card className="w-full rounded-2xl p-6 shadow-xl">
+        <Card className="w-full rounded-2xl bg-gray-900/70 border border-purple-900/50 p-6 shadow-2xl backdrop-blur-lg">
           <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2 text-3xl font-bold tracking-tight text-foreground">
-              <UserCheck /> Step 2: Live Photo & Gender Check
-            </CardTitle>
-            <CardDescription className="mx-auto max-w-sm pt-2">
+            <div className="flex items-center justify-center gap-4 text-3xl font-bold tracking-tight text-white">
+                <UserCheck className="h-8 w-8 text-primary" />
+                <CardTitle className="text-3xl">Step 2: Live Photo & Gender Check</CardTitle>
+            </div>
+            <CardDescription className="mx-auto max-w-sm pt-2 text-gray-400">
                Please take a clear, live photo. We'll verify you're female to ensure our community is safe and authentic.
-               <p className="font-semibold text-destructive mt-2">Please remove glasses for the photo.</p>
+               <p className="font-semibold text-red-500 mt-2">Please remove glasses for the photo.</p>
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -166,7 +168,7 @@ export default function VerifyIdentityPage() {
                   <AlertTriangle className="h-4 w-4" />
                   <AlertTitle>Configuration Error</AlertTitle>
                   <AlertDescription>
-                    The Google AI API key is missing. Please add <code className="font-mono bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_AI_KEY</code> to your <code className="font-mono bg-muted px-1 py-0.5 rounded">.env</code> file. The AI verification will not work without it.
+                    The Google AI API key is missing. The AI verification will not work without it.
                   </AlertDescription>
                 </Alert>
               )}
@@ -188,11 +190,10 @@ export default function VerifyIdentityPage() {
                           playsInline
                       />
                       {hasCameraPermission === false && (
-                          <Alert variant="destructive" className="absolute m-4 max-w-sm">
-                              <AlertTriangle className="h-4 w-4" />
-                              <AlertTitle>Camera Access Denied</AlertTitle>
-                              <AlertDescription>Please enable camera permissions in your browser settings and refresh the page.</AlertDescription>
-                          </Alert>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/80 text-white">
+                            <CameraOff className="h-16 w-16 text-muted-foreground" />
+                            <p className="font-semibold">Camera Access Denied</p>
+                          </div>
                       )}
                       {hasCameraPermission === null && !capturedImage && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50 text-white/80">
@@ -209,9 +210,9 @@ export default function VerifyIdentityPage() {
               <Button
                   onClick={capturePhoto}
                   disabled={hasCameraPermission !== true || isProcessing}
-                  className="w-full"
+                  className="w-full h-12 text-lg bg-[#FF2DAF] hover:bg-[#ff2daf]/90 text-white rounded-lg"
                 >
-                  <Camera className="mr-2 h-4 w-4" />
+                  <Camera className="mr-2 h-5 w-5" />
                   Capture Photo
                 </Button>
             ) : (
@@ -227,7 +228,7 @@ export default function VerifyIdentityPage() {
                 <Button
                   onClick={handleContinue}
                   disabled={isProcessing || apiKeyMissing}
-                  className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-primary-foreground shadow-lg transition-transform hover:scale-105"
+                  className="bg-[#FF2DAF] hover:bg-[#ff2daf]/90 text-white shadow-lg"
                 >
                   {isProcessing && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -243,3 +244,4 @@ export default function VerifyIdentityPage() {
     </main>
   )
 }
+ 
