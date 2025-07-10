@@ -31,7 +31,8 @@ import { countries } from "@/lib/countries"
 import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  firstName: z.string().min(2, { message: "First name must be at least 2 characters." }),
+  lastName: z.string().min(2, { message: "Last name must be at least 2 characters." }),
   country: z.string({ required_error: "Please select a country." }),
 })
 
@@ -44,7 +45,8 @@ export default function SignupPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      firstName: "",
+      lastName: "",
     },
   })
 
@@ -54,7 +56,7 @@ export default function SignupPage() {
     // Simulate API call before redirecting
     setTimeout(() => {
       if (typeof window !== "undefined") {
-        localStorage.setItem("userName", values.name)
+        localStorage.setItem("userName", `${values.firstName} ${values.lastName}`)
         localStorage.setItem("userCountry", values.country)
       }
       toast({
@@ -89,22 +91,40 @@ export default function SignupPage() {
             <CardContent>
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Name</FormLabel>
-                        <FormControl>
-                        <div className="relative">
-                            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input placeholder="Your Name" {...field} className="pl-10 bg-gray-900/70 border-gray-700" disabled={isSubmitting} />
-                        </div>
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                    )}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                          <div className="relative">
+                              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Input placeholder="Your First Name" {...field} className="pl-10 bg-gray-900/70 border-gray-700" disabled={isSubmitting} />
+                          </div>
+                          </FormControl>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                  <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                      <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                          <div className="relative">
+                              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Input placeholder="Your Last Name" {...field} className="pl-10 bg-gray-900/70 border-gray-700" disabled={isSubmitting} />
+                          </div>
+                          </FormControl>
+                          <FormMessage />
+                      </FormItem>
+                      )}
+                  />
+                </div>
                 <FormField
                     control={form.control}
                     name="country"
