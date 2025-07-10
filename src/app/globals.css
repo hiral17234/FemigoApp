@@ -1,28 +1,29 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 260 10% 8%; /* #131114 dark background */
-    --foreground: 0 0% 100%; /* White */
+    --background: 260 10% 8%;
+    --foreground: 0 0% 100%;
     
-    --card: 260 5% 15%; /* Darker card */
+    --card: 260 5% 15%;
     --card-foreground: 0 0% 100%;
 
     --popover: 260 5% 15%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 326 100% 74%; /* Neon Pink */
+    --primary: 326 100% 74%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 270 85% 65%; /* Neon Purple */
+    --secondary: 270 85% 65%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 275 9% 75%;
     --muted-foreground: 275 9% 55%;
 
-    --accent: 326 100% 74%; /* Neon Pink */
+    --accent: 326 100% 74%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -30,7 +31,7 @@
 
     --border: 260 5% 22%;
     --input: 260 5% 22%;
-    --ring: 326 100% 74%; /* Neon Pink */
+    --ring: 326 100% 74%;
 
     --radius: 0.75rem;
 
@@ -45,41 +46,41 @@
   }
 
   .light {
-    --background: 140 52% 97%; /* #F5FDF7 Very light mint green */
-    --foreground: 120 40% 11%; /* #1B1B1B Almost black */
+    --background: 140 52% 97%;
+    --foreground: 120 40% 11%;
     
-    --card: 0 0% 100%; /* White */
+    --card: 0 0% 100%;
     --card-foreground: 120 40% 11%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 120 40% 11%;
 
-    --primary: 122 49% 34%; /* #2E7D32 Primary green */
-    --primary-foreground: 0 0% 100%; /* White */
+    --primary: 122 49% 34%;
+    --primary-foreground: 0 0% 100%;
     
-    --secondary: 122 39% 55%; /* #66BB6A Soft green highlight */
+    --secondary: 122 39% 55%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 152 14% 34%; /* #4B6355 Soft grey-green */
+    --muted: 152 14% 34%;
     --muted-foreground: 152 14% 44%;
 
-    --accent: 141 53% 96%; /* #E9F7EF Light mint */
-    --accent-foreground: 123 57% 19%; /* #1E4620 Dark green heading */
+    --accent: 141 53% 96%;
+    --accent-foreground: 123 57% 19%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 141 53% 90%;
     --input: 141 53% 90%;
-    --ring: 122 49% 34%; /* Primary green */
+    --ring: 122 49% 34%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 141 53% 96%; /* #E9F7EF Light mint */
-    --sidebar-foreground: 123 57% 19%; /* Dark green heading */
-    --sidebar-primary: 122 49% 34%; /* Primary green */
+    --sidebar-background: 141 53% 96%;
+    --sidebar-foreground: 123 57% 19%;
+    --sidebar-primary: 122 49% 34%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 100%; /* White */
+    --sidebar-accent: 0 0% 100%;
     --sidebar-accent-foreground: 122 49% 34%;
     --sidebar-border: 141 53% 90%;
     --sidebar-ring: 122 49% 34%;
