@@ -105,20 +105,6 @@ export default function DiaryPage() {
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const updateChartData = (currentEntries: DiaryEntry[]) => {
-      if (currentEntries.length > 0) {
-        const recentEntries = [...currentEntries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7).reverse();
-        const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
-        const generatedChartData = recentEntries.map((entry) => ({
-          name: new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-          mood: moodMap[entry.mood as keyof typeof moodMap] || 3,
-        }));
-        setChartData(generatedChartData);
-      } else {
-        setChartData([]);
-      }
-  }
-
   useEffect(() => {
     setIsLoading(true);
     let storedFolders = getFromStorage<Folder[]>('diaryFolders', []);
@@ -142,7 +128,6 @@ export default function DiaryPage() {
 
     setFolders(storedFolders);
     setEntries(storedEntries);
-    updateChartData(storedEntries);
     setIsLoading(false);
   }, []);
 
@@ -150,10 +135,25 @@ export default function DiaryPage() {
   const filteredEntries = entries.filter((entry) => {
       const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             (entry.content || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFolder = !selectedFolder ? !entry.folderId : entry.folderId === selectedFolder.id;
+      const matchesFolder = !selectedFolder ? !entry.folderId || entry.folderId === '' : entry.folderId === selectedFolder.id;
       return matchesSearch && matchesFolder;
     }
   );
+
+  useEffect(() => {
+    if (filteredEntries.length > 0) {
+      const recentEntries = [...filteredEntries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7).reverse();
+      const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
+      const generatedChartData = recentEntries.map((entry) => ({
+        name: new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        mood: moodMap[entry.mood as keyof typeof moodMap] || 3,
+      }));
+      setChartData(generatedChartData);
+    } else {
+      setChartData([]);
+    }
+  }, [filteredEntries]);
+
 
   const handleCreateJournal = () => {
     if (newJournalName.trim().length < 3) {
@@ -215,7 +215,6 @@ export default function DiaryPage() {
     const updatedEntries = entries.filter(entry => entry.id !== entryId);
     setEntries(updatedEntries);
     saveToStorage('diaryEntries', updatedEntries);
-    updateChartData(updatedEntries);
     toast({ title: "Entry Deleted" });
   }
   
@@ -245,12 +244,6 @@ export default function DiaryPage() {
     reader.readAsDataURL(file);
     if(fileInputRef.current) fileInputRef.current.value = "";
   }
-
-  useEffect(() => {
-    updateChartData(filteredEntries);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedFolder, searchTerm]);
-
 
   if (isLoading) {
     return (
