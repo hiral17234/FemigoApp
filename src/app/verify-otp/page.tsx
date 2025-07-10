@@ -157,6 +157,7 @@ export default function VerifyOtpPage() {
     setTimeout(() => {
         if (data.pin === otp) {
             toast({
+                variant: "success",
                 title: "Phone Verified! ✅",
                 description: "Next, let's verify your email.",
             });

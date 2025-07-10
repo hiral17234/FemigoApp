@@ -66,6 +66,7 @@ export default function VerifyPhonePage() {
         localStorage.setItem("userPhone", phoneNumber);
       }
       toast({
+        variant: "success",
         title: "OTP Sent!",
         description: `We've sent a verification code to ${phoneNumber}.`,
       });
@@ -115,6 +116,7 @@ export default function VerifyPhonePage() {
                             </PopoverTrigger>
                             <PopoverContent
                               className="w-[250px] p-0"
+                              onPointerDownOutside={(e) => e.preventDefault()}
                             >
                               <Command>
                                 <CommandInput placeholder="Search country..." />

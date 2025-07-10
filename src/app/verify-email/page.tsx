@@ -48,6 +48,7 @@ export default function VerifyEmailPage() {
         localStorage.setItem("userEmail", values.email.trim())
       }
       toast({
+        variant: "success",
         title: "OTP Sent!",
         description: `We've sent a verification code to ${values.email}.`,
       });
