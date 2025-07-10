@@ -43,86 +43,63 @@ export default function CongratulationsPage() {
     setVerifiedSteps(steps)
   }, [])
 
-  const drawHeart = (ctx: CanvasRenderingContext2D) => {
-    const x = 0, y = 0, size = 15;
-    ctx.fillStyle = "rgba(236, 0, 140, 0.7)";
-    ctx.beginPath();
-    const topCurveHeight = size * 0.3;
-    ctx.moveTo(x, y + topCurveHeight);
-    ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + topCurveHeight);
-    ctx.bezierCurveTo(x - size / 2, y + (size + topCurveHeight) / 2, x, y + (size + topCurveHeight) / 2 + size / 4, x, y + size);
-    ctx.bezierCurveTo(x, y + (size + topCurveHeight) / 2 + size / 4, x + size / 2, y + (size + topCurveHeight) / 2, x + size / 2, y + topCurveHeight);
-    ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + topCurveHeight);
-    ctx.closePath();
-    ctx.fill();
-  }
-
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#1D0C2C] p-4 text-white">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50" />
       {showConfetti && width > 0 && height > 0 && (
-        <>
-          <Confetti
-            width={width}
-            height={height}
-            recycle={true}
-            numberOfPieces={200}
-            gravity={0.1}
-          />
-          <Confetti
-            width={width}
-            height={height}
-            recycle={true}
-            numberOfPieces={50}
-            gravity={0.03}
-            drawShape={drawHeart}
-            initialVelocityY={-10}
-          />
-        </>
+        <Confetti
+          width={width}
+          height={height}
+          recycle={false}
+          numberOfPieces={400}
+          gravity={0.15}
+          colors={['#EC008C', '#BF55E6', '#FFD700', '#00C49F', '#0088FE', '#FF8042']}
+        />
       )}
 
-      <div className="absolute -left-20 -top-20 z-0 h-80 w-80 rounded-full bg-primary/20 blur-3xl dark:bg-primary/30" />
-      <div className="absolute -right-20 -bottom-20 z-0 h-80 w-80 rounded-full bg-rose-500/20 blur-3xl dark:bg-rose-500/30" />
-
-      <Card className="z-10 w-full max-w-lg animate-in fade-in zoom-in-90 duration-700 rounded-2xl border border-primary/30 bg-card p-6 text-center shadow-2xl shadow-primary/30">
-        <CardHeader>
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-pink-400 to-rose-400 text-white shadow-lg">
-            <PartyPopper size={40} />
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mt-4 bg-gradient-to-r from-pink-500 to-rose-400 bg-clip-text text-transparent">
-            Congratulations!
-          </h1>
-          <p className="text-muted-foreground pt-2">
-            You've successfully completed the verification process. Welcome to the Femigo community!
-          </p>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          <div className="rounded-lg bg-muted/50 p-4 space-y-3">
-            {verifiedSteps.map((step, index) => (
-              <div
-                key={index}
-                className="flex items-center text-left gap-3 animate-in fade-in-0 slide-in-from-left-4 duration-500"
-                style={{ animationDelay: `${index * 150}ms` }}
-              >
-                <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-sm font-medium text-foreground">{step}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground px-4">
-              You're doing great! Just a few more details to complete your profile and set up your password.
+      <div className="relative z-10 w-full max-w-lg">
+        <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-primary to-secondary opacity-30 blur-2xl" />
+        <Card className="relative z-10 animate-in fade-in zoom-in-90 duration-700 rounded-2xl border border-white/10 bg-[#12051E] p-6 text-center shadow-2xl shadow-primary/20">
+            <CardHeader>
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FF2DAF] text-white shadow-lg shadow-[#FF2DAF]/30">
+                <PartyPopper size={40} />
+            </div>
+            <h1 className="mt-4 text-4xl font-bold tracking-tight text-[#FF2DAF]">
+                Congratulations!
+            </h1>
+            <p className="pt-2 text-white/70">
+                You've successfully completed the verification process. Welcome to the Femigo community!
             </p>
-            <Button
-              onClick={() => router.push("/onboarding/details")}
-              className="w-full rounded-xl bg-gradient-to-r from-[#EC008C] to-[#FF55A5] py-3 text-lg font-semibold text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-primary/40 focus:outline-none"
-            >
-              Let's Go!
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            </CardHeader>
+
+            <CardContent className="space-y-8">
+            <div className="mx-auto max-w-xs space-y-3">
+                {verifiedSteps.map((step, index) => (
+                <div
+                    key={index}
+                    className="flex items-center gap-3 animate-in fade-in-0 slide-in-from-left-4 duration-500"
+                    style={{ animationDelay: `${index * 150}ms` }}
+                >
+                    <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-green-500" />
+                    <span className="text-base font-medium text-white/90">{step}</span>
+                </div>
+                ))}
+            </div>
+
+            <div className="space-y-4">
+                <p className="text-sm text-white/60">
+                    You're doing great! Just a few more details to complete your profile and set up your password.
+                </p>
+                <Button
+                    onClick={() => router.push("/onboarding/details")}
+                    className="w-full rounded-lg bg-[#E50081] py-3 text-lg font-semibold text-primary-foreground shadow-lg shadow-[#E50081]/30 transition-transform duration-300 hover:scale-105 hover:shadow-[#E50081]/40 focus:outline-none"
+                >
+                    Let's Go!
+                </Button>
+            </div>
+            </CardContent>
+        </Card>
+      </div>
     </main>
   )
 }
