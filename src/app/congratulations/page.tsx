@@ -44,22 +44,27 @@ export default function CongratulationsPage() {
   }, [])
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#1D0C2C] p-4 text-white">
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/50" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#0C0C0C] p-4 text-white">
+      {/* --- Animated Blob Background --- */}
+      <div className="absolute top-0 left-0 h-full w-full opacity-50">
+        <div className="absolute -top-1/4 left-0 h-1/2 w-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#8F00FF]/80 to-transparent blur-3xl" />
+        <div className="absolute -bottom-1/4 right-0 h-1/2 w-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FF2DAF]/60 to-transparent blur-3xl" />
+      </div>
+
       {showConfetti && width > 0 && height > 0 && (
         <Confetti
           width={width}
           height={height}
-          recycle={false}
+          recycle={true}
           numberOfPieces={400}
-          gravity={0.15}
+          gravity={0.1}
           colors={['#EC008C', '#BF55E6', '#FFD700', '#00C49F', '#0088FE', '#FF8042']}
         />
       )}
 
       <div className="relative z-10 w-full max-w-lg">
-        <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-primary to-secondary opacity-30 blur-2xl" />
-        <Card className="relative z-10 animate-in fade-in zoom-in-90 duration-700 rounded-2xl border border-white/10 bg-[#12051E] p-6 text-center shadow-2xl shadow-primary/20">
+        <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-[#FF2DAF]/20 to-[#8F00FF]/20 opacity-50 blur-2xl" />
+        <Card className="relative z-10 animate-in fade-in zoom-in-90 duration-700 rounded-2xl border border-white/10 bg-[#12051E]/80 p-6 text-center shadow-2xl shadow-primary/20 backdrop-blur-md">
             <CardHeader>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#FF2DAF] text-white shadow-lg shadow-[#FF2DAF]/30">
                 <PartyPopper size={40} />
