@@ -116,7 +116,7 @@ export default function DiaryPage() {
             { id: 'journal1', name: 'My Reflections', ...placeholderFolders[0] },
             { id: 'journal2', name: 'Travel Notes', ...placeholderFolders[1] }
         ];
-        const initialEntries: DiaryEntry[] = placeholderEntries.map(e => ({...e, id: Date.now().toString() + Math.random() }));
+        const initialEntries: DiaryEntry[] = placeholderEntries.map(e => ({...e, id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}` }));
 
         saveToStorage('diaryFolders', initialFolders);
         saveToStorage('diaryEntries', initialEntries);
@@ -131,7 +131,6 @@ export default function DiaryPage() {
     setIsLoading(false);
   }, []);
 
-
   const filteredEntries = entries.filter((entry) => {
       const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             (entry.content || '').toLowerCase().includes(searchTerm.toLowerCase());
@@ -141,15 +140,8 @@ export default function DiaryPage() {
   );
 
   useEffect(() => {
-    const currentFilteredEntries = entries.filter((entry) => {
-        const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                              (entry.content || '').toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFolder = !selectedFolder ? !entry.folderId || entry.folderId === '' : entry.folderId === selectedFolder.id;
-        return matchesSearch && matchesFolder;
-    });
-
-    if (currentFilteredEntries.length > 0) {
-      const recentEntries = [...currentFilteredEntries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7).reverse();
+    if (filteredEntries.length > 0) {
+      const recentEntries = [...filteredEntries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7).reverse();
       const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
       const generatedChartData = recentEntries.map((entry) => ({
         name: new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -159,7 +151,7 @@ export default function DiaryPage() {
     } else {
       setChartData([]);
     }
-  }, [entries, searchTerm, selectedFolder]);
+  }, [entries, searchTerm, selectedFolder, filteredEntries]);
 
 
   const handleCreateJournal = () => {
