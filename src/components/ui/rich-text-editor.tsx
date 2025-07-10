@@ -69,7 +69,7 @@ export const RichTextEditor = ({ value, onChange, placeholder, selectedTheme, on
     >
         <div className={cn(
             "bg-transparent",
-            selectedTheme && 'bg-background/80 backdrop-blur-sm'
+            selectedTheme && 'bg-background/80' // Keep some overlay for text readability
         )}>
             <div className="flex flex-wrap items-center gap-1 border-b p-2">
                 <Button
@@ -157,7 +157,9 @@ export const RichTextEditor = ({ value, onChange, placeholder, selectedTheme, on
                 suppressContentEditableWarning={true}
                 className={cn(
                 "min-h-[250px] w-full p-4 text-base focus-visible:outline-none prose-p:my-0",
-                !value && "text-muted-foreground"
+                !value && "text-muted-foreground",
+                // Make text color white for better readability on dark themes
+                selectedTheme && 'prose-p:text-white prose-strong:text-white'
                 )}
                 data-placeholder={placeholder}
                 style={{ whiteSpace: 'pre-wrap' }}

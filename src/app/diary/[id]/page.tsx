@@ -208,7 +208,7 @@ export default function ViewDiaryEntryPage() {
                             <div
                                 className={cn(
                                     "prose dark:prose-invert max-w-none prose-p:my-0 prose-p:text-foreground prose-strong:text-foreground",
-                                    entry.themeUrl ? 'bg-background/80 backdrop-blur-sm p-4' : 'p-4'
+                                    entry.themeUrl ? 'bg-background/80 p-4 prose-p:text-white prose-strong:text-white' : 'p-4'
                                 )}
                                 dangerouslySetInnerHTML={{ __html: entry.content }}
                             />
