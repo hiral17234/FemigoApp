@@ -176,12 +176,12 @@ export default function VerifyAadhaarPage() {
                 {isProcessing && (
                     <div className="flex flex-col items-center justify-center gap-4 text-center">
                         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        <h3 className="text-lg font-semibold">Verifying your Aadhaar...</h3>
-                        <p className="text-sm text-muted-foreground">This may take a moment. Please don't close the page.</p>
-                        <div className="w-full space-y-2">
-                            <Skeleton className="h-4 w-3/4" />
-                            <Skeleton className="h-4 w-1/2" />
-                            <Skeleton className="h-4 w-2/3" />
+                        <h3 className="text-lg font-semibold text-white">Verifying your Aadhaar...</h3>
+                        <p className="text-sm text-gray-400">This may take a moment. Please don't close the page.</p>
+                        <div className="w-full space-y-2 pt-4">
+                            <Skeleton className="h-4 w-3/4 bg-gray-700" />
+                            <Skeleton className="h-4 w-1/2 bg-gray-700" />
+                            <Skeleton className="h-4 w-2/3 bg-gray-700" />
                         </div>
                     </div>
                 )}
@@ -193,33 +193,33 @@ export default function VerifyAadhaarPage() {
                           <h3>Verification Successful</h3>
                         </div>
 
-                        <div className="w-full space-y-3 rounded-lg border bg-background p-4 text-left">
+                        <div className="w-full space-y-3 rounded-lg border border-purple-900/50 bg-gray-900/50 p-4 text-left">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Name Matched</span>
+                                <span className="text-sm text-gray-400">Name Matched</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-semibold">{verificationResult.extractedName}</span>
+                                    <span className="font-semibold text-white">{verificationResult.extractedName}</span>
                                     <CheckCircle className="h-5 w-5 text-green-500" />
                                 </div>
                             </div>
-                            <Separator />
+                            <Separator className="bg-purple-900/50" />
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Gender Verified</span>
+                                <span className="text-sm text-gray-400">Gender Verified</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-semibold">Female</span>
+                                    <span className="font-semibold text-white">Female</span>
                                     <CheckCircle className="h-5 w-5 text-green-500" />
                                 </div>
                             </div>
-                            <Separator />
+                            <Separator className="bg-purple-900/50" />
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Aadhaar Number Valid</span>
+                                <span className="text-sm text-gray-400">Aadhaar Number Valid</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="font-mono font-semibold tracking-wider">{verificationResult.extractedAadhaarNumber ? `**** **** ${verificationResult.extractedAadhaarNumber.slice(-4)}` : 'N/A'}</span>
+                                    <span className="font-mono font-semibold tracking-wider text-white">{verificationResult.extractedAadhaarNumber ? `**** **** ${verificationResult.extractedAadhaarNumber.slice(-4)}` : 'N/A'}</span>
                                     <CheckCircle className="h-5 w-5 text-green-500" />
                                 </div>
                             </div>
                         </div>
 
-                        <Button onClick={() => router.push('/verify-phone')} className="w-full">
+                        <Button onClick={() => router.push('/verify-phone')} className="w-full h-12 text-lg bg-[#FF2DAF] hover:bg-[#ff2daf]/90 text-white rounded-lg">
                             Continue to Next Step
                         </Button>
                          <Button onClick={resetVerification} className="w-full" variant="outline">
@@ -229,11 +229,11 @@ export default function VerifyAadhaarPage() {
                 )}
 
                 {verificationStatus === "failed" && verificationResult && (
-                    <div className="flex flex-col items-center justify-center gap-4 text-center text-destructive">
-                        <XCircle className="h-16 w-16" />
-                        <h3 className="text-2xl font-bold">Verification Failed</h3>
-                        <p className="max-w-sm">{verificationResult.reason}</p>
-                        <Button onClick={resetVerification} className="w-full" variant="outline">
+                     <div className="flex flex-col items-center justify-center gap-4 text-center p-4 rounded-lg bg-red-900/20 border border-red-500/50">
+                        <XCircle className="h-16 w-16 text-red-500" />
+                        <h3 className="text-2xl font-bold text-red-400">Verification Failed</h3>
+                        <p className="max-w-sm text-red-400/80">{verificationResult.reason}</p>
+                        <Button onClick={resetVerification} className="w-full bg-red-500/20 text-red-300 border-red-500/50 hover:bg-red-500/30" variant="outline">
                             Try Again
                         </Button>
                     </div>
@@ -245,9 +245,9 @@ export default function VerifyAadhaarPage() {
     // Default view: Tabs for camera or upload
     return (
         <Tabs value={captureMode} onValueChange={(value) => setCaptureMode(value as CaptureMode)} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="camera"><Camera className="mr-2 h-4 w-4" />Scan Card</TabsTrigger>
-                <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" />Upload File</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-gray-800">
+                <TabsTrigger value="camera" className="data-[state=active]:bg-gray-900 data-[state=active]:text-white"><Camera className="mr-2 h-4 w-4" />Scan Card</TabsTrigger>
+                <TabsTrigger value="upload" className="data-[state=active]:bg-gray-900 data-[state=active]:text-white"><Upload className="mr-2 h-4 w-4" />Upload File</TabsTrigger>
             </TabsList>
             <TabsContent value="camera" className="mt-4">
                 <div className="space-y-4">
@@ -270,16 +270,16 @@ export default function VerifyAadhaarPage() {
                             </Alert>
                         )}
                     </div>
-                    <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || apiKeyMissing} className="w-full">
+                    <Button onClick={capturePhoto} disabled={hasCameraPermission !== true || apiKeyMissing} className="w-full h-12 text-lg bg-[#FF2DAF] hover:bg-[#ff2daf]/90 text-white rounded-lg">
                         <Camera className="mr-2 h-4 w-4" /> Capture & Verify
                     </Button>
                 </div>
             </TabsContent>
             <TabsContent value="upload" className="mt-4">
-                <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50" onClick={() => fileInputRef.current?.click()}>
-                    <Upload className="h-10 w-10 text-muted-foreground" />
-                    <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG (MAX. 5MB)</p>
+                <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-purple-900/50 rounded-lg cursor-pointer text-gray-400 hover:bg-gray-900/50 hover:border-primary" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="h-10 w-10 text-gray-500" />
+                    <p className="mt-2 text-sm">Click to upload or drag and drop</p>
+                    <p className="text-xs text-gray-600">PNG, JPG (MAX. 5MB)</p>
                 </div>
                 <Input id="aadhaar-upload" type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/jpeg,image/png" disabled={apiKeyMissing} />
             </TabsContent>
@@ -288,22 +288,22 @@ export default function VerifyAadhaarPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
-      <div className="w-full max-w-lg">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] p-4 text-white">
+      <div className="w-full max-w-md">
         <Link
           href="/verify"
-          className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+          className="mb-4 flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Live Photo
         </Link>
-        <Card className="w-full rounded-2xl bg-card p-8 shadow-xl">
+        <Card className="w-full rounded-2xl bg-gray-900/70 border border-purple-900/50 p-6 shadow-2xl backdrop-blur-lg">
           <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold tracking-tight">
+              <CardTitle className="text-3xl font-bold tracking-tight text-white">
               Step 3: Aadhaar Verification
               </CardTitle>
-              <CardDescription className="mx-auto max-w-sm pt-2">
-                As an additional step for users in India, please capture or upload a clear image of your Aadhaar card.
+              <CardDescription className="mx-auto max-w-sm pt-2 text-gray-400">
+                For users in India, please capture or upload a clear image of your Aadhaar card for identity verification.
               </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -323,3 +323,5 @@ export default function VerifyAadhaarPage() {
     </main>
   )
 }
+
+    
