@@ -87,19 +87,6 @@ function ThemeToggle() {
   )
 }
 
-function SidebarHeaderClose() {
-    const { state, toggleSidebar } = useSidebar();
-    
-    if (state === "collapsed") return null;
-
-    return (
-        <Button variant="ghost" size="icon" className="absolute right-2 top-3 h-7 w-7" onClick={toggleSidebar}>
-            <PanelLeftClose />
-            <span className="sr-only">Close sidebar</span>
-        </Button>
-    )
-}
-
 export default function DashboardLayout({
   children,
 }: {
@@ -195,7 +182,6 @@ export default function DashboardLayout({
                 </svg>
               </div>
            </div>
-           <SidebarHeaderClose/>
         </SidebarHeader>
         <SidebarContent className="p-2">
           <SidebarMenu>
