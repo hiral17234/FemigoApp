@@ -215,6 +215,7 @@ export default function DiaryPage() {
     const updatedEntries = entries.filter(entry => entry.id !== entryId);
     setEntries(updatedEntries);
     saveToStorage('diaryEntries', updatedEntries);
+    updateChartData(updatedEntries);
     toast({ title: "Entry Deleted" });
   }
   
@@ -246,13 +247,25 @@ export default function DiaryPage() {
   }
 
   useEffect(() => {
-    updateChartData(entries);
-  }, [entries]);
+    updateChartData(filteredEntries);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFolder, searchTerm]);
+
 
   if (isLoading) {
     return (
-        <div className="flex h-screen items-center justify-center bg-background">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <div 
+            className="flex h-screen items-center justify-center" 
+            style={{ 
+                backgroundImage: "url('https://img.freepik.com/free-photo/neon-tropical-monstera-leaf-banner_53876-138943.jpg?semt=ais_hybrid&w=740')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center'
+            }}
+        >
+            <div className="absolute inset-0 bg-black/50" />
+            <div className="relative">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            </div>
         </div>
     );
   }
@@ -264,7 +277,7 @@ export default function DiaryPage() {
         className="absolute inset-0 bg-cover bg-center -z-10" 
         style={{ backgroundImage: "url('https://img.freepik.com/free-photo/neon-tropical-monstera-leaf-banner_53876-138943.jpg?semt=ais_hybrid&w=740')" }}
       />
-      <div className="absolute inset-0 bg-black/50 -z-10" />
+      <div className="absolute inset-0 bg-black/60 -z-10" />
       <input type="file" ref={fileInputRef} onChange={handleCoverImageChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
       <div className="mx-auto max-w-2xl space-y-8 p-4 sm:p-6 md:p-8">
         <Link href="/dashboard" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
@@ -278,7 +291,7 @@ export default function DiaryPage() {
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input placeholder="Search your journal..." className="pl-10" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <Input placeholder="Search your journal..." className="pl-10 bg-card/50" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
         <section>
@@ -286,7 +299,7 @@ export default function DiaryPage() {
             <h2 className="text-2xl font-semibold">Your Journals</h2>
              <Dialog open={isNewJournalDialogOpen} onOpenChange={setIsNewJournalDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm"><Plus className="mr-2 h-4 w-4" /> New Journal</Button>
+                <Button variant="outline" size="sm" className="bg-card/50"><Plus className="mr-2 h-4 w-4" /> New Journal</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>Create a New Journal</DialogTitle><DialogDescription>Give your new journal a name to categorize your entries.</DialogDescription></DialogHeader>
@@ -306,11 +319,11 @@ export default function DiaryPage() {
           <ScrollArea className="w-full whitespace-nowrap">
             <div className="flex w-max space-x-4 pb-4">
                 <div onClick={() => setSelectedFolder(null)} className={cn("group cursor-pointer rounded-lg border-2", !selectedFolder ? "border-primary" : "border-transparent")}>
-                  <Card className="w-40 shrink-0 overflow-hidden"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">Uncategorized</h3><p className="text-xs text-muted-foreground">{entries.filter(e => !e.folderId || e.folderId === '').length} Entries</p></div></Card>
+                  <Card className="w-40 shrink-0 overflow-hidden bg-card/70"><div className="relative h-24 bg-muted/20 flex items-center justify-center"><FolderIcon className="h-10 w-10 text-muted-foreground" /></div><div className="p-3"><h3 className="font-semibold truncate">Uncategorized</h3><p className="text-xs text-muted-foreground">{entries.filter(e => !e.folderId || e.folderId === '').length} Entries</p></div></Card>
                 </div>
               {folders.map((folder) => (
                 <div key={folder.id} onClick={() => setSelectedFolder(folder)} className={cn("relative group cursor-pointer rounded-lg border-2", selectedFolder?.id === folder.id ? "border-primary" : "border-transparent")}>
-                    <Card className="w-40 shrink-0 overflow-hidden">
+                    <Card className="w-40 shrink-0 overflow-hidden bg-card/70">
                       <div className="relative h-24"><Image src={folder.imageUrl} data-ai-hint={folder.imageHint} alt={folder.name} layout="fill" objectFit="cover" className="transition-transform group-hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" /></div>
                       <div className="p-3"><h3 className="font-semibold truncate">{folder.name}</h3><p className="text-xs text-muted-foreground">{entries.filter(entry => entry.folderId === folder.id).length} Entries</p></div>
                     </Card>
@@ -345,12 +358,12 @@ export default function DiaryPage() {
             <div className="space-y-4">
               {filteredEntries.map((entry) => (
                 <div key={entry.id} className="relative group">
-                    <Card onClick={() => router.push(`/diary/${entry.id}`)} className="flex items-start gap-4 p-4 hover:bg-card/80 transition-colors cursor-pointer pr-12">
+                    <Card onClick={() => router.push(`/diary/${entry.id}`)} className="flex items-start gap-4 p-4 bg-card/70 hover:bg-card/80 transition-colors cursor-pointer pr-12">
                         <div className="text-4xl">{moods[entry.mood].sticker}</div>
                         <div className="flex-1 overflow-hidden">
                             <p className="text-xs text-muted-foreground">{format(new Date(entry.date), "MMMM d, yyyy")}</p>
                             <h3 className="font-semibold text-lg truncate">{entry.title}</h3>
-                            <div className="text-sm text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: entry.content }} />
+                            <div className="text-sm text-muted-foreground line-clamp-2" dangerouslySetInnerHTML={{ __html: entry.content.replace(/<[^>]+>/g, '') }} />
                         </div>
                         {entry.photos && entry.photos.length > 0 && (
                             <div className="relative h-20 w-20 shrink-0"><Image src={entry.photos[0].url} data-ai-hint="diary photo" alt="Diary photo" layout="fill" objectFit="cover" className="rounded-md" /></div>
@@ -369,7 +382,7 @@ export default function DiaryPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg">
+            <div className="text-center py-12 text-muted-foreground bg-card/50 rounded-lg">
                 <BookOpenText className="mx-auto h-12 w-12 mb-4" />
                 <p className="font-semibold">{selectedFolder ? `No entries in "${selectedFolder.name}" yet.` : "You haven't written anything yet."}</p>
                 <p className="text-sm mt-1">Click the '+' button below to start a new entry.</p>
@@ -378,7 +391,7 @@ export default function DiaryPage() {
         </section>
 
         <section>
-          <Card>
+          <Card className="bg-card/70">
             <CardHeader>
               <CardTitle>Mood Tracker</CardTitle>
               <CardDescription>Your emotional trends over the last 7 entries.</CardDescription>
@@ -402,7 +415,7 @@ export default function DiaryPage() {
       </div>
 
       <div className="sticky bottom-6 flex justify-center">
-        <Link href="/diary/new"><Button size="lg" className="rounded-full shadow-lg h-16 w-16"><Plus className="h-8 w-8" /></Button></Link>
+        <Link href="/diary/new"><Button size="lg" className="rounded-full shadow-lg h-16 w-16 bg-primary hover:bg-primary/90"><Plus className="h-8 w-8" /></Button></Link>
       </div>
     </div>
   )
