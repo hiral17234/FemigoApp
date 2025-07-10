@@ -45,17 +45,15 @@ const OtpToastContent = ({ otp, theme }: { otp: string, theme?: string }) => {
     }, 2000); // Revert back to copy icon after 2 seconds
   };
 
-  const isLight = theme === 'light';
-
   return (
     <div className="flex w-full items-center justify-between gap-4">
       <div>
-        <p className={`text-sm font-medium text-blue-400`}>Femigo Verification</p>
-        <p className={`text-xl font-bold tracking-widest text-gray-100`}>{otp}</p>
+        <p className={`text-sm font-medium text-blue-500`}>Femigo Verification</p>
+        <p className={`text-2xl font-bold tracking-widest text-gray-900`}>{otp}</p>
       </div>
       <button
         onClick={handleCopy}
-        className={`flex shrink-0 items-center justify-center rounded-md p-2 text-sm transition-colors text-blue-400 hover:bg-blue-900/50`}
+        className={`flex shrink-0 items-center justify-center rounded-md p-2 text-sm transition-colors text-blue-500 hover:bg-blue-100`}
       >
         {isCopied ? (
           <Check className="h-5 w-5 text-green-500" />
@@ -89,7 +87,7 @@ export default function VerifyOtpPage() {
   const showOtpToast = (newOtp: string) => {
     toast({
       description: <OtpToastContent otp={newOtp} theme={theme} />,
-      className: "bg-card border-border shadow-lg w-full",
+      className: "bg-white border-gray-200 shadow-lg w-full text-black",
     });
   }
 
