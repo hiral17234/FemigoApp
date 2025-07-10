@@ -163,31 +163,23 @@ export default function OnboardingDetailsPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 z-0 h-full w-full object-cover opacity-30"
-        src="https://videos.pexels.com/video-files/2806063/2806063-hd_1080_1920_30fps.mp4"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
+    <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
             <Link
               href="/congratulations"
-              className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
+              className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
             </Link>
-            <div className="w-full rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
-              <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <div className="w-full rounded-2xl border bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+              <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Tell Us About Yourself
               </h1>
-              <p className="mb-8 text-center text-purple-200/70">
+              <p className="mb-8 text-center text-muted-foreground">
                 This information helps us personalize your experience.
               </p>
 
@@ -198,7 +190,7 @@ export default function OnboardingDetailsPage() {
                       <FormItem>
                         <FormLabel>Age</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="e.g., 25" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
+                          <Input type="number" placeholder="e.g., 25" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -207,7 +199,7 @@ export default function OnboardingDetailsPage() {
                       <FormItem>
                         <FormLabel>Nickname (Optional)</FormLabel>
                         <FormControl>
-                          <Input placeholder="How should we call you?" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
+                          <Input placeholder="How should we call you?" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -218,19 +210,19 @@ export default function OnboardingDetailsPage() {
                     <FormLabel>Address</FormLabel>
                     <FormField control={form.control} name="address1" render={({ field }) => (
                       <FormItem>
-                        <FormControl><Input placeholder="Address Line 1" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" /></FormControl>
+                        <FormControl><Input placeholder="Address Line 1" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                      <FormField control={form.control} name="address2" render={({ field }) => (
                       <FormItem>
-                        <FormControl><Input placeholder="Address Line 2 (Optional)" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" /></FormControl>
+                        <FormControl><Input placeholder="Address Line 2 (Optional)" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                      <FormField control={form.control} name="address3" render={({ field }) => (
                       <FormItem>
-                        <FormControl><Input placeholder="Address Line 3 (Optional)" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" /></FormControl>
+                        <FormControl><Input placeholder="Address Line 3 (Optional)" {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -247,13 +239,13 @@ export default function OnboardingDetailsPage() {
                                         <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
                                         <PopoverTrigger asChild>
                                             <FormControl>
-                                            <Button variant="outline" role="combobox" className={cn("w-full justify-between bg-transparent border-white/20 backdrop-blur-sm hover:bg-white/10 hover:text-white", !field.value && "text-muted-foreground")}>
+                                            <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
                                                 {field.value ? regions.find(s => s.name === field.value)?.name : `Select your ${countryConfig.regionLabel.toLowerCase()}`}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                             </FormControl>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 dark" onPointerDownOutside={(e) => e.preventDefault()}>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onPointerDownOutside={(e) => e.preventDefault()}>
                                             <Command>
                                             <CommandInput placeholder={`Search ${countryConfig.regionLabel.toLowerCase()}...`} />
                                             <CommandList>
@@ -283,13 +275,13 @@ export default function OnboardingDetailsPage() {
                                         <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
                                         <PopoverTrigger asChild>
                                             <FormControl>
-                                            <Button variant="outline" role="combobox" disabled={cities.length === 0} className={cn("w-full justify-between bg-transparent border-white/20 backdrop-blur-sm hover:bg-white/10 hover:text-white", !field.value && "text-muted-foreground")}>
+                                            <Button variant="outline" role="combobox" disabled={cities.length === 0} className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
                                                 {field.value || "Select your city"}
                                                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                             </Button>
                                             </FormControl>
                                         </PopoverTrigger>
-                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 dark" onPointerDownOutside={(e) => e.preventDefault()}>
+                                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0" onPointerDownOutside={(e) => e.preventDefault()}>
                                             <Command>
                                             <CommandInput placeholder="Search city..." />
                                             <CommandList>
@@ -318,7 +310,7 @@ export default function OnboardingDetailsPage() {
                                     <FormItem className="md:col-span-2">
                                     <FormLabel>City</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter your city" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
+                                        <Input placeholder="Enter your city" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                     </FormItem>
@@ -331,7 +323,7 @@ export default function OnboardingDetailsPage() {
                                <FormItem>
                                    <FormLabel>Please specify your {countryConfig?.regionLabel || 'region'}</FormLabel>
                                    <FormControl>
-                                       <Input placeholder={`Enter ${countryConfig?.regionLabel || 'region'}`} {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
+                                       <Input placeholder={`Enter ${countryConfig?.regionLabel || 'region'}`} {...field} />
                                    </FormControl>
                                    <FormMessage />
                                </FormItem>
@@ -343,7 +335,7 @@ export default function OnboardingDetailsPage() {
                                 <FormItem>
                                     <FormLabel>Please specify your city</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Enter city name" {...field} className="bg-transparent border-white/20 backdrop-blur-sm" />
+                                        <Input placeholder="Enter city name" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -363,14 +355,14 @@ export default function OnboardingDetailsPage() {
                               <Popover open={countryCodePopoverOpen} onOpenChange={setCountryCodePopoverOpen}>
                                 <PopoverTrigger asChild>
                                   <FormControl>
-                                    <Button variant="outline" role="combobox" className={cn("w-full justify-between bg-transparent border-white/20 backdrop-blur-sm hover:bg-white/10 hover:text-white", !field.value && "text-muted-foreground")}>
+                                    <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground")}>
                                       {field.value ? `+${field.value}` : "Code"}
                                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                   </FormControl>
                                 </PopoverTrigger>
                                 <PopoverContent
-                                  className="w-[250px] p-0 dark"
+                                  className="w-[250px] p-0"
                                   onPointerDownOutside={(e) => e.preventDefault()}
                                 >
                                   <Command>
@@ -416,7 +408,6 @@ export default function OnboardingDetailsPage() {
                                     placeholder="Enter number"
                                     {...field}
                                     disabled={isSubmitting}
-                                    className="bg-transparent border-white/20 backdrop-blur-sm"
                                 />
                                 </FormControl>
                                 <FormMessage />
@@ -426,7 +417,7 @@ export default function OnboardingDetailsPage() {
                     </div>
                  </FormItem>
 
-                  <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-lg font-semibold text-white py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/50 hover:scale-105">
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-primary text-lg font-semibold text-primary-foreground py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : "Next Step"}
                     <ChevronRight />
                   </Button>

@@ -114,7 +114,6 @@ export default function OnboardingPasswordPage() {
       toast({
         title: "Account Created!",
         description: "Welcome to Femigo! Please log in to continue.",
-        className: "bg-green-500 text-white"
       })
 
       router.push("/login")
@@ -144,31 +143,23 @@ export default function OnboardingPasswordPage() {
   }, [watchedPassword])
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 z-0 h-full w-full object-cover opacity-30"
-        src="https://videos.pexels.com/video-files/8099723/8099723-hd_1920_1080_30fps.mp4"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
+    <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
             <Link
               href="/onboarding/details"
-              className="mb-4 inline-flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
+              className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               <ArrowLeft className="h-4 w-4" />
               Back
             </Link>
-            <div className="w-full rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
-              <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <div className="w-full rounded-2xl border bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+              <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Secure Your Account
               </h1>
-              <p className="mb-8 text-center text-purple-200/70">
+              <p className="mb-8 text-center text-muted-foreground">
                 Create a strong password to keep your account safe.
               </p>
 
@@ -183,8 +174,8 @@ export default function OnboardingPasswordPage() {
                                     type={showPassword ? "text" : "password"} 
                                     placeholder="Enter a strong password" 
                                     {...field}
-                                    className="bg-transparent border-white/20 backdrop-blur-sm pr-10" />
-                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-200/70 hover:text-purple-200">
+                                    className="pr-10" />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground">
                                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
@@ -203,8 +194,8 @@ export default function OnboardingPasswordPage() {
                                     type={showConfirmPassword ? "text" : "password"} 
                                     placeholder="Confirm your password" 
                                     {...field} 
-                                    className="bg-transparent border-white/20 backdrop-blur-sm pr-10" />
-                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-200/70 hover:text-purple-200">
+                                    className="pr-10" />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground">
                                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                 </button>
                             </div>
@@ -213,7 +204,7 @@ export default function OnboardingPasswordPage() {
                       </FormItem>
                     )} />
 
-                  <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-to-r from-pink-500 to-purple-500 text-lg font-semibold text-white py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/50 hover:scale-105">
+                  <Button type="submit" disabled={isSubmitting} className="w-full bg-primary text-lg font-semibold text-primary-foreground py-6 rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105">
                     {isSubmitting ? <Loader2 className="animate-spin" /> : "Create Account & Finish"}
                   </Button>
                 </form>

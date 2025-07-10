@@ -67,20 +67,20 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="absolute top-8 left-8">
-        <Link href="/" className="flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300">
+        <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
           <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Link>
       </div>
 
-      <Card className="w-full max-w-md rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
+      <Card className="w-full max-w-md rounded-2xl">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight text-white">
+          <CardTitle className="text-3xl font-bold tracking-tight">
             Create Account
           </CardTitle>
-          <CardDescription className="text-purple-200/70">
+          <CardDescription>
             Join Femigo and be part of our community.
           </CardDescription>
         </CardHeader>
@@ -92,11 +92,11 @@ export default function SignupPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-purple-200/90">Name</FormLabel>
+                    <FormLabel>Name</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-300/70" />
-                        <Input placeholder="Your Name" {...field} className="pl-10 bg-white/5 border-white/20" disabled={isSubmitting} />
+                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input placeholder="Your Name" {...field} className="pl-10" disabled={isSubmitting} />
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -108,7 +108,7 @@ export default function SignupPage() {
                 name="country"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel className="text-purple-200/90">Country</FormLabel>
+                    <FormLabel>Country</FormLabel>
                     <Popover open={open} onOpenChange={setOpen}>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -118,12 +118,12 @@ export default function SignupPage() {
                             aria-expanded={open}
                             disabled={isSubmitting}
                             className={cn(
-                              "w-full justify-between bg-white/5 border-white/20 hover:bg-white/10 hover:text-white",
+                              "w-full justify-between",
                               !field.value && "text-muted-foreground"
                             )}
                           >
                             <div className="flex items-center gap-2">
-                                <Globe className="h-4 w-4 text-purple-300/70" />
+                                <Globe className="h-4 w-4 text-muted-foreground" />
                                 {field.value
                                 ? countries.find(
                                     (country) => country.value === field.value
@@ -135,14 +135,11 @@ export default function SignupPage() {
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent
-                        className="w-[--radix-popover-trigger-width] p-0 dark"
+                        className="w-[--radix-popover-trigger-width] p-0"
                         onPointerDownOutside={(e) => e.preventDefault()}
                       >
                         <Command>
                           <CommandInput placeholder="Search country..." />
-                           <div className="border-t border-border p-2 text-center text-xs text-muted-foreground">
-                            Press Enter to select.
-                          </div>
                           <CommandList>
                             <CommandEmpty>No country found.</CommandEmpty>
                             <CommandGroup>
@@ -178,7 +175,7 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-pink-500/50 focus:outline-none">
+              <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-primary py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105">
                 {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                 Create Account
               </Button>
@@ -186,9 +183,9 @@ export default function SignupPage() {
           </Form>
         </CardContent>
         <CardFooter className="flex items-center justify-center pt-6">
-          <p className="text-sm text-purple-200/70">
+          <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-pink-400 hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               Log in
             </Link>
           </p>

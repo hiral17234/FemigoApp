@@ -99,7 +99,7 @@ export default function VerifyAadhaarPage() {
         setVerificationResult(result);
         if (result.verificationPassed) {
             setVerificationStatus("success");
-            toast({ title: "Verification Successful!", className: "bg-green-500 text-white" });
+            toast({ title: "Verification Successful!" });
             localStorage.setItem('aadhaarImage', aadhaarPhotoDataUri); 
         } else {
             setVerificationStatus("failed");
@@ -193,7 +193,7 @@ export default function VerifyAadhaarPage() {
                           <h3>Verification Successful</h3>
                         </div>
 
-                        <div className="w-full space-y-3 rounded-lg border bg-background p-4 text-left text-foreground">
+                        <div className="w-full space-y-3 rounded-lg border bg-background p-4 text-left">
                             <div className="flex items-center justify-between">
                                 <span className="text-sm text-muted-foreground">Name Matched</span>
                                 <div className="flex items-center gap-2">
@@ -232,7 +232,7 @@ export default function VerifyAadhaarPage() {
                     <div className="flex flex-col items-center justify-center gap-4 text-center text-destructive">
                         <XCircle className="h-16 w-16" />
                         <h3 className="text-2xl font-bold">Verification Failed</h3>
-                        <p className="text-red-700 dark:text-red-300 max-w-sm">{verificationResult.reason}</p>
+                        <p className="max-w-sm">{verificationResult.reason}</p>
                         <Button onClick={resetVerification} className="w-full" variant="outline">
                             Try Again
                         </Button>
@@ -288,7 +288,7 @@ export default function VerifyAadhaarPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-lg">
         <Link
           href="/verify"
@@ -299,7 +299,7 @@ export default function VerifyAadhaarPage() {
         </Link>
         <Card className="w-full rounded-2xl bg-card p-8 shadow-xl">
           <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+              <CardTitle className="text-3xl font-bold tracking-tight">
               Step 3: Aadhaar Verification
               </CardTitle>
               <CardDescription className="mx-auto max-w-sm pt-2">

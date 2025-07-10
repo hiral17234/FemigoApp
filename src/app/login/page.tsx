@@ -61,7 +61,6 @@ export default function LoginPage() {
       toast({
         title: "Logged In!",
         description: "Welcome back.",
-        className: "bg-green-500 text-white",
       })
       router.push("/dashboard")
     } catch (error: any) {
@@ -82,7 +81,7 @@ export default function LoginPage() {
 
   if (firebaseError) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
+      <div className="flex h-screen w-full items-center justify-center bg-background p-4 text-center">
           <div className="rounded-lg bg-card p-8 text-card-foreground">
               <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
               <p className="mt-2 text-muted-foreground">{firebaseError}</p>
@@ -92,33 +91,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-black text-white">
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 z-0 h-full w-full object-cover opacity-30"
-        src="https://videos.pexels.com/video-files/5661979/5661979-hd_1920_1080_30fps.mp4"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-black via-black/60 to-transparent" />
+    <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
         <div className="w-full max-w-sm">
           <Link
             href="/"
-            className="mb-4 flex items-center gap-2 text-sm text-purple-300/70 transition-colors hover:text-purple-300"
+            className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
-          <div className="w-full rounded-2xl border border-white/10 bg-black/20 p-8 shadow-2xl shadow-pink-500/10 backdrop-blur-xl">
+          <div className="w-full rounded-2xl border bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
             <div className="flex flex-col items-center space-y-6 text-center">
               <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tight text-white">
+                <h1 className="text-3xl font-bold tracking-tight">
                   Log In
                 </h1>
-                <p className="text-sm text-purple-200/70">
+                <p className="text-sm text-muted-foreground">
                   Welcome back! Please enter your details.
                 </p>
               </div>
@@ -133,14 +124,14 @@ export default function LoginPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-purple-200/90">Email</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-300/70" />
+                            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                               placeholder="your.email@example.com"
                               {...field}
-                              className="pl-10 bg-white/5 border-white/20"
+                              className="pl-10"
                               disabled={isSubmitting}
                             />
                           </div>
@@ -155,21 +146,21 @@ export default function LoginPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-purple-200/90">Password</FormLabel>
+                        <FormLabel>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-purple-300/70" />
+                            <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
                               type={showPassword ? "text" : "password"}
                               placeholder="Your Password"
                               {...field}
-                              className="pl-10 pr-10 bg-white/5 border-white/20"
+                              className="pl-10 pr-10"
                               disabled={isSubmitting}
                             />
                              <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-200/70 hover:text-purple-200"
+                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
                                 aria-label={showPassword ? "Hide password" : "Show password"}
                             >
                                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -184,7 +175,7 @@ export default function LoginPage() {
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:shadow-pink-500/50 focus:outline-none"
+                    className="w-full rounded-xl bg-primary py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105"
                   >
                     {isSubmitting && (
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -194,11 +185,11 @@ export default function LoginPage() {
                 </form>
               </Form>
 
-              <p className="pt-2 text-center text-sm text-purple-200/70">
+              <p className="pt-2 text-center text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link
                   href="/signup"
-                  className="font-semibold text-pink-400 hover:underline"
+                  className="font-semibold text-primary hover:underline"
                 >
                   Sign Up
                 </Link>

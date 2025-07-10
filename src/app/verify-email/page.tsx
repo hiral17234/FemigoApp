@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <Link href="/verify-otp" className="mb-4 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
             <ArrowLeft className="h-4 w-4" />
@@ -65,7 +65,7 @@ export default function VerifyEmailPage() {
         </Link>
         <Card className="w-full rounded-2xl p-6 shadow-xl">
           <CardHeader className="text-center">
-              <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+              <CardTitle className="text-3xl font-bold tracking-tight">
                 Step 5: Email Verification
               </CardTitle>
               <CardDescription className="pt-2">
@@ -107,7 +107,7 @@ export default function VerifyEmailPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
+                  className="w-full rounded-xl bg-primary py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105"
                 >
                   {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                   Continue <ChevronRight className="h-5 w-5" />

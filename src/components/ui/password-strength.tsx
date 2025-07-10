@@ -1,3 +1,4 @@
+
 "use client"
 
 import { cn } from "@/lib/utils"
@@ -22,12 +23,21 @@ const PasswordStrength = ({ password }: { password?: string }) => {
   const strengthLabel = ["", "Very Weak", "Weak", "Moderate", "Strong", "Very Strong"][strength]
   
   const strengthColors = [
-    "bg-gray-500", // 0
-    "bg-red-500",   // 1
-    "bg-orange-500",// 2
-    "bg-yellow-500",// 3
-    "bg-green-500", // 4
-    "bg-emerald-500"// 5
+    "bg-muted-foreground/30",   // 0
+    "bg-red-500",               // 1
+    "bg-orange-500",            // 2
+    "bg-yellow-500",            // 3
+    "bg-lime-500",              // 4
+    "bg-green-500"              // 5
+  ]
+
+  const strengthTextColors = [
+    "",                         // 0
+    "text-red-500",             // 1
+    "text-orange-500",          // 2
+    "text-yellow-500",          // 3
+    "text-lime-500",            // 4
+    "text-green-500"            // 5
   ]
 
   return (
@@ -38,17 +48,13 @@ const PasswordStrength = ({ password }: { password?: string }) => {
             key={index}
             className={cn(
               "h-2 rounded-full transition-colors",
-              index < strength ? strengthColors[strength] : "bg-white/10"
+              index < strength ? strengthColors[strength] : "bg-muted/30"
             )}
           />
         ))}
       </div>
       {password && (
-        <p className={cn("text-xs font-medium text-right", 
-            strength > 0 && strength <= 2 && "text-red-400",
-            strength === 3 && "text-yellow-400",
-            strength >= 4 && "text-green-400"
-        )}>
+        <p className={cn("text-xs font-medium text-right", strengthTextColors[strength])}>
           {strengthLabel}
         </p>
       )}

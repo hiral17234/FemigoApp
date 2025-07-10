@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -7,6 +8,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
+import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -32,7 +34,7 @@ const formSchema = z.object({
   }),
 })
 
-const OtpToastContent = ({ otp }: { otp: string }) => {
+const OtpToastContent = ({ otp, theme }: { otp: string, theme?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopy = () => {
@@ -43,15 +45,17 @@ const OtpToastContent = ({ otp }: { otp: string }) => {
     }, 2000); // Revert back to copy icon after 2 seconds
   };
 
+  const isLight = theme === 'light';
+
   return (
     <div className="flex w-full items-center justify-between gap-4">
       <div>
-        <p className="text-sm font-medium text-blue-500">Femigo Verification</p>
-        <p className="text-xl font-bold tracking-widest text-gray-900">{otp}</p>
+        <p className={`text-sm font-medium ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>Femigo Verification</p>
+        <p className={`text-xl font-bold tracking-widest ${isLight ? 'text-gray-900' : 'text-gray-100'}`}>{otp}</p>
       </div>
       <button
         onClick={handleCopy}
-        className="flex shrink-0 items-center justify-center rounded-md p-2 text-sm text-blue-500 transition-colors hover:bg-blue-50"
+        className={`flex shrink-0 items-center justify-center rounded-md p-2 text-sm transition-colors ${isLight ? 'text-blue-600 hover:bg-blue-50' : 'text-blue-400 hover:bg-blue-900/50'}`}
       >
         {isCopied ? (
           <Check className="h-5 w-5 text-green-500" />
@@ -68,6 +72,7 @@ const OtpToastContent = ({ otp }: { otp: string }) => {
 export default function VerifyOtpPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const { theme } = useTheme()
   const [phone, setPhone] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [otp, setOtp] = useState("")
@@ -83,8 +88,8 @@ export default function VerifyOtpPage() {
   
   const showOtpToast = (newOtp: string) => {
     toast({
-      description: <OtpToastContent otp={newOtp} />,
-      className: "bg-white border-gray-200 shadow-lg w-full",
+      description: <OtpToastContent otp={newOtp} theme={theme} />,
+      className: "bg-card border-border shadow-lg w-full",
     });
   }
 
@@ -94,7 +99,7 @@ export default function VerifyOtpPage() {
     setOtp(initialOtp);
     showOtpToast(initialOtp);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [theme]); // Rerun if theme changes to update toast style
 
   useEffect(() => {
     const storedPhone = typeof window !== "undefined" ? localStorage.getItem("userPhone") : ""
@@ -154,7 +159,6 @@ export default function VerifyOtpPage() {
             toast({
                 title: "Phone Verified! ✅",
                 description: "Next, let's verify your email.",
-                className: "bg-green-500 text-white",
             });
             router.push("/verify-email");
         } else {
@@ -176,7 +180,7 @@ export default function VerifyOtpPage() {
   }
 
   return (
-     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-gradient-to-b from-[#FFF1F5] to-white p-4 dark:bg-gradient-to-b dark:from-gray-900 dark:to-black">
+     <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
         <Link
           href="/verify-phone"
@@ -187,7 +191,7 @@ export default function VerifyOtpPage() {
         </Link>
         <Card className="w-full rounded-2xl bg-card p-8 shadow-xl">
           <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold tracking-tight text-foreground">
+            <CardTitle className="text-3xl font-bold tracking-tight">
               Step 4: OTP Verification
             </CardTitle>
             <CardDescription className="mx-auto max-w-sm pt-2">
@@ -246,7 +250,7 @@ export default function VerifyOtpPage() {
                 <Button
                   type="submit"
                   disabled={isVerifying}
-                  className="w-full rounded-xl bg-[#EC008C] py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105 hover:bg-[#d4007a] focus:outline-none"
+                  className="w-full rounded-xl bg-primary py-3 text-lg font-normal text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105"
                 >
                   {isVerifying && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
                   Verify & Continue
