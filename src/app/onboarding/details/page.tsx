@@ -249,6 +249,9 @@ export default function OnboardingDetailsPage() {
                                             <Command>
                                             <CommandInput placeholder={`Search ${countryConfig.regionLabel.toLowerCase()}...`} />
                                             <CommandList>
+                                                <div className="my-1 mx-2 rounded-sm bg-red-900/50 p-1.5 text-center text-xs font-bold text-red-300">
+                                                    Press Enter to select
+                                                </div>
                                                 <CommandEmpty>No {countryConfig.regionLabel.toLowerCase()} found.</CommandEmpty>
                                                 <CommandGroup>
                                                 {regions.map((region) => (
@@ -285,6 +288,9 @@ export default function OnboardingDetailsPage() {
                                             <Command>
                                             <CommandInput placeholder="Search city..." />
                                             <CommandList>
+                                                <div className="my-1 mx-2 rounded-sm bg-red-900/50 p-1.5 text-center text-xs font-bold text-red-300">
+                                                    Press Enter to select
+                                                </div>
                                                 <CommandEmpty>No city found.</CommandEmpty>
                                                 <CommandGroup>
                                                 {cities.map((city) => (
@@ -368,6 +374,9 @@ export default function OnboardingDetailsPage() {
                                   <Command>
                                     <CommandInput placeholder="Search country..." />
                                     <CommandList>
+                                      <div className="my-1 mx-2 rounded-sm bg-red-900/50 p-1.5 text-center text-xs font-bold text-red-300">
+                                        Press Enter to select
+                                      </div>
                                       <CommandEmpty>No country found.</CommandEmpty>
                                       <CommandGroup>
                                         {countries.map((country) => (
