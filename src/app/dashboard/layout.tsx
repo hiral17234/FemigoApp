@@ -246,7 +246,7 @@ export default function DashboardLayout({
             <SidebarTrigger className="text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300" />
             <div>
               <h1 className="text-3xl font-bold text-foreground">Femigo</h1>
-              <p className="text-sm text-muted-foreground">Safety. Strength. Solidarity.</p>
+              <p className="text-sm text-secondary">Safety. Strength. Solidarity.</p>
             </div>
           </div>
           {isLoadingUser ? (
