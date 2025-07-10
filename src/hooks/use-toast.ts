@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -151,10 +152,6 @@ function toast({ ...props }: Toast) {
       toast: { ...props, id },
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
-
-  if (props.variant === 'destructive' && !props.className) {
-    props.className = "bg-red-600 text-white border-red-700"
-  }
 
   dispatch({
     type: "ADD_TOAST",
