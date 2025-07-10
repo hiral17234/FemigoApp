@@ -255,11 +255,9 @@ export default function DiaryPage() {
   if (isLoading) {
     return (
         <div 
-            className="flex h-screen items-center justify-center" 
+            className="flex h-screen items-center justify-center bg-cover bg-center" 
             style={{ 
                 backgroundImage: "url('https://img.freepik.com/free-photo/neon-tropical-monstera-leaf-banner_53876-138943.jpg?semt=ais_hybrid&w=740')",
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
             }}
         >
             <div className="absolute inset-0 bg-black/50" />
