@@ -141,8 +141,15 @@ export default function DiaryPage() {
   );
 
   useEffect(() => {
-    if (filteredEntries.length > 0) {
-      const recentEntries = [...filteredEntries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7).reverse();
+    const currentFilteredEntries = entries.filter((entry) => {
+        const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (entry.content || '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFolder = !selectedFolder ? !entry.folderId || entry.folderId === '' : entry.folderId === selectedFolder.id;
+        return matchesSearch && matchesFolder;
+    });
+
+    if (currentFilteredEntries.length > 0) {
+      const recentEntries = [...currentFilteredEntries].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 7).reverse();
       const moodMap: Record<string, number> = { happy: 5, calm: 4, love: 5, angry: 1, sad: 2 };
       const generatedChartData = recentEntries.map((entry) => ({
         name: new Date(entry.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -152,7 +159,7 @@ export default function DiaryPage() {
     } else {
       setChartData([]);
     }
-  }, [filteredEntries]);
+  }, [entries, searchTerm, selectedFolder]);
 
 
   const handleCreateJournal = () => {
