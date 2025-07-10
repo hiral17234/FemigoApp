@@ -260,6 +260,11 @@ export default function DiaryPage() {
 
   return (
     <div className="relative min-h-screen">
+      <div 
+        className="absolute inset-0 bg-cover bg-center -z-10" 
+        style={{ backgroundImage: "url('https://img.freepik.com/free-photo/neon-tropical-monstera-leaf-banner_53876-138943.jpg?semt=ais_hybrid&w=740')" }}
+      />
+      <div className="absolute inset-0 bg-black/50 -z-10" />
       <input type="file" ref={fileInputRef} onChange={handleCoverImageChange} className="hidden" accept="image/png, image/jpeg, image/webp" />
       <div className="mx-auto max-w-2xl space-y-8 p-4 sm:p-6 md:p-8">
         <Link href="/dashboard" className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
