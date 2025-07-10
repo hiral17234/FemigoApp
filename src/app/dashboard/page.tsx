@@ -197,7 +197,7 @@ export default function DashboardPage() {
               className="group flex flex-col items-center justify-center gap-2 text-center transition-transform duration-300 hover:-translate-y-1"
             >
               <div className="rounded-full bg-gradient-to-br from-primary/30 to-[#4b0e9c]/30 p-px transition-all duration-300 group-hover:from-primary/80 group-hover:to-[#4b0e9c]/80">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-card transition-colors duration-300 group-hover:bg-accent">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-card transition-colors duration-300">
                     <feature.icon className="h-8 w-8 text-primary [filter:drop-shadow(0_0_4px_hsl(var(--primary)))]" />
                   </div>
               </div>
