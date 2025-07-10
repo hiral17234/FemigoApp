@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -72,14 +73,14 @@ function DailyThought() {
   
   return (
     <div className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700 space-y-6 text-center">
-        <div className="inline-block rounded-full bg-gradient-to-r from-primary/30 to-secondary/30 p-px shadow-lg shadow-primary/10">
+        <div className="inline-block rounded-full bg-gradient-to-r from-primary/30 to-[#4b0e9c]/30 p-px shadow-lg shadow-primary/10">
             <div className="rounded-full bg-card px-4 py-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <CalendarDays className="h-4 w-4" />
                 <p>{format(currentDateTime, "eeee, MMMM d, yyyy 'at' hh:mm:ss a")}</p>
             </div>
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 p-6 shadow-inner-lg border border-border/10 relative">
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-[#4b0e9c]/10 p-6 shadow-inner-lg border border-border/10 relative">
             <Quote className="absolute top-4 left-2 h-8 w-8 text-primary/30" />
             <Quote className="absolute bottom-4 right-2 h-8 w-8 text-primary/30 rotate-180" />
             <p className="text-lg italic text-foreground/90">"{dailyQuote.quote}"</p>
@@ -167,7 +168,7 @@ export default function DashboardPage() {
     <div className="flex flex-1 flex-col p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Welcome, <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{userName}!</span>
+          Welcome, <span className="bg-gradient-to-r from-primary to-[#4b0e9c] bg-clip-text text-transparent">{userName}!</span>
         </h1>
         <p className="text-muted-foreground">
           Your safety is our priority.
@@ -177,7 +178,7 @@ export default function DashboardPage() {
       <DailyThought />
 
       <Link href="/emergency" className="w-full max-w-md mx-auto">
-        <div className="group rounded-3xl bg-gradient-to-r from-primary to-secondary p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30">
+        <div className="group rounded-3xl bg-gradient-to-r from-primary to-[#4b0e9c] p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30">
           <div className="flex h-20 items-center justify-center gap-6 rounded-[22px] bg-black px-8">
             <Siren className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
             <span className="text-3xl font-bold text-foreground">
@@ -195,7 +196,7 @@ export default function DashboardPage() {
               key={feature.name}
               className="group flex flex-col items-center justify-center gap-2 text-center transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 p-px transition-all duration-300 group-hover:from-primary/80 group-hover:to-secondary/80">
+              <div className="rounded-full bg-gradient-to-br from-primary/30 to-[#4b0e9c]/30 p-px transition-all duration-300 group-hover:from-primary/80 group-hover:to-[#4b0e9c]/80">
                   <div className="flex h-20 w-20 items-center justify-center rounded-full bg-card transition-colors duration-300 group-hover:bg-accent">
                     <feature.icon className="h-8 w-8 text-primary [filter:drop-shadow(0_0_4px_hsl(var(--primary)))]" />
                   </div>
