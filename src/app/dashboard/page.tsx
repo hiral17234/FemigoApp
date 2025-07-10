@@ -74,7 +74,7 @@ function DailyThought() {
   return (
     <div className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700 space-y-6 text-center">
         <div className="inline-block rounded-full bg-gradient-to-r from-primary/30 to-[#4b0e9c]/30 p-px shadow-lg shadow-primary/10">
-            <div className="rounded-full bg-card px-4 py-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <div className="rounded-full bg-[#4b0e9c]/30 px-4 py-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <CalendarDays className="h-4 w-4" />
                 <p>{format(currentDateTime, "eeee, MMMM d, yyyy 'at' hh:mm:ss a")}</p>
             </div>
