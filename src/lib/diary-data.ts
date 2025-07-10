@@ -39,12 +39,18 @@ export type Folder = {
 };
 
 export const themesList = [
-    "https://i.pinimg.com/564x/4f/4a/92/4f4a92955f1a32943498305d3c86144e.jpg", // Pink sparkle
-    "https://i.pinimg.com/564x/b8/97/81/b897813583c26927a731d6a365448386.jpg", // Purple galaxy
-    "https://i.pinimg.com/564x/6c/e0/a1/6ce0a142138a74e54ad3a14a38f03783.jpg", // Blue clouds
-    "https://i.pinimg.com/564x/e7/0d/18/e70d186c2a4f4b9f1d07b79143890333.jpg", // Orange sunset
-    "https://i.pinimg.com/564x/c4/86/e1/c486e118c7c938f8e022f87a3715e7a9.jpg", // Green leaves
-    "https://i.pinimg.com/564x/77/82/39/77823930b8d5a1913f89836365a44371.jpg", // Rainy window
+    "https://i.pinimg.com/474x/77/fb/cf/77fbcf6a795187ed64cc80aa20235f43.jpg",
+    "https://i.pinimg.com/736x/25/43/2a/25432a5ad0ac0508999c6816c4850e2f.jpg",
+    "https://i.pinimg.com/736x/b1/13/69/b113694967b5f4c113a1ddde7d767a2d.jpg",
+    "https://i.pinimg.com/736x/13/ba/44/13ba44beda97550f3cd1921b5d7f51c8.jpg",
+    "https://i.pinimg.com/736x/15/ea/4a/15ea4a490a6a162a02c03745a1ff567b.jpg",
+    "https://i.pinimg.com/736x/29/19/6a/29196a1450e9f60f3d8482ba30b9252d.jpg",
+    "https://i.pinimg.com/736x/7d/6c/6c/7d6c6ce6bf4ff45c63b8ebce31ef5c3d.jpg",
+    "https://i.pinimg.com/736x/66/26/2a/66262add3cd0e45a30ffbbc6cf1e6678.jpg",
+    "https://i.pinimg.com/736x/f4/14/4d/f4144dad1c5446fd322c54a8e6e09b28.jpg",
+    "https://i.pinimg.com/736x/4f/f8/44/4ff844f49052b4e9d2b3f7a9f9fa60fc.jpg",
+    "https://i.pinimg.com/736x/5a/cb/39/5acb39fc16fb22d676b8a74531e900a6.jpg",
+    "https://i.pinimg.com/736x/e3/1b/b8/e31bb8ab47b3b8c9a7604a03f4e02510.jpg"
 ];
 
 
