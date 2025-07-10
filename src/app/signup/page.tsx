@@ -60,6 +60,7 @@ export default function SignupPage() {
       toast({
         title: "Account Details Saved!",
         description: "Next, let's verify your identity.",
+        className: "bg-green-600 text-white border-green-700"
       })
       router.push("/verify")
       setIsSubmitting(false)
@@ -67,130 +68,132 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background p-4">
-      <div className="absolute top-8 left-8">
-        <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
-          <ArrowLeft className="h-4 w-4" />
-          Back to Home
-        </Link>
-      </div>
-
-      <Card className="w-full max-w-md rounded-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">
-            Create Account
-          </CardTitle>
-          <CardDescription>
-            Join Femigo and be part of our community.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="Your Name" {...field} className="pl-10" disabled={isSubmitting} />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="country"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Country</FormLabel>
-                    <Popover open={open} onOpenChange={setOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={open}
-                            disabled={isSubmitting}
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            <div className="flex items-center gap-2">
-                                <Globe className="h-4 w-4 text-muted-foreground" />
-                                {field.value
-                                ? countries.find(
-                                    (country) => country.value === field.value
-                                  )?.label
-                                : "Select your country"}
-                            </div>
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        className="w-[--radix-popover-trigger-width] p-0"
-                        onPointerDownOutside={(e) => e.preventDefault()}
-                      >
-                        <Command>
-                          <CommandInput placeholder="Search country..." />
-                          <CommandList>
-                            <CommandEmpty>No country found.</CommandEmpty>
-                            <CommandGroup>
-                              {countries.map((country) => (
-                                <CommandItem
-                                  value={country.label}
-                                  key={country.value}
-                                  onSelect={(currentValue) => {
-                                    const selectedCountry = countries.find(c => c.label.toLowerCase() === currentValue.toLowerCase());
-                                    if (selectedCountry) {
-                                      form.setValue("country", selectedCountry.value);
-                                    }
-                                    setOpen(false)
-                                  }}
-                                >
-                                  <Check
-                                    className={cn(
-                                      "mr-2 h-4 w-4",
-                                      country.value === field.value
-                                        ? "opacity-100"
-                                        : "opacity-0"
-                                    )}
-                                  />
-                                  {country.label}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-primary py-3 text-lg text-primary-foreground shadow-lg transition-transform duration-300 hover:scale-105">
-                {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                Create Account
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex items-center justify-center pt-6">
-          <p className="text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-primary hover:underline">
-              Log in
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-[#06010F] text-white p-4">
+      <div className="w-full max-w-md">
+        <div className="absolute top-8 left-8">
+            <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
             </Link>
-          </p>
-        </CardFooter>
-      </Card>
+        </div>
+
+        <Card className="w-full max-w-md rounded-2xl bg-[#161616]/80 border border-white/10 p-2 sm:p-4">
+            <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold tracking-tight">
+                Create Account
+            </CardTitle>
+            <CardDescription>
+                Join Femigo and be part of our community.
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input placeholder="Your Name" {...field} className="pl-10 bg-gray-900/70 border-gray-700" disabled={isSubmitting} />
+                        </div>
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                        <FormLabel>Country</FormLabel>
+                        <Popover open={open} onOpenChange={setOpen}>
+                        <PopoverTrigger asChild>
+                            <FormControl>
+                            <Button
+                                variant="outline"
+                                role="combobox"
+                                aria-expanded={open}
+                                disabled={isSubmitting}
+                                className={cn(
+                                "w-full justify-between bg-gray-900/70 border-gray-700 hover:bg-gray-800",
+                                !field.value && "text-muted-foreground"
+                                )}
+                            >
+                                <div className="flex items-center gap-2">
+                                    <Globe className="h-4 w-4 text-muted-foreground" />
+                                    {field.value
+                                    ? countries.find(
+                                        (country) => country.value === field.value
+                                    )?.label
+                                    : "Select your country"}
+                                </div>
+                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                            </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent
+                            className="w-[--radix-popover-trigger-width] p-0"
+                            onPointerDownOutside={(e) => e.preventDefault()}
+                        >
+                            <Command>
+                            <CommandInput placeholder="Search country..." />
+                            <CommandList>
+                                <CommandEmpty>No country found.</CommandEmpty>
+                                <CommandGroup>
+                                {countries.map((country) => (
+                                    <CommandItem
+                                    value={country.label}
+                                    key={country.value}
+                                    onSelect={(currentValue) => {
+                                        const selectedCountry = countries.find(c => c.label.toLowerCase() === currentValue.toLowerCase());
+                                        if (selectedCountry) {
+                                        form.setValue("country", selectedCountry.value);
+                                        }
+                                        setOpen(false)
+                                    }}
+                                    >
+                                    <Check
+                                        className={cn(
+                                        "mr-2 h-4 w-4",
+                                        country.value === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                    />
+                                    {country.label}
+                                    </CommandItem>
+                                ))}
+                                </CommandGroup>
+                            </CommandList>
+                            </Command>
+                        </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                <Button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-gradient-to-r from-[#EC008C] to-[#BF55E6] py-3 text-lg font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/50">
+                    {isSubmitting && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                    Create Account
+                </Button>
+                </form>
+            </Form>
+            </CardContent>
+            <CardFooter className="flex items-center justify-center pt-6">
+            <p className="text-sm text-muted-foreground">
+                Already have an account?{" "}
+                <Link href="/login" className="font-semibold text-primary hover:underline">
+                Log in
+                </Link>
+            </p>
+            </CardFooter>
+        </Card>
+      </div>
     </main>
   )
 }
