@@ -75,9 +75,9 @@ function ThemeToggle() {
       className="w-full justify-start text-sm"
     >
       {theme === "light" ? (
-        <Sun className="h-[1.5rem] w-[1.5rem] text-primary" />
+        <Sun className="h-[1.5rem] w-[1.5rem]" />
       ) : (
-        <Moon className="h-[1.5rem] w-[1.5rem] text-primary" />
+        <Moon className="h-[1.5rem] w-[1.5rem]" />
       )}
       <span className="group-data-[collapsible=icon]:hidden ml-2">
         {theme === "light" ? "Dark" : "Light"} Mode
