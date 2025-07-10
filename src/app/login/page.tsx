@@ -91,7 +91,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
+    <div className="relative min-h-screen w-full overflow-hidden bg-black text-foreground">
+      <video
+        src="https://media.istockphoto.com/id/1456520455/nl/video/sulfur-cosmos-flowers-bloom-in-the-garden.mp4?s=mp4-480x480-is&k=20&c=xbZAFUX4xgFK_GWD71mYxPUwCZr-qTb9wObCrWMB8ak="
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
+      />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
@@ -103,7 +111,7 @@ export default function LoginPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
-          <div className="w-full rounded-2xl border bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+          <div className="w-full rounded-2xl border border-white/10 bg-transparent p-8 shadow-2xl">
             <div className="flex flex-col items-center space-y-6 text-center">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">
