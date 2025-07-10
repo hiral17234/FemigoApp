@@ -1,3 +1,4 @@
+
 "use client"
 
 import Image from "next/image"
@@ -9,8 +10,8 @@ export default function WelcomePage() {
   const router = useRouter()
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-slate-950 p-4 text-white">
-      <div className="absolute top-0 left-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-900/10 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#0C0A09] p-4 text-white">
+      <div className="absolute top-0 left-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/40 via-violet-900/10 to-transparent" />
       
       <div className="relative z-10 w-full max-w-sm animate-in fade-in zoom-in-95 duration-700">
         <div className="rounded-2xl border border-white/10 bg-[#161616]/80 p-8 text-center shadow-2xl shadow-primary/10 backdrop-blur-lg">
