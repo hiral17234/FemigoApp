@@ -178,9 +178,9 @@ export default function DashboardPage() {
       <DailyThought />
 
       <Link href="/emergency" className="w-full max-w-md mx-auto">
-        <div className="group rounded-3xl bg-gradient-to-r from-primary to-[#4b0e9c] p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-xl hover:shadow-primary/30">
-          <div className="flex h-20 items-center justify-center gap-6 rounded-[22px] bg-black px-8">
-            <Siren className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" />
+        <div className="group rounded-3xl bg-gradient-to-r from-primary to-[#4b0e9c] p-1 shadow-xl shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/30 active:scale-100">
+          <div className="flex h-20 items-center justify-center gap-4 rounded-[22px] bg-black px-8">
+            <Siren className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" style={{filter: 'drop-shadow(0 0 8px hsl(var(--primary)))'}} />
             <span className="text-3xl font-bold text-foreground">
               Emergency
             </span>
