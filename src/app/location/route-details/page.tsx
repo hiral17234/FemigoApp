@@ -47,8 +47,7 @@ function RouteDetailsContent() {
     
     const { route, details } = routeData;
     
-    // Placeholder for safety score calculation
-    const safetyScore = Math.floor(Math.random() * 41) + 60; // Random score between 60 and 100
+    const safetyScore = details.reviewsCount > 50 ? 85 : 65;
 
     const InfoRow = ({ icon: Icon, label, value, valueClass }: { icon: React.ElementType, label: string, value: string, valueClass?: string }) => (
         <div className="flex items-center justify-between py-3">

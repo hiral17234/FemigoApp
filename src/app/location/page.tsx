@@ -25,7 +25,7 @@ const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 type Point = { lat: number; lng: number };
 type Place = { address: string; location: Point | null };
 type TravelMode = 'DRIVING' | 'BICYCLING' | 'TRANSIT' | 'WALKING';
-type RouteDetail = RouteSafetyOutput;
+type RouteDetail = RouteSafetyOutput & { isGenerated?: boolean };
 
 // Helper function to parse DMS coordinates
 function parseDMSToLatLng(dmsStr: string): Point | null {
@@ -395,67 +395,37 @@ function LocationPlanner() {
         destination: destinationPoint.location,
         travelMode: travelMode as google.maps.TravelMode,
         provideRouteAlternatives: true,
-    }).then(response => {
+    }).then(async response => {
         setDirections(response);
 
-        if(response.routes.length > 0 && response.routes[0].bounds && window.google?.maps) {
-            const bounds = response.routes[0].bounds;
-            const tempMapEl = document.createElement('div');
-            tempMapEl.style.width = '100px'; tempMapEl.style.height = '100px';
-            const newMap = new window.google.maps.Map(tempMapEl);
-            newMap.fitBounds(bounds);
-            setMapZoom(newMap.getZoom() ?? 12);
-            setMapCenter(bounds.getCenter().toJSON());
-        }
-
-        const safetyPromises = response.routes.map(route => 
-            getRouteSafetyDetails({
-                summary: route.summary,
-                distance: route.legs[0].distance?.text || 'N/A',
-                duration: route.legs[0].duration?.text || 'N/A',
-            }).catch(e => {
-                console.error("Safety detail generation failed for a route:", e);
-                // Return a default/error state object so Promise.all doesn't fail
-                return {
-                  roadQuality: 'Moderate',
-                  incidents: 'Data unavailable',
-                  reviewsCount: 0,
-                  lighting: 'Partially-lit',
-                  crowdedness: 'Medium',
-                  safetySummary: 'Could not retrieve safety details for this route.',
-                  crimeSummary: 'Could not retrieve crime details.',
-                  policeInfo: 'Could not retrieve police info.',
-                  weatherInfo: 'Could not retrieve weather info.'
-                };
-            })
-        );
-        
-        Promise.all(safetyPromises).then(async (details) => {
-            const validDetails = details as RouteDetail[];
-            setRouteDetails(validDetails);
-            
-            if (validDetails.length > 1) { // Only run recommendation if there's more than one route
-                try {
-                    const recommendationResult = await recommendSafestRoute(validDetails);
-                    setSelectedRouteIndex(recommendationResult.recommendedRouteIndex);
-                    setRecommendation({ index: recommendationResult.recommendedRouteIndex, reason: recommendationResult.reason });
-                    toast({
-                        title: "Safest Route Recommended",
-                        description: recommendationResult.reason,
-                        className: "bg-green-600 text-white"
-                    });
-                } catch (e) {
-                    console.error("Failed to get route recommendation:", e);
-                    setSelectedRouteIndex(0); // Fallback to first route
-                }
-            } else {
-                 setSelectedRouteIndex(0); // Default to first route if only one
+        if(response.routes.length > 0) {
+            if (response.routes[0].bounds && window.google?.maps) {
+                const bounds = response.routes[0].bounds;
+                const tempMapEl = document.createElement('div');
+                tempMapEl.style.width = '100px'; tempMapEl.style.height = '100px';
+                const newMap = new window.google.maps.Map(tempMapEl);
+                newMap.fitBounds(bounds);
+                setMapZoom(newMap.getZoom() ?? 12);
+                setMapCenter(bounds.getCenter().toJSON());
             }
 
-        }).finally(() => {
-            setIsCalculating(false);
-            setTimeout(() => { isRecalculatingRef.current = false; }, 2000);
-        });
+            // Initialize routeDetails with basic info and isGenerated: false
+            const initialDetails = response.routes.map(() => ({
+                roadQuality: 'Moderate',
+                incidents: 'N/A',
+                reviewsCount: 0,
+                lighting: 'Partially-lit',
+                crowdedness: 'Medium',
+                safetySummary: 'Click "More Info" to generate safety details.',
+                crimeSummary: 'Click "More Info" to generate safety details.',
+                policeInfo: 'Click "More Info" to generate safety details.',
+                weatherInfo: 'Click "More Info" to generate safety details.',
+                isGenerated: false,
+            }));
+            setRouteDetails(initialDetails);
+        }
+        setIsCalculating(false);
+        setTimeout(() => { isRecalculatingRef.current = false; }, 2000);
 
     }).catch(e => {
         console.error("Directions request failed", e);
@@ -558,10 +528,35 @@ function LocationPlanner() {
       }
   }
 
-  const handleViewDetails = (route: any, details: any) => {
-    if (typeof window !== "undefined") {
+  const handleViewDetails = async (route: google.maps.DirectionsRoute, index: number) => {
+    const currentDetails = routeDetails[index];
+
+    // If details are already generated, navigate directly
+    if (currentDetails.isGenerated) {
+      sessionStorage.setItem("selectedRouteData", JSON.stringify({ route, details: currentDetails }));
+      router.push("/location/route-details");
+      return;
+    }
+
+    toast({ title: 'Generating AI Safety Insights...', description: 'This may take a moment.' });
+    
+    try {
+      const details = await getRouteSafetyDetails({
+        summary: route.summary,
+        distance: route.legs[0].distance?.text || 'N/A',
+        duration: route.legs[0].duration?.text || 'N/A',
+      });
+      
+      const newRouteDetails = [...routeDetails];
+      newRouteDetails[index] = { ...details, isGenerated: true };
+      setRouteDetails(newRouteDetails);
+
       sessionStorage.setItem("selectedRouteData", JSON.stringify({ route, details }));
       router.push("/location/route-details");
+
+    } catch(e) {
+      console.error("Safety detail generation failed:", e);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not generate safety details for this route.' });
     }
   };
 
@@ -724,18 +719,11 @@ function LocationPlanner() {
                                               className="shrink-0"
                                               onClick={(e) => {
                                                   e.stopPropagation(); // Prevent route selection
-                                                  handleViewDetails(route, details);
+                                                  handleViewDetails(route, index);
                                               }}
                                           >
                                               More Info
                                           </Button>
-                                      </div>
-                                      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-xs text-gray-300">
-                                        <div className="flex items-center gap-2" title="Road Quality"><Route className="h-4 w-4 text-primary/80" /><span>{details.roadQuality}</span></div>
-                                        <div className="flex items-center gap-2" title="Historical Incidents"><AlertTriangle className="h-4 w-4 text-primary/80" /><span>{details.incidents}</span></div>
-                                        <div className="flex items-center gap-2" title="User Reviews"><MessageSquare className="h-4 w-4 text-primary/80" /><span>{details.reviewsCount} Reviews</span></div>
-                                        <div className="flex items-center gap-2" title="Lighting Condition"><Lamp className="h-4 w-4 text-primary/80" /><span>{details.lighting}</span></div>
-                                        <div className="flex items-center gap-2" title="Crowdedness"><Users className="h-4 w-4 text-primary/80" /><span>{details.crowdedness} Traffic</span></div>
                                       </div>
                                   </div>
                               )
