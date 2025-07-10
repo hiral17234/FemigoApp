@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useEffect, useRef, ChangeEvent } from "react"
+import { useState, useEffect, useRef, ChangeEvent, useMemo } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -131,13 +131,14 @@ export default function DiaryPage() {
     setIsLoading(false);
   }, []);
 
-  const filteredEntries = entries.filter((entry) => {
-      const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (entry.content || '').toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFolder = !selectedFolder ? !entry.folderId || entry.folderId === '' : entry.folderId === selectedFolder.id;
-      return matchesSearch && matchesFolder;
-    }
-  );
+  const filteredEntries = useMemo(() => {
+    return entries.filter((entry) => {
+        const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (entry.content || '').toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFolder = !selectedFolder ? !entry.folderId || entry.folderId === '' : entry.folderId === selectedFolder.id;
+        return matchesSearch && matchesFolder;
+    });
+  }, [entries, searchTerm, selectedFolder]);
 
   useEffect(() => {
     if (filteredEntries.length > 0) {
@@ -151,7 +152,7 @@ export default function DiaryPage() {
     } else {
       setChartData([]);
     }
-  }, [entries, searchTerm, selectedFolder, filteredEntries]);
+  }, [filteredEntries]);
 
 
   const handleCreateJournal = () => {
