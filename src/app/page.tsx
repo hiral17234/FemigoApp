@@ -11,7 +11,7 @@ export default function WelcomePage() {
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#0C0C0C] p-4 text-white">
-      <div className="absolute -top-40 left-1/2 -translate-x-1/2 z-0 h-96 w-[150%] max-w-4xl rounded-full bg-purple-900/30 blur-3xl" />
+      <div className="absolute top-0 left-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/40 via-purple-900/10 to-transparent" />
       
       <div className="relative z-10 w-full max-w-sm animate-in fade-in zoom-in-95 duration-700">
         <div className="rounded-2xl border border-white/10 bg-[#161616]/80 p-8 text-center shadow-2xl shadow-primary/10 backdrop-blur-lg">
