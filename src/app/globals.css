@@ -14,7 +14,7 @@
     --popover: 260 5% 15%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 326 100% 74%;
+    --primary: 331 87% 55%;
     --primary-foreground: 0 0% 100%;
     
     --secondary: 270 85% 65%;
@@ -23,7 +23,7 @@
     --muted: 275 9% 75%;
     --muted-foreground: 275 9% 55%;
 
-    --accent: 326 100% 74%;
+    --accent: 331 87% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,18 +31,18 @@
 
     --border: 260 5% 22%;
     --input: 260 5% 22%;
-    --ring: 326 100% 74%;
+    --ring: 331 87% 55%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 260 8% 10%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 326 100% 74%;
+    --sidebar-primary: 331 87% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 260 5% 15%;
-    --sidebar-accent-foreground: 326 100% 74%;
+    --sidebar-accent-foreground: 331 87% 55%;
     --sidebar-border: 260 5% 20%;
-    --sidebar-ring: 326 100% 74%;
+    --sidebar-ring: 331 87% 55%;
   }
 
   .dark {
@@ -55,7 +55,7 @@
     --popover: 260 5% 15%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 326 100% 74%;
+    --primary: 331 87% 55%;
     --primary-foreground: 0 0% 100%;
     
     --secondary: 270 85% 65%;
@@ -64,7 +64,7 @@
     --muted: 275 9% 75%;
     --muted-foreground: 275 9% 55%;
 
-    --accent: 326 100% 74%;
+    --accent: 331 87% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -72,18 +72,18 @@
 
     --border: 260 5% 22%;
     --input: 260 5% 22%;
-    --ring: 326 100% 74%;
+    --ring: 331 87% 55%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 260 8% 10%;
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 326 100% 74%;
+    --sidebar-primary: 331 87% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 260 5% 15%;
-    --sidebar-accent-foreground: 326 100% 74%;
+    --sidebar-accent-foreground: 331 87% 55%;
     --sidebar-border: 260 5% 20%;
-    --sidebar-ring: 326 100% 74%;
+    --sidebar-ring: 331 87% 55%;
   }
 
   * {
