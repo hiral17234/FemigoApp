@@ -9,7 +9,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc } from "firestore";
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import { auth, db, firebaseError } from "@/lib/firebase";
 import { ArrowLeft, User as UserIcon, Mail, Phone, Calendar, Home, Save, Loader2, Edit2, Camera } from "lucide-react";
@@ -168,8 +168,6 @@ export default function EditProfilePage() {
         setIsSubmitting(true);
         try {
             const userDocRef = doc(db, "users", user.uid);
-            // Note: This only updates the email in Firestore, not in Firebase Auth.
-            // A full implementation would require re-authentication to change the login email.
             await updateDoc(userDocRef, data);
             toast({ title: 'Profile Updated!', description: 'Your changes have been saved successfully.' });
         } catch (error) {
@@ -275,3 +273,4 @@ export default function EditProfilePage() {
         </main>
     );
 }
+
