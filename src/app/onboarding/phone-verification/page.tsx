@@ -183,27 +183,33 @@ export default function PhoneVerificationPage() {
                     </Button>
                 </div>
             ) : (
-                <div className="space-y-8 text-center">
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tight">Enter OTP</h1>
-                        <p className="text-muted-foreground">Enter the 6-digit code sent to {countryCode}{phone}</p>
+                <div className="space-y-8">
+                    <div className="space-y-2 text-center">
+                        <h1 className="text-3xl font-bold tracking-tight">Step 4: OTP Verification</h1>
+                        <p className="text-muted-foreground max-w-xs mx-auto">A 6-digit code has been sent to your device. Check the notification and enter the code below.</p>
                     </div>
-                    <div className="flex justify-center pt-2">
-                    <InputOTP maxLength={6} value={otp} onChange={handleOtpChange}>
-                        <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                    </InputOTP>
+                    <div className="space-y-2 pt-4">
+                        <label className="text-sm font-medium">Verification Code</label>
+                         <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={otp} onChange={handleOtpChange}>
+                                <InputOTPGroup>
+                                <InputOTPSlot index={0} />
+                                <InputOTPSlot index={1} />
+                                <InputOTPSlot index={2} />
+                                <InputOTPSlot index={3} />
+                                <InputOTPSlot index={4} />
+                                <InputOTPSlot index={5} />
+                                </InputOTPGroup>
+                            </InputOTP>
+                        </div>
                     </div>
                     <Button onClick={onVerifyOtp} className="w-full bg-primary py-3 text-lg" disabled={isSubmitting}>
-                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify"}
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify & Continue"}
                     </Button>
-                    <Button variant="link" onClick={() => setStep('phone')} className="text-muted-foreground">Change number</Button>
+                     <div className="text-center text-sm">
+                        <span className="text-muted-foreground">Didn't receive the code? </span>
+                        <Button variant="link" className="text-primary p-0 h-auto" onClick={() => setStep('phone')}>Resend OTP</Button>
+                    </div>
                 </div>
             )}
             </div>
