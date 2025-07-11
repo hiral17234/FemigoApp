@@ -3,12 +3,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle2, ChevronRight } from "lucide-react"
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -57,12 +56,15 @@ export default function PhoneVerificationPage() {
       // Error handled on the page, but prevent recaptcha setup
       return;
     }
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-      size: "invisible",
-      callback: (response: any) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-      },
-    })
+    // Make sure recaptcha container is on the page
+    if (document.getElementById("recaptcha-container")) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+          'size': "invisible",
+          'callback': (response: any) => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+          },
+        });
+    }
   }, [])
   
   const onSendOtp = async () => {
@@ -130,44 +132,36 @@ export default function PhoneVerificationPage() {
 
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black p-4 text-white">
-      <video
-        src="https://media.istockphoto.com/id/1456520455/nl/video/sulfur-cosmos-flowers-bloom-in-the-garden.mp4?s=mp4-480x480-is&k=20&c=xbZAFUX4xgFK_GWD71mYxPUwCZr-qTb9wObCrWMB8ak="
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
+      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
+      
+      <div className="absolute top-8 left-8 z-10">
+          <Button onClick={() => router.back()} variant="ghost" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </Button>
+      </div>
 
       <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
-        <div className="absolute top-0 left-0">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft />
-          </Button>
-        </div>
-
-        <div className="mb-8 mt-16 px-4 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Phone Verification</h1>
-           <p className="text-muted-foreground mt-2 text-sm">We need to verify your phone number to secure your account.</p>
-          <Progress value={(3 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
-        </div>
-
-        <div className="w-full rounded-2xl border border-white/10 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
+          
           {firebaseError ? (
             <div className="text-center text-red-500">
                 <h3 className="font-bold">Configuration Error</h3>
                 <p className="text-sm">{firebaseError}</p>
             </div>
           ) : isVerified ? (
-            <div className="flex flex-col items-center justify-center gap-4 text-center text-green-400">
+            <div className="flex flex-col items-center justify-center gap-4 text-center text-green-400 min-h-[280px]">
                 <CheckCircle2 className="h-16 w-16" />
                 <h2 className="text-2xl font-bold">Verified!</h2>
                 <p className="text-sm text-muted-foreground">Redirecting...</p>
             </div>
           ) : step === "phone" ? (
-             <div className="space-y-6">
+             <div className="space-y-8">
+                <div className="space-y-2 text-center">
+                    <h1 className="text-3xl font-bold tracking-tight">Step 4: Phone Verification</h1>
+                    <p className="text-muted-foreground">Enter your phone number to receive a verification code.</p>
+                </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Phone Number</label>
                     <div className="flex gap-2">
@@ -181,37 +175,40 @@ export default function PhoneVerificationPage() {
                         </Select>
                         <Input 
                             type="tel" 
-                            placeholder="Enter your phone number" 
+                            placeholder="9238099587" 
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
+                            className="focus:ring-primary focus:border-primary"
                         />
                     </div>
+                     <p className="text-xs text-muted-foreground pt-2">An OTP will be sent via SMS to verify your mobile number.</p>
                 </div>
-                <Button onClick={onSendOtp} className="w-full bg-primary py-3 text-lg" disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Send OTP"}
+                <Button onClick={onSendOtp} className="w-full bg-primary py-3 text-lg font-semibold group" disabled={isSubmitting}>
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Continue"}
+                    {!isSubmitting && <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />}
                 </Button>
                 <div id="recaptcha-container"></div>
              </div>
           ) : (
-            <div className="space-y-6 text-center">
+            <div className="space-y-8 text-center">
                 <div className="space-y-2">
-                    <label className="text-sm font-medium">Enter 6-Digit OTP</label>
-                    <p className="text-xs text-muted-foreground">Sent to {countryCode}{phone}</p>
-                    <div className="flex justify-center pt-2">
-                      <InputOTP maxLength={6} value={otp} onChange={handleOtpChange}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
+                    <h1 className="text-3xl font-bold tracking-tight">Enter OTP</h1>
+                    <p className="text-muted-foreground">Enter the 6-digit code sent to {countryCode}{phone}</p>
+                </div>
+                <div className="flex justify-center pt-2">
+                  <InputOTP maxLength={6} value={otp} onChange={handleOtpChange}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
                 </div>
                  <Button onClick={onVerifyOtp} className="w-full bg-primary py-3 text-lg" disabled={isSubmitting}>
-                     {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify OTP"}
+                     {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify"}
                  </Button>
                  <Button variant="link" onClick={() => setStep('phone')} className="text-muted-foreground">Change number</Button>
             </div>
