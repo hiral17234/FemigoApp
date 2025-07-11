@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Loader2, Eye, EyeOff, Check, X } from "lucide-react"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 
@@ -24,26 +24,52 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { auth, db, firebaseError } from "@/lib/firebase"
+import { cn } from "@/lib/utils"
 
 const formSchema = z
   .object({
-    password: z.string().min(8, {
-      message: "Password must be at least 8 characters.",
-    }),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters.")
+      .refine((password) => /[a-z]/.test(password), {
+        message: "Password must contain a lowercase letter.",
+      })
+      .refine((password) => /[A-Z]/.test(password), {
+        message: "Password must contain an uppercase letter.",
+      })
+      .refine((password) => /\d/.test(password), {
+        message: "Password must contain a number.",
+      })
+      .refine((password) => /[^a-zA-Z0-9]/.test(password), {
+        message: "Password must contain a special character.",
+      }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match.",
     path: ["confirmPassword"],
   })
+  
+type PasswordValidation = {
+  rule: string;
+  regex: RegExp;
+  met: boolean;
+}
 
 export default function OnboardingPasswordPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const [validations, setValidations] = useState<PasswordValidation[]>([
+      { rule: 'At least 8 characters long', regex: /.{8,}/, met: false },
+      { rule: 'Contains an uppercase letter', regex: /[A-Z]/, met: false },
+      { rule: 'Contains a lowercase letter', regex: /[a-z]/, met: false },
+      { rule: 'Contains a number', regex: /\d/, met: false },
+      { rule: 'Contains a special character', regex: /[^a-zA-Z0-9]/, met: false },
+  ]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,7 +77,17 @@ export default function OnboardingPasswordPage() {
       password: "",
       confirmPassword: "",
     },
+    mode: 'onChange'
   })
+
+  const password = form.watch("password")
+
+  useEffect(() => {
+    setValidations(prev => 
+        prev.map(v => ({ ...v, met: v.regex.test(password) }))
+    )
+  }, [password])
+
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     if (firebaseError || !auth || !db) {
@@ -149,16 +185,18 @@ export default function OnboardingPasswordPage() {
       setIsSubmitting(false)
     }
   }
-  
-  const watchedPassword = form.watch("password")
-  
-  useEffect(() => {
-    setPassword(watchedPassword || "")
-  }, [watchedPassword])
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background text-foreground">
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
+        <video
+            src="https://videos.pexels.com/video-files/26621651/11977308_2560_1440_30fps.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
+        />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       <main className="relative z-20 flex min-h-screen flex-col items-center justify-center p-4">
         <div className="w-full max-w-md">
@@ -169,7 +207,7 @@ export default function OnboardingPasswordPage() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Link>
-            <div className="w-full rounded-2xl border bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+            <div className="w-full rounded-2xl border border-white/10 bg-transparent p-8 shadow-2xl backdrop-blur-xl">
               <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Secure Your Account
               </h1>
@@ -195,9 +233,20 @@ export default function OnboardingPasswordPage() {
                             </div>
                         </FormControl>
                         <FormMessage />
-                        <PasswordStrength password={password} />
                       </FormItem>
                     )} />
+
+                    <div className="space-y-2">
+                        {validations.map((item) => (
+                            <div key={item.rule} className={cn(
+                                "flex items-center gap-2 text-sm transition-colors",
+                                item.met ? "text-green-400" : "text-muted-foreground"
+                            )}>
+                                {item.met ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+                                <span>{item.rule}</span>
+                            </div>
+                        ))}
+                    </div>
 
                     <FormField control={form.control} name="confirmPassword" render={({ field }) => (
                       <FormItem>
