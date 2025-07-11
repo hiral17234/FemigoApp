@@ -10,8 +10,8 @@ import { Button } from "@/components/ui/button"
 
 export default function ContactUsPage() {
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#0C0A09] p-4 text-white">
-      <div className="absolute top-0 left-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900/40 via-violet-900/10 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">
+      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
       <div className="absolute top-4 left-4 sm:top-8 sm:left-8">
         <Link href="/dashboard">
