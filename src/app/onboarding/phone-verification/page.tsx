@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check } from "lucide-react"
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,19 +13,13 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { useToast } from "@/hooks/use-toast"
-import { auth, firebaseError } from "@/lib/firebase"
+import { firebaseError } from "@/lib/firebase"
 import { countries } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 
-
-declare global {
-  interface Window {
-    recaptchaVerifier: RecaptchaVerifier
-    confirmationResult: any
-  }
-}
+const DEMO_OTP = "123456";
 
 export default function PhoneVerificationPage() {
   const router = useRouter()
@@ -48,23 +41,6 @@ export default function PhoneVerificationPage() {
       setCountryCode(`+${country.phone}`);
     }
   }, []);
-
-  useEffect(() => {
-    if (firebaseError || !auth) {
-      // Error handled on the page, but prevent recaptcha setup
-      return;
-    }
-    // Make sure recaptcha container is on the page
-    const recaptchaContainer = document.getElementById("recaptcha-container");
-    if (recaptchaContainer && !window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-          'size': "invisible",
-          'callback': (response: any) => {
-            // reCAPTCHA solved, allow signInWithPhoneNumber.
-          },
-        });
-    }
-  }, [])
   
   const onSendOtp = async () => {
     if (phone.length < 8) {
@@ -73,28 +49,16 @@ export default function PhoneVerificationPage() {
     }
     setIsSubmitting(true);
     const fullPhoneNumber = countryCode + phone;
-    const appVerifier = window.recaptchaVerifier;
 
-    try {
-        const confirmationResult = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
-        window.confirmationResult = confirmationResult;
+    // DEMO MODE: Simulate sending OTP
+    setTimeout(() => {
         setStep("otp");
         toast({
             title: 'OTP Sent!', 
-            description: `We've sent a verification code to ${fullPhoneNumber}`
+            description: `Enter the demo OTP (123456) sent to ${fullPhoneNumber}`
         });
-    } catch(error: any) {
-        console.error("Error sending OTP", error);
-        let errorMessage = "Failed to send OTP. Please try again.";
-        if (error.code === 'auth/invalid-phone-number') {
-            errorMessage = "The phone number is not valid. Please check and try again.";
-        } else if (error.code === 'auth/too-many-requests') {
-            errorMessage = "Too many requests. Please try again later.";
-        }
-        toast({variant: 'destructive', title: 'Error', description: errorMessage});
-    } finally {
         setIsSubmitting(false);
-    }
+    }, 1000);
   }
 
   const onVerifyOtp = async () => {
@@ -103,25 +67,20 @@ export default function PhoneVerificationPage() {
         return;
     }
     setIsSubmitting(true);
-    try {
-        await window.confirmationResult.confirm(otp);
-        setIsVerified(true);
-        // Save the verified phone number to localStorage
-        localStorage.setItem("userPhone", countryCode + phone);
-        toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.'});
-        setTimeout(() => router.push('/onboarding/details'), 2000);
-    } catch(error: any) {
-        console.error("Error verifying OTP", error);
-         let errorMessage = "Failed to verify OTP. Please try again.";
-        if (error.code === 'auth/invalid-verification-code') {
-            errorMessage = "The OTP you entered is incorrect.";
-        } else if (error.code === 'auth/code-expired') {
-            errorMessage = "The OTP has expired. Please request a new one.";
+
+    // DEMO MODE: Verify against the hardcoded OTP
+    setTimeout(() => {
+        if (otp === DEMO_OTP) {
+            setIsVerified(true);
+            // Save the verified phone number to localStorage
+            localStorage.setItem("userPhone", countryCode + phone);
+            toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.'});
+            setTimeout(() => router.push('/onboarding/details'), 2000);
+        } else {
+            toast({variant: 'destructive', title: 'Verification Failed', description: "The OTP you entered is incorrect."});
         }
-        toast({variant: 'destructive', title: 'Verification Failed', description: errorMessage});
-    } finally {
         setIsSubmitting(false);
-    }
+    }, 1000);
   }
   
   const handleOtpChange = (newOtp: string) => {
@@ -221,7 +180,6 @@ export default function PhoneVerificationPage() {
                     {isSubmitting ? <Loader2 className="animate-spin" /> : "Continue"}
                     {!isSubmitting && <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />}
                 </Button>
-                <div id="recaptcha-container"></div>
              </div>
           ) : (
             <div className="space-y-8 text-center">
