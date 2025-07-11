@@ -259,12 +259,14 @@ export default function SettingsPage() {
 
                 </div>
 
-                 <Separator className="my-6 bg-border/20" />
+                <Separator className="my-6 bg-border/20" />
 
-                 <Button variant="destructive" className="w-full bg-red-900/50 border border-red-500/50 hover:bg-red-900/80" onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    {t.logout}
-                 </Button>
+                <div className="flex justify-start">
+                    <Button variant="destructive" className="bg-red-900/50 border border-red-500/50 hover:bg-red-900/80" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        {t.logout}
+                    </Button>
+                </div>
 
             </CardContent>
           </Card>
