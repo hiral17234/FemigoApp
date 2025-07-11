@@ -20,12 +20,8 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils"
 
 function CustomOtpNotification({ otp, visible }: { otp: string, visible: boolean }) {
-    const { toast } = useToast();
-
     const handleCopy = () => {
-        navigator.clipboard.writeText(otp).then(() => {
-            toast({ title: "OTP Copied!", variant: "default" });
-        });
+        navigator.clipboard.writeText(otp);
     }
 
     return (
