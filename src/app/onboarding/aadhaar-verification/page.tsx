@@ -54,7 +54,7 @@ export default function AadhaarVerificationPage() {
   
   const startCamera = useCallback(async (mode: 'user' | 'environment') => {
       stopCamera();
-      if (verificationState !== 'idle' || inputMode !== 'camera') return;
+      if (inputMode !== 'camera') return;
       
       try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } })
@@ -70,7 +70,7 @@ export default function AadhaarVerificationPage() {
               description: "Could not access camera. Please check permissions.",
           })
       }
-  }, [stopCamera, toast, inputMode, verificationState]);
+  }, [stopCamera, toast, inputMode]);
   
   useEffect(() => {
     if (inputMode === 'camera' && verificationState === 'idle') {
@@ -116,6 +116,12 @@ export default function AadhaarVerificationPage() {
       reader.readAsDataURL(file)
     }
   }
+  
+  const openFilePicker = () => {
+    if (inputMode === 'upload') {
+        fileInputRef.current?.click();
+    }
+  };
 
   const resetState = () => {
     setImageDataUrl(null)
@@ -182,9 +188,12 @@ export default function AadhaarVerificationPage() {
             }
             if (inputMode === 'upload') {
                 return (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-primary/50 rounded-lg cursor-pointer hover:bg-primary/10 transition-colors">
+                    <div 
+                        onClick={openFilePicker} 
+                        className="w-full h-full flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-primary/50 rounded-lg cursor-pointer hover:bg-primary/10 transition-colors"
+                    >
                         <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="font-semibold">Click the button below to upload</p>
+                        <p className="font-semibold">Click to upload a file</p>
                         <p className="text-xs text-muted-foreground mt-1">PNG, JPG (MAX. 5MB)</p>
                     </div>
                 )
