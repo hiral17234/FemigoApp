@@ -170,6 +170,7 @@ export default function DashboardLayout({
     };
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setIsLoadingUser(true);
       if (currentUser) {
         setUser(currentUser);
         try {
@@ -187,6 +188,7 @@ export default function DashboardLayout({
         } catch (error) {
             console.error("Failed to fetch user data:", error);
             setUserName(currentUser.displayName || "User");
+            setUserInitial((currentUser.displayName || "U").charAt(0).toUpperCase());
         } finally {
             setIsLoadingUser(false);
         }
@@ -231,6 +233,14 @@ export default function DashboardLayout({
     { href: "/contact-us", icon: LifeBuoy, label: t.contactSupport },
     { href: "/settings", icon: Settings, label: t.settings },
   ]
+
+  if (isLoadingUser) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </div>
+    );
+  }
 
   return (
     <SidebarProvider>
