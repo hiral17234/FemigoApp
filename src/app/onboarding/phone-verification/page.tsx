@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check, Copy } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,33 +21,6 @@ import { cn } from "@/lib/utils"
 
 const DEMO_OTP = "123456";
 
-const CustomOtpNotification = ({ otp, onCopy, onClose }: { otp: string, onCopy: () => void, onClose: () => void }) => {
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            onClose();
-        }, 3000); // Auto-close after 3 seconds
-        return () => clearTimeout(timer);
-    }, [onClose]);
-
-    return (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-full max-w-sm p-4 animate-in slide-in-from-top-full duration-500">
-            <div className="rounded-2xl border bg-white text-black p-4 shadow-2xl">
-                <div className="flex justify-between items-start">
-                    <div className="space-y-1">
-                        <p className="font-bold text-lg">OTP Sent!</p>
-                        <p className="text-sm text-gray-600">Your verification code is:</p>
-                        <p className="text-3xl font-bold tracking-widest text-blue-600">{otp}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={onCopy}>
-                        <Copy className="h-5 w-5" />
-                    </Button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
 export default function PhoneVerificationPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -59,7 +32,6 @@ export default function PhoneVerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
-  const [showCustomOtp, setShowCustomOtp] = useState(false)
 
   // Get user country from local storage to set a default
   useEffect(() => {
@@ -77,24 +49,19 @@ export default function PhoneVerificationPage() {
     }
     setIsSubmitting(true);
     
-    // DEMO MODE: Simulate sending OTP
-    setShowCustomOtp(true);
-  }
-
-  const handleNotificationClose = () => {
-      setShowCustomOtp(false);
-      setIsSubmitting(false);
-      setStep('otp');
-  };
-
-  const handleCopyOtp = () => {
-    navigator.clipboard.writeText(DEMO_OTP);
+    // DEMO MODE: Simulate sending OTP using the standard toast
     toast({
-        title: "Copied!",
-        description: "OTP copied to clipboard.",
-        variant: "default",
+        title: "OTP Sent!",
+        description: `We've sent a verification code to ${countryCode}${phone}.`,
+        variant: 'default', // This will be the dark style
     });
-  };
+
+    // Wait for a moment to let the user see the toast, then proceed
+    setTimeout(() => {
+        setIsSubmitting(false);
+        setStep('otp');
+    }, 2000); // 2-second delay
+  }
 
   const onVerifyOtp = async () => {
      if (otp.length !== 6) {
@@ -109,12 +76,12 @@ export default function PhoneVerificationPage() {
             setIsVerified(true);
             // Save the verified phone number to localStorage
             localStorage.setItem("userPhone", countryCode + phone);
-            toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.'});
+            toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
             setTimeout(() => router.push('/onboarding/details'), 2000);
         } else {
             toast({variant: 'destructive', title: 'Verification Failed', description: "The OTP you entered is incorrect."});
+            setIsSubmitting(false);
         }
-        setIsSubmitting(false);
     }, 1000);
   }
   
@@ -125,10 +92,8 @@ export default function PhoneVerificationPage() {
     }
   }
 
-
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
-        {showCustomOtp && <CustomOtpNotification otp={DEMO_OTP} onCopy={handleCopyOtp} onClose={handleNotificationClose} />}
         <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
         
         <div className="absolute top-8 left-8 z-10">
