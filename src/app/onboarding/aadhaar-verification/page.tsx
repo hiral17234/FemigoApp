@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast"
 import { verifyAadhaar } from "@/ai/flows/aadhaar-verification-flow"
 import { type AadhaarVerificationOutput } from "@/ai/types"
 
-type VerificationState = "idle" | "uploading" | "verifying" | "success" | "failed" | "error"
+type VerificationState = "idle" | "camera" | "preview" | "verifying" | "success" | "failed" | "error"
 
 export default function AadhaarVerificationPage() {
   const router = useRouter()
@@ -44,11 +44,13 @@ export default function AadhaarVerificationPage() {
 
   const startCamera = async () => {
     try {
+      // Prefer the rear camera for documents
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
       if (videoRef.current) {
         videoRef.current.srcObject = stream
       }
       setIsCameraOn(true)
+      setVerificationState("camera");
     } catch (err) {
       console.error("Error accessing camera:", err)
       toast({
@@ -59,14 +61,14 @@ export default function AadhaarVerificationPage() {
     }
   }
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach((track) => track.stop())
       videoRef.current.srcObject = null
     }
     setIsCameraOn(false)
-  }
+  }, [])
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -79,6 +81,7 @@ export default function AadhaarVerificationPage() {
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
         const dataUrl = canvas.toDataURL("image/jpeg")
         setImageDataUrl(dataUrl)
+        setVerificationState("preview")
         stopCamera()
       }
     }
@@ -90,6 +93,7 @@ export default function AadhaarVerificationPage() {
       const reader = new FileReader()
       reader.onload = (e) => {
         setImageDataUrl(e.target?.result as string)
+        setVerificationState("preview")
       }
       reader.readAsDataURL(file)
     }
@@ -135,11 +139,12 @@ export default function AadhaarVerificationPage() {
     }
   }, [imageDataUrl, router, toast, userName]);
   
+  // Cleanup camera on unmount
   useEffect(() => {
-    if (imageDataUrl && verificationState === 'idle') {
-        handleVerification();
-    }
-  }, [imageDataUrl, verificationState, handleVerification])
+      return () => {
+          stopCamera();
+      }
+  }, [stopCamera]);
 
   const getCardContent = () => {
     switch (verificationState) {
@@ -172,35 +177,40 @@ export default function AadhaarVerificationPage() {
                     <p className="text-muted-foreground">Our AI is analyzing your document. Please wait.</p>
                 </div>
             )
+        case 'camera':
+            return (
+                <div className="flex flex-col items-center gap-4 h-full">
+                    <div className="relative w-full aspect-[16/10] bg-muted rounded-lg overflow-hidden border-2 border-primary">
+                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+                        <canvas ref={canvasRef} className="hidden" />
+                    </div>
+                    <div className="flex gap-4">
+                        <Button onClick={capturePhoto} size="lg" className="rounded-full h-16 w-16">
+                            <Camera className="h-8 w-8" />
+                        </Button>
+                        <Button onClick={resetState} variant="destructive">Cancel</Button>
+                    </div>
+                </div>
+            );
+        case 'preview':
+             return (
+                <div className="flex flex-col items-center gap-4 h-full">
+                    <Image src={imageDataUrl!} alt="Aadhaar Preview" width={400} height={250} className="rounded-lg max-w-full" />
+                    <div className="flex gap-4 w-full">
+                        <Button onClick={resetState} variant="secondary" className="w-full">
+                            <RefreshCw className="mr-2 h-4 w-4" /> Retake
+                        </Button>
+                        <Button onClick={handleVerification} className="w-full">
+                            Looks Good
+                        </Button>
+                    </div>
+                </div>
+            )
         default: // idle
-            if (isCameraOn) {
-                return (
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="relative w-full aspect-[16/10] bg-black rounded-lg overflow-hidden">
-                            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                             <canvas ref={canvasRef} className="hidden" />
-                        </div>
-                        <div className="flex gap-4">
-                           <Button onClick={capturePhoto} size="lg" className="rounded-full h-16 w-16">
-                                <Camera className="h-8 w-8" />
-                            </Button>
-                            <Button onClick={stopCamera} variant="destructive">Cancel</Button>
-                        </div>
-                    </div>
-                )
-            }
-             if (imageDataUrl) {
-                return (
-                    <div className="flex flex-col items-center gap-4">
-                         <Image src={imageDataUrl} alt="Aadhaar Preview" width={400} height={250} className="rounded-lg max-w-full" />
-                         <p className="text-muted-foreground">Uploaded. Preparing for verification...</p>
-                    </div>
-                )
-            }
             return (
                 <div className="flex flex-col items-center justify-center gap-6 h-full p-8 text-center">
                     <h2 className="text-2xl font-semibold">Upload Your Aadhaar Card</h2>
-                    <p className="text-muted-foreground">You can either upload a photo or use your phone's camera.</p>
+                    <p className="text-muted-foreground">You can either upload a photo of the front of your card or use your phone's camera.</p>
                     <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
                     <div className="w-full space-y-4">
                         <Button onClick={() => fileInputRef.current?.click()} size="lg" className="w-full">
@@ -236,7 +246,7 @@ export default function AadhaarVerificationPage() {
         </div>
 
         <div className="mb-8 mt-16 px-4">
-            <h1 className="text-center text-3xl font-bold tracking-tight">Aadhaar Verification</h1>
+            <h1 className="text-center text-3xl font-bold tracking-tight">Step 3: Aadhaar Verification</h1>
             <Progress value={(3 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
