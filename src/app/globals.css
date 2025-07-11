@@ -96,3 +96,22 @@
     transition-duration: 300ms;
   }
 }
+
+@layer components {
+    /* Custom scrollbar for CMDK Command List */
+    [cmdk-list] {
+        scrollbar-width: auto; /* For Firefox */
+        scrollbar-color: hsl(var(--muted)) hsl(var(--popover)); /* For Firefox */
+    }
+    [cmdk-list]::-webkit-scrollbar {
+        width: 8px;
+    }
+    [cmdk-list]::-webkit-scrollbar-track {
+        background-color: hsl(var(--popover));
+    }
+    [cmdk-list]::-webkit-scrollbar-thumb {
+        background-color: hsl(var(--muted));
+        border-radius: 4px;
+        border: 2px solid hsl(var(--popover));
+    }
+}
