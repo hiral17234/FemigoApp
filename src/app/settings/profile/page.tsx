@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from "react";
@@ -9,7 +8,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firestore";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
 import { auth, db, firebaseError } from "@/lib/firebase";
 import { ArrowLeft, User as UserIcon, Mail, Phone, Calendar, Home, Save, Loader2, Edit2, Camera } from "lucide-react";
@@ -273,4 +272,3 @@ export default function EditProfilePage() {
         </main>
     );
 }
-
