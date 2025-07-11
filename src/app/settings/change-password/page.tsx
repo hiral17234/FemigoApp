@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ArrowLeft, Loader2, Eye, EyeOff, KeyRound } from "lucide-react"
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth"
 import Link from "next/link"
@@ -26,18 +26,69 @@ import { auth, firebaseError } from "@/lib/firebase"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 
 
-const formSchema = z
-  .object({
+const baseSchema = {
     currentPassword: z.string().min(1, { message: "Current password is required." }),
     newPassword: z.string().min(8, {
       message: "New password must be at least 8 characters.",
     }),
     confirmPassword: z.string(),
-  })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords do not match.",
-    path: ["confirmPassword"],
-  })
+}
+
+const translations = {
+    en: {
+        formSchema: z.object(baseSchema).refine((data) => data.newPassword === data.confirmPassword, {
+            message: "Passwords do not match.",
+            path: ["confirmPassword"],
+        }),
+        title: "Change Password",
+        description: "Enter your current and new password below.",
+        currentPasswordLabel: "Current Password",
+        currentPasswordPlaceholder: "Enter your current password",
+        forgotPassword: "Forgot Password?",
+        newPasswordLabel: "New Password",
+        newPasswordPlaceholder: "Enter a new strong password",
+        confirmPasswordLabel: "Confirm New Password",
+        confirmPasswordPlaceholder: "Confirm your new password",
+        updateButton: "Update Password",
+        toastError: "Error",
+        toastNotLoggedIn: "You are not logged in.",
+        toastSuccessTitle: "Password Updated",
+        toastSuccessDesc: "Your password has been changed successfully.",
+        toastUpdateFailed: "Update Failed",
+        toastErrorUnexpected: "An unexpected error occurred. Please try again.",
+        toastErrorWrongPass: "The current password you entered is incorrect.",
+        toastErrorTooManyRequests: "Too many attempts. Please try again later.",
+    },
+    hi: {
+        formSchema: z.object({
+            currentPassword: z.string().min(1, { message: "वर्तमान पासवर्ड आवश्यक है।" }),
+            newPassword: z.string().min(8, { message: "नया पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।" }),
+            confirmPassword: z.string(),
+        }).refine((data) => data.newPassword === data.confirmPassword, {
+            message: "पासवर्ड मेल नहीं खाते।",
+            path: ["confirmPassword"],
+        }),
+        title: "पासवर्ड बदलें",
+        description: "नीचे अपना वर्तमान और नया पासवर्ड दर्ज करें।",
+        currentPasswordLabel: "वर्तमान पासवर्ड",
+        currentPasswordPlaceholder: "अपना वर्तमान पासवर्ड दर्ज करें",
+        forgotPassword: "पासवर्ड भूल गए?",
+        newPasswordLabel: "नया पासवर्ड",
+        newPasswordPlaceholder: "एक नया मजबूत पासवर्ड दर्ज करें",
+        confirmPasswordLabel: "नए पासवर्ड की पुष्टि करें",
+        confirmPasswordPlaceholder: "अपने नए पासवर्ड की पुष्टि करें",
+        updateButton: "पासवर्ड अपडेट करें",
+        toastError: "त्रुटि",
+        toastNotLoggedIn: "आप लॉग इन नहीं हैं।",
+        toastSuccessTitle: "पासवर्ड अपडेट किया गया",
+        toastSuccessDesc: "आपका पासवर्ड सफलतापूर्वक बदल दिया गया है।",
+        toastUpdateFailed: "अपडेट विफल",
+        toastErrorUnexpected: "एक अप्रत्याशित त्रुटि हुई। कृपया फिर से प्रयास करें।",
+        toastErrorWrongPass: "आपके द्वारा दर्ज किया गया वर्तमान पासवर्ड गलत है।",
+        toastErrorTooManyRequests: "बहुत अधिक प्रयास। कृपया बाद में फिर से प्रयास करें।",
+    }
+}
+
 
 export default function ChangePasswordPage() {
   const router = useRouter()
@@ -47,6 +98,15 @@ export default function ChangePasswordPage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [language, setLanguage] = useState('en');
+
+  useEffect(() => {
+    const storedLang = localStorage.getItem('femigo-language') || 'en';
+    setLanguage(storedLang);
+  }, []);
+
+  const t = translations[language as keyof typeof translations];
+  const formSchema = t.formSchema;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,7 +129,7 @@ export default function ChangePasswordPage() {
     const user = auth?.currentUser;
 
     if (!user || !user.email) {
-      toast({ variant: "destructive", title: "Error", description: "You are not logged in." })
+      toast({ variant: "destructive", title: t.toastError, description: t.toastNotLoggedIn })
       setIsSubmitting(false)
       return;
     }
@@ -81,23 +141,23 @@ export default function ChangePasswordPage() {
       await updatePassword(user, values.newPassword);
 
       toast({
-        title: "Password Updated",
-        description: "Your password has been changed successfully.",
+        title: t.toastSuccessTitle,
+        description: t.toastSuccessDesc,
       })
       router.push("/settings")
 
     } catch (error: any) {
       console.error("Password change failed:", error)
-      let errorMessage = "An unexpected error occurred. Please try again."
+      let errorMessage = t.toastErrorUnexpected;
       if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        errorMessage = "The current password you entered is incorrect."
+        errorMessage = t.toastErrorWrongPass;
       } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Too many attempts. Please try again later."
+        errorMessage = t.toastErrorTooManyRequests;
       }
       
       toast({
         variant: "destructive",
-        title: "Update Failed",
+        title: t.toastUpdateFailed,
         description: errorMessage,
       })
     } finally {
@@ -113,18 +173,18 @@ export default function ChangePasswordPage() {
       
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <Link href="/settings" aria-label="Back to Settings">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:bg-accent/20 hover:text-primary rounded-full">
-                <ArrowLeft className="h-5 w-5" />
-            </Button>
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:bg-accent/20 hover:text-primary rounded-full">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
         </Link>
       </div>
 
         <div className="w-full max-w-md">
             <Card className="w-full rounded-2xl border-none bg-black/30 p-8 shadow-2xl shadow-primary/10 backdrop-blur-md">
                 <CardHeader className="p-0 mb-6 text-center">
-                    <CardTitle className="text-3xl font-bold tracking-tight">Change Password</CardTitle>
+                    <CardTitle className="text-3xl font-bold tracking-tight">{t.title}</CardTitle>
                     <CardDescription className="text-muted-foreground">
-                        Enter your current and new password below.
+                        {t.description}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -133,12 +193,12 @@ export default function ChangePasswordPage() {
                             
                             <FormField control={form.control} name="currentPassword" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Current Password</FormLabel>
+                                <FormLabel>{t.currentPasswordLabel}</FormLabel>
                                 <FormControl>
                                     <div className="relative">
                                         <Input 
                                             type={showCurrentPassword ? "text" : "password"} 
-                                            placeholder="Enter your current password" 
+                                            placeholder={t.currentPasswordPlaceholder} 
                                             {...field}
                                             className="pr-10" />
                                         <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground">
@@ -153,7 +213,7 @@ export default function ChangePasswordPage() {
                                       className="text-xs font-semibold text-red-500 transition-colors hover:text-red-400 disabled:opacity-50"
                                       style={{ textShadow: '0 0 8px hsl(0 100% 50% / 0.5)' }}
                                     >
-                                      Forgot Password?
+                                      {t.forgotPassword}
                                     </button>
                                 </div>
                                 <FormMessage />
@@ -162,12 +222,12 @@ export default function ChangePasswordPage() {
 
                             <FormField control={form.control} name="newPassword" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>New Password</FormLabel>
+                                <FormLabel>{t.newPasswordLabel}</FormLabel>
                                 <FormControl>
                                     <div className="relative">
                                         <Input 
                                             type={showNewPassword ? "text" : "password"} 
-                                            placeholder="Enter a new strong password" 
+                                            placeholder={t.newPasswordPlaceholder} 
                                             {...field}
                                             className="pr-10" />
                                         <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground">
@@ -182,12 +242,12 @@ export default function ChangePasswordPage() {
 
                             <FormField control={form.control} name="confirmPassword" render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Confirm New Password</FormLabel>
+                                <FormLabel>{t.confirmPasswordLabel}</FormLabel>
                                 <FormControl>
                                     <div className="relative">
                                         <Input 
                                             type={showConfirmPassword ? "text" : "password"} 
-                                            placeholder="Confirm your new password" 
+                                            placeholder={t.confirmPasswordPlaceholder}
                                             {...field} 
                                             className="pr-10" />
                                         <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground">
@@ -200,7 +260,7 @@ export default function ChangePasswordPage() {
                             )} />
 
                         <Button type="submit" disabled={isSubmitting} className="w-full bg-primary text-lg font-semibold text-primary-foreground py-3 rounded-lg transition-all duration-300 hover:shadow-lg hover:scale-105">
-                            {isSubmitting ? <Loader2 className="animate-spin" /> : "Update Password"}
+                            {isSubmitting ? <Loader2 className="animate-spin" /> : t.updateButton}
                         </Button>
                         </form>
                     </Form>

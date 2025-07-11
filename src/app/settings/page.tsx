@@ -23,6 +23,51 @@ const languages = [
     { code: 'hi', name: 'हिंदी (Hindi)' },
 ]
 
+const translations = {
+    en: {
+        settings: "Settings",
+        profile: "Profile",
+        editProfile: "Edit Profile",
+        security: "Security",
+        changePassword: "Change Password",
+        notifications: "Notifications",
+        emergencyAlerts: "Emergency Alerts",
+        appUpdates: "App Updates",
+        regional: "Regional",
+        languageRegion: "Language & Region",
+        theme: "Theme",
+        lightMode: "Light Mode",
+        darkMode: "Dark Mode",
+        logout: "Logout",
+        languageUpdated: "Language Updated",
+        languageUpdatedDesc: (lang: string) => `Language set to ${lang}.`,
+        loggedOut: "Logged Out",
+        loggedOutDesc: "You have been successfully logged out.",
+        logoutFailed: "Logout Failed",
+    },
+    hi: {
+        settings: "सेटिंग्स",
+        profile: "प्रोफ़ाइल",
+        editProfile: "प्रोफ़ाइल संपादित करें",
+        security: "सुरक्षा",
+        changePassword: "पासवर्ड बदलें",
+        notifications: "सूचनाएं",
+        emergencyAlerts: "आपातकालीन अलर्ट",
+        appUpdates: "ऐप अपडेट",
+        regional: "क्षेत्रीय",
+        languageRegion: "भाषा और क्षेत्र",
+        theme: "थीम",
+        lightMode: "लाइट मोड",
+        darkMode: "डार्क मोड",
+        logout: "लॉग आउट",
+        languageUpdated: "भाषा अपडेट की गई",
+        languageUpdatedDesc: (lang: string) => `भाषा ${lang} पर सेट की गई है।`,
+        loggedOut: "लॉग आउट",
+        loggedOutDesc: "आप सफलतापूर्वक लॉग आउट हो गए हैं।",
+        logoutFailed: "लॉगआउट विफल",
+    }
+}
+
 export default function SettingsPage() {
     const router = useRouter()
     const { toast } = useToast()
@@ -38,13 +83,15 @@ export default function SettingsPage() {
         setSelectedLang(storedLang);
     }, []);
 
+    const t = translations[selectedLang as keyof typeof translations];
+
     const handleLanguageChange = (langCode: string) => {
         setSelectedLang(langCode);
         localStorage.setItem('femigo-language', langCode);
-        // We can optionally force a reload to make sure all components re-render with the new language.
-        // For this simple case, navigating to the same page will cause a re-render.
+        const newT = translations[langCode as keyof typeof translations];
+        const langName = languages.find(l => l.code === langCode)?.name || 'the selected language';
         router.refresh();
-        toast({ title: "Language Updated", description: `Language set to ${languages.find(l => l.code === langCode)?.name}.`})
+        toast({ title: newT.languageUpdated, description: newT.languageUpdatedDesc(langName)})
     }
 
 
@@ -76,10 +123,10 @@ export default function SettingsPage() {
         if (!auth) return
         try {
             await signOut(auth)
-            toast({ title: "Logged Out", description: "You have been successfully logged out." })
+            toast({ title: t.loggedOut, description: t.loggedOutDesc })
             router.push('/login')
         } catch (error) {
-            toast({ variant: "destructive", title: "Logout Failed" })
+            toast({ variant: "destructive", title: t.logoutFailed })
         }
     }
 
@@ -105,7 +152,7 @@ export default function SettingsPage() {
               </Button>
             </Link>
           </div>
-          <h1 className="my-6 text-center text-3xl font-bold tracking-tight">Settings</h1>
+          <h1 className="my-6 text-center text-3xl font-bold tracking-tight">{t.settings}</h1>
       
           <Card className="w-full rounded-2xl border-none bg-black/30 p-6 shadow-2xl shadow-primary/10 backdrop-blur-md">
             <CardContent className="p-0">
@@ -125,11 +172,11 @@ export default function SettingsPage() {
                 <div className="space-y-6">
                     {/* Profile Section */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">Profile</h3>
+                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">{t.profile}</h3>
                         <div className="flex items-center justify-between rounded-lg bg-black/20 p-4">
                             <div className="flex items-center gap-4">
                                 <User className="h-5 w-5 text-primary" />
-                                <span>Edit Profile</span>
+                                <span>{t.editProfile}</span>
                             </div>
                             <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
@@ -137,12 +184,12 @@ export default function SettingsPage() {
 
                     {/* Security Section */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">Security</h3>
+                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">{t.security}</h3>
                          <Link href="/settings/change-password">
                             <div className="flex cursor-pointer items-center justify-between rounded-lg bg-black/20 p-4 hover:bg-black/30">
                                 <div className="flex items-center gap-4">
                                     <KeyRound className="h-5 w-5 text-primary" />
-                                    <span>Change Password</span>
+                                    <span>{t.changePassword}</span>
                                 </div>
                                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
                             </div>
@@ -151,12 +198,12 @@ export default function SettingsPage() {
 
                     {/* Notifications Section */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">Notifications</h3>
+                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">{t.notifications}</h3>
                         <div className="rounded-lg bg-black/20 p-4 space-y-4">
                            <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <Bell className="h-5 w-5 text-primary" />
-                                    <span>Emergency Alerts</span>
+                                    <span>{t.emergencyAlerts}</span>
                                 </div>
                                 <Switch id="emergency-alerts" defaultChecked />
                             </div>
@@ -164,7 +211,7 @@ export default function SettingsPage() {
                              <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <Bell className="h-5 w-5 text-primary" />
-                                    <span>App Updates</span>
+                                    <span>{t.appUpdates}</span>
                                 </div>
                                 <Switch id="app-updates" defaultChecked />
                             </div>
@@ -173,13 +220,13 @@ export default function SettingsPage() {
 
                     {/* Regional Section */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">Regional</h3>
+                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">{t.regional}</h3>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <div className="flex cursor-pointer items-center justify-between rounded-lg bg-black/20 p-4 hover:bg-black/30">
                                     <div className="flex items-center gap-4">
                                         <MapPin className="h-5 w-5 text-primary" />
-                                        <span>Language & Region</span>
+                                        <span>{t.languageRegion}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="text-muted-foreground">{languages.find(l => l.code === selectedLang)?.name}</span>
@@ -200,11 +247,11 @@ export default function SettingsPage() {
 
                      {/* Theme Section */}
                     <div className="space-y-2">
-                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">Theme</h3>
+                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">{t.theme}</h3>
                         <div className="flex items-center justify-between rounded-lg bg-black/20 p-4">
                             <div className="flex items-center gap-4">
                                 {theme === 'light' ? <Sun className="h-5 w-5 text-primary" /> : <Moon className="h-5 w-5 text-primary" />}
-                                <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
+                                <span>{theme === 'light' ? t.lightMode : t.darkMode}</span>
                             </div>
                             <Switch id="theme-mode" checked={theme === 'dark'} onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')} />
                         </div>
@@ -216,7 +263,7 @@ export default function SettingsPage() {
 
                  <Button variant="destructive" className="w-full bg-red-900/50 border border-red-500/50 hover:bg-red-900/80" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Logout
+                    {t.logout}
                  </Button>
 
             </CardContent>

@@ -22,6 +22,53 @@ type TrustedContact = {
   phone: string;
 };
 
+const translations = {
+    en: {
+        error: "Error",
+        notLoggedIn: "Not logged in",
+        notLoggedInDesc: "You must be logged in to add contacts.",
+        invalidInput: "Invalid Input",
+        invalidInputDesc: "Please enter a valid name and phone number (5-15 digits).",
+        contactSaved: "Contact Saved!",
+        contactSavedDesc: (name: string) => `${name} has been added to your trusted contacts.`,
+        saveFailed: "Save Failed",
+        saveFailedDesc: "Could not save your contact. Please try again.",
+        couldNotLoadContacts: "Could not load your contacts.",
+        emergencyServices: "Emergency Services",
+        emergencyServicesDesc: "In an emergency, call an appropriate number for help.",
+        trustedContacts: "Trusted Contacts",
+        trustedContactsDesc: "You can trust your trustworthy contacts for help.",
+        noTrustedContacts: "No trusted contacts added yet.",
+        addTrustedContact: "Add Trusted Contact",
+        addNewTrustedContact: "Add New Trusted Contact",
+        nameLabel: "Name",
+        phoneLabel: "Phone",
+        saveContactButton: "Save contact",
+    },
+    hi: {
+        error: "त्रुटि",
+        notLoggedIn: "लॉग इन नहीं हैं",
+        notLoggedInDesc: "संपर्क जोड़ने के लिए आपको लॉग इन होना चाहिए।",
+        invalidInput: "अमान्य इनपुट",
+        invalidInputDesc: "कृपया एक मान्य नाम और फ़ोन नंबर (5-15 अंक) दर्ज करें।",
+        contactSaved: "संपर्क सहेजा गया!",
+        contactSavedDesc: (name: string) => `${name} को आपके विश्वसनीय संपर्कों में जोड़ दिया गया है।`,
+        saveFailed: "सहेजें विफल",
+        saveFailedDesc: "आपका संपर्क सहेजा नहीं जा सका। कृपया फिर से प्रयास करें।",
+        couldNotLoadContacts: "आपके संपर्क लोड नहीं हो सके।",
+        emergencyServices: "आपातकालीन सेवाएं",
+        emergencyServicesDesc: "आपात स्थिति में, सहायता के लिए उपयुक्त नंबर पर कॉल करें।",
+        trustedContacts: "विश्वसनीय संपर्क",
+        trustedContactsDesc: "आप सहायता के लिए अपने भरोसेमंद संपर्कों पर भरोसा कर सकते हैं।",
+        noTrustedContacts: "अभी तक कोई विश्वसनीय संपर्क नहीं जोड़ा गया है।",
+        addTrustedContact: "विश्वसनीय संपर्क जोड़ें",
+        addNewTrustedContact: "नया विश्वसनीय संपर्क जोड़ें",
+        nameLabel: "नाम",
+        phoneLabel: "फ़ोन",
+        saveContactButton: "संपर्क सहेजें",
+    }
+}
+
 export default function EmergencyPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -33,6 +80,14 @@ export default function EmergencyPage() {
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [language, setLanguage] = useState('en');
+
+  useEffect(() => {
+    const storedLang = localStorage.getItem('femigo-language') || 'en';
+    setLanguage(storedLang);
+  }, []);
+
+  const t = translations[language as keyof typeof translations];
 
   useEffect(() => {
     if (firebaseError || !auth || !db) {
@@ -63,7 +118,7 @@ export default function EmergencyPage() {
 
         } catch (error) {
           console.error("Failed to fetch user data:", error);
-          toast({ variant: "destructive", title: "Error", description: "Could not load your contacts." });
+          toast({ variant: "destructive", title: t.error, description: t.couldNotLoadContacts });
           // Fallback to default on error
           setEmergencyServices(emergencyContacts.default);
         }
@@ -74,19 +129,19 @@ export default function EmergencyPage() {
     });
 
     return () => unsubscribe();
-  }, [router, toast]);
+  }, [router, toast, t]);
 
   const handleSaveContact = async () => {
     if (!user || !db) {
-        toast({ variant: "destructive", title: "Not logged in", description: "You must be logged in to add contacts." });
+        toast({ variant: "destructive", title: t.notLoggedIn, description: t.notLoggedInDesc });
         return;
     }
 
     if (newContactName.trim() === '' || !/^\d{5,15}$/.test(newContactPhone.trim())) {
       toast({
         variant: "destructive",
-        title: "Invalid Input",
-        description: "Please enter a valid name and phone number (5-15 digits).",
+        title: t.invalidInput,
+        description: t.invalidInputDesc,
       });
       return;
     }
@@ -109,12 +164,12 @@ export default function EmergencyPage() {
         setNewContactPhone('');
         setIsDialogOpen(false);
         toast({
-            title: "Contact Saved!",
-            description: `${newContact.name} has been added to your trusted contacts.`,
+            title: t.contactSaved,
+            description: t.contactSavedDesc(newContact.name),
         });
     } catch (error) {
         console.error("Error saving contact:", error);
-        toast({ variant: "destructive", title: "Save Failed", description: "Could not save your contact. Please try again." });
+        toast({ variant: "destructive", title: t.saveFailed, description: t.saveFailedDesc });
     }
   };
 
@@ -155,8 +210,8 @@ export default function EmergencyPage() {
 
         <main className="p-4 space-y-8">
           <section>
-            <h1 className="text-2xl font-bold text-white">Emergency Services</h1>
-            <p className="text-gray-400 mt-1">In an emergency, call an appropriate number for help.</p>
+            <h1 className="text-2xl font-bold text-white">{t.emergencyServices}</h1>
+            <p className="text-gray-400 mt-1">{t.emergencyServicesDesc}</p>
             <div className="space-y-3 mt-4">
               {emergencyServices.map(service => (
                 <div key={service.name} className="flex items-center justify-between p-3 bg-gray-900/70 rounded-xl shadow-lg shadow-black/20">
@@ -178,8 +233,8 @@ export default function EmergencyPage() {
           </section>
 
           <section>
-            <h1 className="text-2xl font-bold text-white">Trusted Contacts</h1>
-            <p className="text-gray-400 mt-1">You can trust your trustworthy contacts for help.</p>
+            <h1 className="text-2xl font-bold text-white">{t.trustedContacts}</h1>
+            <p className="text-gray-400 mt-1">{t.trustedContactsDesc}</p>
             <div className="space-y-3 mt-4">
               {trustedContacts.length > 0 ? trustedContacts.map(contact => (
                 <div key={contact.id} className="flex items-center justify-between p-3 bg-gray-900/70 rounded-xl shadow-lg shadow-black/20">
@@ -199,32 +254,32 @@ export default function EmergencyPage() {
                 </div>
               )) : (
                 <div className="text-center py-8 text-gray-500 bg-gray-900/70 rounded-xl">
-                    <p>No trusted contacts added yet.</p>
+                    <p>{t.noTrustedContacts}</p>
                 </div>
               )}
             </div>
              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                      <Button className="w-full mt-4 bg-gradient-to-r from-[#EC008C] to-[#FF55A5] hover:shadow-lg text-white rounded-xl py-6 text-lg font-semibold">
-                        <UserPlus className="mr-2" /> Add Trusted Contact
+                        <UserPlus className="mr-2" /> {t.addTrustedContact}
                     </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] bg-gray-950 border border-purple-900 text-white rounded-lg">
                     <DialogHeader>
-                    <DialogTitle>Add New Trusted Contact</DialogTitle>
+                    <DialogTitle>{t.addNewTrustedContact}</DialogTitle>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right text-gray-300">Name</Label>
+                        <Label htmlFor="name" className="text-right text-gray-300">{t.nameLabel}</Label>
                         <Input id="name" value={newContactName} onChange={(e) => setNewContactName(e.target.value)} className="col-span-3 bg-gray-800 border-gray-700" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="phone" className="text-right text-gray-300">Phone</Label>
+                        <Label htmlFor="phone" className="text-right text-gray-300">{t.phoneLabel}</Label>
                         <Input id="phone" type="tel" value={newContactPhone} onChange={(e) => setNewContactPhone(e.target.value)} className="col-span-3 bg-gray-800 border-gray-700" />
                     </div>
                     </div>
                     <DialogFooter>
-                    <Button type="submit" onClick={handleSaveContact} className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-white">Save contact</Button>
+                    <Button type="submit" onClick={handleSaveContact} className="bg-gradient-to-r from-[#EC008C] to-[#FF55A5] text-white">{t.saveContactButton}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

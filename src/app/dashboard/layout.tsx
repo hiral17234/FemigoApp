@@ -42,11 +42,62 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSidebar } from "@/components/ui/sidebar"
 import { useToast } from "@/hooks/use-toast"
 
+const translations = {
+    en: {
+        theme: "Toggle Theme",
+        loadingTheme: "Loading Theme...",
+        loading: "Loading...",
+        lightMode: "Light Mode",
+        darkMode: "Dark Mode",
+        home: "Home",
+        myProfile: "My Profile",
+        emergencyContacts: "Emergency Contacts",
+        liveMap: "Live Map",
+        myDiary: "My Diary",
+        myCorner: "My Corner",
+        aiAssistant: "AI Assistant",
+        contactSupport: "Contact Support",
+        settings: "Settings",
+        logout: "Logout",
+        loggedOut: "Logged Out",
+        loggedOutDesc: "You have been successfully logged out.",
+        logoutFailed: "Logout Failed",
+        logoutFailedDesc: "An error occurred while logging out. Please try again.",
+        headerSubtitle: "Safety. Strength. Solidarity."
+    },
+    hi: {
+        theme: "थीम बदलें",
+        loadingTheme: "थीम लोड हो रहा है...",
+        loading: "लोड हो रहा है...",
+        lightMode: "लाइट मोड",
+        darkMode: "डार्क मोड",
+        home: "होम",
+        myProfile: "मेरी प्रोफाइल",
+        emergencyContacts: "आपातकालीन संपर्क",
+        liveMap: "लाइव मैप",
+        myDiary: "मेरी डायरी",
+        myCorner: "मेरा कोना",
+        aiAssistant: "एआई सहायक",
+        contactSupport: "सहायता संपर्क",
+        settings: "सेटिंग्स",
+        logout: "लॉग आउट",
+        loggedOut: "लॉग आउट",
+        loggedOutDesc: "आप सफलतापूर्वक लॉग आउट हो गए हैं।",
+        logoutFailed: "लॉगआउट विफल",
+        logoutFailedDesc: "लॉग आउट करते समय एक त्रुटि हुई। कृपया फिर से प्रयास करें।",
+        headerSubtitle: "सुरक्षा। शक्ति। एकजुटता।"
+    }
+}
+
+
 function ThemeToggle() {
   const [mounted, setMounted] = React.useState(false)
   const { theme, setTheme } = useTheme()
+  const [language, setLanguage] = React.useState('en');
 
   React.useEffect(() => {
+    const storedLang = localStorage.getItem('femigo-language') || 'en';
+    setLanguage(storedLang);
     setMounted(true)
   }, [])
 
@@ -67,11 +118,13 @@ function ThemeToggle() {
       </SidebarMenuButton>
     )
   }
+  
+  const t = translations[language as keyof typeof translations];
 
   return (
     <SidebarMenuButton
       onClick={handleToggle}
-      tooltip={{ children: "Toggle Theme" }}
+      tooltip={{ children: t.theme }}
       className="w-full justify-start text-sm"
     >
       {theme === "light" ? (
@@ -80,9 +133,9 @@ function ThemeToggle() {
         <Moon className="h-[1.5rem] w-[1.5rem]" />
       )}
       <span className="group-data-[collapsible=icon]:hidden ml-2">
-        {theme === "light" ? "Dark" : "Light"} Mode
+        {theme === "light" ? t.darkMode : t.lightMode}
       </span>
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">{t.theme}</span>
     </SidebarMenuButton>
   )
 }
@@ -101,6 +154,14 @@ export default function DashboardLayout({
   const [userName, setUserName] = React.useState<string | null>(null)
   const [userInitial, setUserInitial] = React.useState("")
   const [isLoadingUser, setIsLoadingUser] = React.useState(true)
+  const [language, setLanguage] = React.useState('en');
+
+  React.useEffect(() => {
+    const storedLang = localStorage.getItem('femigo-language') || 'en';
+    setLanguage(storedLang);
+  }, []);
+
+  const t = translations[language as keyof typeof translations];
 
   React.useEffect(() => {
     if (!auth || !db) {
@@ -146,29 +207,29 @@ export default function DashboardLayout({
     try {
       await signOut(auth)
       // The onAuthStateChanged listener will handle the redirect.
-      toast({ title: "Logged Out", description: "You have been successfully logged out." })
+      toast({ title: t.loggedOut, description: t.loggedOutDesc })
     } catch (error) {
       toast({
         variant: "destructive",
-        title: "Logout Failed",
-        description: "An error occurred while logging out. Please try again.",
+        title: t.logoutFailed,
+        description: t.logoutFailedDesc,
       })
     }
   }
 
   const menuItems = [
-    { href: "/dashboard", icon: Home, label: "Home" },
-    { href: "/dashboard", icon: User, label: "My Profile" },
-    { href: "/emergency", icon: Siren, label: "Emergency Contacts" },
-    { href: "/location/fullscreen", icon: Map, label: "Live Map" },
-    { href: "/diary", icon: BookHeart, label: "My Diary" },
-    { href: "/dashboard", icon: Flower2, label: "My Corner" },
-    { href: "/ai-assistant", icon: Sparkles, label: "AI Assistant" },
+    { href: "/dashboard", icon: Home, label: t.home },
+    { href: "/dashboard", icon: User, label: t.myProfile },
+    { href: "/emergency", icon: Siren, label: t.emergencyContacts },
+    { href: "/location/fullscreen", icon: Map, label: t.liveMap },
+    { href: "/diary", icon: BookHeart, label: t.myDiary },
+    { href: "/dashboard", icon: Flower2, label: t.myCorner },
+    { href: "/ai-assistant", icon: Sparkles, label: t.aiAssistant },
   ]
 
   const bottomMenuItems = [
-    { href: "/contact-us", icon: LifeBuoy, label: "Contact Support" },
-    { href: "/settings", icon: Settings, label: "Settings" },
+    { href: "/contact-us", icon: LifeBuoy, label: t.contactSupport },
+    { href: "/settings", icon: Settings, label: t.settings },
   ]
 
   return (
@@ -216,9 +277,9 @@ export default function DashboardLayout({
                 <ThemeToggle />
              </SidebarMenuItem>
              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout} tooltip={{ children: "Logout" }}>
+                <SidebarMenuButton onClick={handleLogout} tooltip={{ children: t.logout }}>
                     <LogOut />
-                    <span>Logout</span>
+                    <span>{t.logout}</span>
                 </SidebarMenuButton>
             </SidebarMenuItem>
            </SidebarMenu>
@@ -231,7 +292,7 @@ export default function DashboardLayout({
             <SidebarTrigger className="text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300" />
             <div>
               <h1 className="text-3xl font-bold text-foreground">Femigo</h1>
-              <p className="text-sm text-secondary">Safety. Strength. Solidarity.</p>
+              <p className="text-sm text-secondary">{t.headerSubtitle}</p>
             </div>
           </div>
           {isLoadingUser ? (
