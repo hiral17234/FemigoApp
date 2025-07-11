@@ -27,27 +27,30 @@ let auth: Auth;
 let db: Firestore;
 let firebaseError: string | null = null;
 
-const missingOrInvalidKeys: string[] = [];
-for (const [key, value] of Object.entries(firebaseConfig)) {
-    if (!value || typeof value !== 'string' || value.includes('YOUR_')) {
-        missingOrInvalidKeys.push(keyMapping[key as keyof typeof keyMapping]);
+try {
+    const missingOrInvalidKeys: string[] = [];
+    for (const [key, value] of Object.entries(firebaseConfig)) {
+        if (!value || typeof value !== 'string' || value.includes('YOUR_')) {
+            missingOrInvalidKeys.push(keyMapping[key as keyof typeof keyMapping]);
+        }
     }
-}
 
-if (missingOrInvalidKeys.length > 0) {
+    if (missingOrInvalidKeys.length > 0) {
+        throw new Error(missingOrInvalidKeys.join(", "));
+    }
+
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+
+} catch (error: any) {
     const errorIntro = "Firebase configuration failed. The following required variable(s) are missing or invalid in your .env file:";
-    const errorDetails = missingOrInvalidKeys.join(", ");
-    firebaseError = `${errorIntro}\n\n- ${errorDetails}`;
+    firebaseError = `${errorIntro}\n\n- ${error.message}`;
     console.error(firebaseError);
     // Provide dummy objects to prevent the app from crashing where auth/db is used.
     app = {} as FirebaseApp;
     auth = {} as Auth;
     db = {} as Firestore;
-} else {
-    // Initialize Firebase only if the config is valid.
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
 }
 
 export { app, auth, db, firebaseError };
