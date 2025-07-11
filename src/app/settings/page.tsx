@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, User, Bell, MapPin, ChevronRight, LogOut, Moon, Sun, Loader2 } from "lucide-react"
+import { ArrowLeft, User, Bell, MapPin, ChevronRight, LogOut, Moon, Sun, Loader2, KeyRound } from "lucide-react"
 import { useTheme } from "next-themes"
 import { signOut, onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
@@ -112,6 +112,20 @@ export default function SettingsPage() {
                             </div>
                             <ChevronRight className="h-5 w-5 text-muted-foreground" />
                         </div>
+                    </div>
+
+                    {/* Security Section */}
+                    <div className="space-y-2">
+                        <h3 className="text-sm font-semibold uppercase text-muted-foreground">Security</h3>
+                         <Link href="/settings/change-password">
+                            <div className="flex cursor-pointer items-center justify-between rounded-lg bg-black/20 p-4 hover:bg-black/30">
+                                <div className="flex items-center gap-4">
+                                    <KeyRound className="h-5 w-5 text-primary" />
+                                    <span>Change Password</span>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                        </Link>
                     </div>
 
                     {/* Notifications Section */}
