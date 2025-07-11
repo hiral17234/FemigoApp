@@ -54,6 +54,8 @@ export default function AadhaarVerificationPage() {
   
   const startCamera = useCallback(async (mode: 'user' | 'environment') => {
       stopCamera();
+      if (inputMode !== 'camera') return;
+      
       try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } })
           if (videoRef.current) {
@@ -62,25 +64,19 @@ export default function AadhaarVerificationPage() {
           }
       } catch (err) {
           console.error("Error accessing camera:", err)
-          try {
-              const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-              if (videoRef.current) {
-                  videoRef.current.srcObject = stream;
-                  await videoRef.current.play();
-              }
-          } catch (fallbackErr) {
-              toast({
-                  variant: "destructive",
-                  title: "Camera Error",
-                  description: "Could not access camera. Please check permissions.",
-              })
-          }
+          toast({
+              variant: "destructive",
+              title: "Camera Error",
+              description: "Could not access camera. Please check permissions.",
+          })
       }
-  }, [stopCamera, toast]);
+  }, [stopCamera, toast, inputMode]);
   
   useEffect(() => {
     if (inputMode === 'camera' && verificationState === 'idle') {
         startCamera(facingMode);
+    } else {
+        stopCamera();
     }
     // Cleanup function to stop the camera when the component unmounts
     // or when dependencies change that should stop the camera.
@@ -187,7 +183,19 @@ export default function AadhaarVerificationPage() {
                     </>
                 )
             }
-            return <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">Please upload an image.</p></div>
+            if (inputMode === 'upload') {
+                return (
+                    <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full h-full flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-primary/50 rounded-lg cursor-pointer hover:bg-primary/10 transition-colors"
+                        >
+                        <Upload className="h-12 w-12 text-muted-foreground mb-4" />
+                        <p className="font-semibold">Click to upload or drag and drop</p>
+                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG (MAX. 5MB)</p>
+                    </div>
+                )
+            }
+            return null;
     }
   }
   
@@ -200,7 +208,12 @@ export default function AadhaarVerificationPage() {
         case 'error':
             return <Button className="w-full" size="lg" onClick={resetState}><RefreshCw className="mr-2" /> Try Again</Button>
         case 'preview':
-            return <Button className="w-full" size="lg" onClick={handleVerification}>Looks Good, Verify</Button>
+            return (
+                <div className="flex gap-4">
+                    <Button variant="secondary" className="w-full" size="lg" onClick={resetState}>Retake</Button>
+                    <Button className="w-full" size="lg" onClick={handleVerification}>Looks Good, Verify</Button>
+                </div>
+            )
         default: // idle
              return <Button 
                 className="w-full" 
@@ -233,10 +246,10 @@ export default function AadhaarVerificationPage() {
             </div>
             
             <div className="grid grid-cols-2 gap-4 mb-4">
-                <Button variant={inputMode === 'camera' ? 'secondary' : 'ghost'} onClick={() => {setInputMode('camera'); setVerificationState('idle');}}>
+                <Button variant={inputMode === 'camera' ? 'secondary' : 'ghost'} onClick={() => {setInputMode('camera'); resetState();}}>
                     <Camera className="mr-2 h-4 w-4"/> Scan Card
                 </Button>
-                <Button variant={inputMode === 'upload' ? 'secondary' : 'ghost'} onClick={() => { setInputMode('upload'); fileInputRef.current?.click(); }}>
+                <Button variant={inputMode === 'upload' ? 'secondary' : 'ghost'} onClick={() => { setInputMode('upload'); resetState(); }}>
                     <Upload className="mr-2 h-4 w-4"/> Upload File
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
