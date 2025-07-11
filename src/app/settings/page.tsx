@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, User, Bell, MapPin, ChevronRight, LogOut, Moon, Sun, Loader2, KeyRound } from "lucide-react"
+import { ArrowLeft, User, Bell, MapPin, ChevronRight, LogOut, Moon, Sun, Loader2, KeyRound, Check } from "lucide-react"
 import { useTheme } from "next-themes"
 import { signOut, onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
 import { doc, getDoc } from "firebase/firestore"
@@ -16,7 +16,12 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { auth, db } from "@/lib/firebase"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
+const languages = [
+    { code: 'en', name: 'English (US)' },
+    { code: 'hi', name: 'हिंदी (Hindi)' },
+]
 
 export default function SettingsPage() {
     const router = useRouter()
@@ -26,6 +31,22 @@ export default function SettingsPage() {
     const [user, setUser] = useState<FirebaseUser | null>(null)
     const [userData, setUserData] = useState<{ displayName?: string; email?: string } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [selectedLang, setSelectedLang] = useState('en');
+
+    useEffect(() => {
+        const storedLang = localStorage.getItem('femigo-language') || 'en';
+        setSelectedLang(storedLang);
+    }, []);
+
+    const handleLanguageChange = (langCode: string) => {
+        setSelectedLang(langCode);
+        localStorage.setItem('femigo-language', langCode);
+        // We can optionally force a reload to make sure all components re-render with the new language.
+        // For this simple case, navigating to the same page will cause a re-render.
+        router.refresh();
+        toast({ title: "Language Updated", description: `Language set to ${languages.find(l => l.code === langCode)?.name}.`})
+    }
+
 
     useEffect(() => {
         if (!auth || !db) {
@@ -153,16 +174,28 @@ export default function SettingsPage() {
                     {/* Regional Section */}
                     <div className="space-y-2">
                         <h3 className="text-sm font-semibold uppercase text-muted-foreground">Regional</h3>
-                        <div className="flex items-center justify-between rounded-lg bg-black/20 p-4">
-                            <div className="flex items-center gap-4">
-                                <MapPin className="h-5 w-5 text-primary" />
-                                <span>Language & Region</span>
-                            </div>
-                             <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground">English (US)</span>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <div className="flex cursor-pointer items-center justify-between rounded-lg bg-black/20 p-4 hover:bg-black/30">
+                                    <div className="flex items-center gap-4">
+                                        <MapPin className="h-5 w-5 text-primary" />
+                                        <span>Language & Region</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-muted-foreground">{languages.find(l => l.code === selectedLang)?.name}</span>
+                                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                    </div>
+                                </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56">
+                                {languages.map(lang => (
+                                    <DropdownMenuItem key={lang.code} onSelect={() => handleLanguageChange(lang.code)}>
+                                        {lang.name}
+                                        {selectedLang === lang.code && <Check className="ml-auto h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
 
                      {/* Theme Section */}

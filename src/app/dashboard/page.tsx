@@ -35,16 +35,42 @@ type Feature = {
   name: string
   icon: React.ElementType
   href: string
+  translationKey: string;
 }
 
 const features: Feature[] = [
-  { name: "Location", icon: MapPin, href: "/location" },
-  { name: "SOS", icon: RadioTower, href: "#" },
-  { name: "Check Safe", icon: ShieldCheck, href: "#" },
-  { name: "Track Me", icon: Compass, href: "#" },
-  { name: "Safety Score", icon: BarChartBig, href: "#" },
-  { name: "Safe Mode", icon: ShieldPlus, href: "#" },
+  { name: "Location", icon: MapPin, href: "/location", translationKey: "location" },
+  { name: "SOS", icon: RadioTower, href: "#", translationKey: "sos" },
+  { name: "Check Safe", icon: ShieldCheck, href: "#", translationKey: "checkSafe" },
+  { name: "Track Me", icon: Compass, href: "#", translationKey: "trackMe" },
+  { name: "Safety Score", icon: BarChartBig, href: "#", translationKey: "safetyScore" },
+  { name: "Safe Mode", icon: ShieldPlus, href: "#", translationKey: "safeMode" },
 ]
+
+const translations: Record<string, Record<string, string>> = {
+    en: {
+        welcome: "Welcome",
+        priority: "Your safety is our priority.",
+        emergency: "Emergency",
+        location: "Location",
+        sos: "SOS",
+        checkSafe: "Check Safe",
+        trackMe: "Track Me",
+        safetyScore: "Safety Score",
+        safeMode: "Safe Mode",
+    },
+    hi: {
+        welcome: "आपका स्वागत है",
+        priority: "आपकी सुरक्षा हमारी प्राथमिकता है।",
+        emergency: "आपातकाल",
+        location: "स्थान",
+        sos: "एसओएस",
+        checkSafe: "सुरक्षित जांचें",
+        trackMe: "मुझे ट्रैक करें",
+        safetyScore: "सुरक्षा स्कोर",
+        safeMode: "सुरक्षित मोड",
+    }
+};
 
 function DailyThought() {
   const [currentDateTime, setCurrentDateTime] = useState<Date | null>(null);
@@ -94,6 +120,15 @@ function DailyThought() {
 export default function DashboardPage() {
   const [userName, setUserName] = useState<string | null>(null)
   const [isLoadingUser, setIsLoadingUser] = useState(true)
+  const [language, setLanguage] = useState('en');
+
+  useEffect(() => {
+    const storedLang = localStorage.getItem('femigo-language');
+    if (storedLang && (storedLang === 'en' || storedLang === 'hi')) {
+        setLanguage(storedLang);
+    }
+  }, []);
+
 
   useEffect(() => {
     if (!auth) {
@@ -135,6 +170,8 @@ export default function DashboardPage() {
     return () => unsubscribe();
   }, []);
   
+  const t = translations[language];
+
   if (firebaseError) {
     return (
       <main className="flex flex-1 items-center justify-center p-4 text-center">
@@ -168,10 +205,10 @@ export default function DashboardPage() {
     <div className="flex flex-1 flex-col p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          Welcome, <span className="bg-gradient-to-r from-primary to-[#4b0e9c] bg-clip-text text-transparent">{userName}!</span>
+          {t.welcome}, <span className="bg-gradient-to-r from-primary to-[#4b0e9c] bg-clip-text text-transparent">{userName}!</span>
         </h1>
         <p className="text-muted-foreground">
-          Your safety is our priority.
+          {t.priority}
         </p>
       </div>
       
@@ -182,7 +219,7 @@ export default function DashboardPage() {
           <div className="flex h-20 items-center justify-center gap-4 rounded-[22px] bg-black px-8">
             <Siren className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" style={{filter: 'drop-shadow(0 0 8px hsl(var(--primary)))'}} />
             <span className="text-3xl font-bold text-foreground">
-              Emergency
+              {t.emergency}
             </span>
           </div>
         </div>
@@ -202,7 +239,7 @@ export default function DashboardPage() {
                   </div>
               </div>
               <span className="text-sm font-medium text-foreground">
-                {feature.name}
+                {t[feature.translationKey]}
               </span>
             </Link>
           ))}
