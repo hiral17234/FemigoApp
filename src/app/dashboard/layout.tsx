@@ -167,7 +167,7 @@ export default function DashboardLayout({
   ]
 
   const bottomMenuItems = [
-    { href: "/dashboard", icon: LifeBuoy, label: "Contact Support" },
+    { href: "/contact-us", icon: LifeBuoy, label: "Contact Support" },
     { href: "/dashboard", icon: Settings, label: "Settings" },
   ]
 
@@ -205,7 +205,7 @@ export default function DashboardLayout({
              {bottomMenuItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
                     <Link href={item.href}>
-                    <SidebarMenuButton tooltip={{ children: item.label }}>
+                    <SidebarMenuButton isActive={pathname === item.href} tooltip={{ children: item.label }}>
                         <item.icon />
                         <span>{item.label}</span>
                     </SidebarMenuButton>
