@@ -7,7 +7,7 @@ import Image from "next/image"
 import { ArrowLeft, Loader2, Upload, Camera, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { verifyAadhaar } from "@/ai/flows/aadhaar-verification-flow"
 import { type AadhaarVerificationOutput } from "@/ai/types"
@@ -205,17 +205,9 @@ export default function AadhaarVerificationPage() {
 
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black p-4 text-white">
-      <video
-        src="https://media.istockphoto.com/id/1456520455/nl/video/sulfur-cosmos-flowers-bloom-in-the-garden.mp4?s=mp4-480x480-is&k=20&c=xbZAFUX4xgFK_GWD71mYxPUwCZr-qTb9wObCrWMB8ak="
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
-
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
+       <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
+      
       <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
           <Button onClick={() => router.push('/onboarding/live-photo')} variant="ghost" className="absolute -top-10 left-0 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
