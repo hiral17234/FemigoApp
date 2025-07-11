@@ -54,7 +54,7 @@ export default function AadhaarVerificationPage() {
   
   const startCamera = useCallback(async (mode: 'user' | 'environment') => {
       stopCamera();
-      if (inputMode !== 'camera') return;
+      if (verificationState !== 'idle' || inputMode !== 'camera') return;
       
       try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } })
@@ -70,7 +70,7 @@ export default function AadhaarVerificationPage() {
               description: "Could not access camera. Please check permissions.",
           })
       }
-  }, [stopCamera, toast, inputMode]);
+  }, [stopCamera, toast, inputMode, verificationState]);
   
   useEffect(() => {
     if (inputMode === 'camera' && verificationState === 'idle') {
@@ -78,8 +78,6 @@ export default function AadhaarVerificationPage() {
     } else {
         stopCamera();
     }
-    // Cleanup function to stop the camera when the component unmounts
-    // or when dependencies change that should stop the camera.
     return () => {
         stopCamera();
     };
@@ -123,7 +121,6 @@ export default function AadhaarVerificationPage() {
     setImageDataUrl(null)
     setVerificationState("idle")
     setVerificationResult(null)
-    setInputMode("camera");
   }
 
   const handleVerification = useCallback(async () => {
@@ -185,12 +182,9 @@ export default function AadhaarVerificationPage() {
             }
             if (inputMode === 'upload') {
                 return (
-                    <div 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full h-full flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-primary/50 rounded-lg cursor-pointer hover:bg-primary/10 transition-colors"
-                        >
+                    <div className="w-full h-full flex flex-col items-center justify-center text-center p-4 border-2 border-dashed border-primary/50 rounded-lg cursor-pointer hover:bg-primary/10 transition-colors">
                         <Upload className="h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="font-semibold">Click to upload or drag and drop</p>
+                        <p className="font-semibold">Click the button below to upload</p>
                         <p className="text-xs text-muted-foreground mt-1">PNG, JPG (MAX. 5MB)</p>
                     </div>
                 )
@@ -200,17 +194,25 @@ export default function AadhaarVerificationPage() {
   }
   
   const getActionButton = () => {
+    const handleButtonClick = () => {
+      if (inputMode === 'camera') {
+        capturePhoto();
+      } else if (inputMode === 'upload') {
+        fileInputRef.current?.click();
+      }
+    };
+    
     switch (verificationState) {
         case 'verifying':
         case 'success':
             return <Button className="w-full" size="lg" disabled>Verifying...</Button>
         case 'failed':
         case 'error':
-            return <Button className="w-full" size="lg" onClick={resetState}><RefreshCw className="mr-2" /> Try Again</Button>
+            return <Button className="w-full" size="lg" onClick={() => {setInputMode('camera'); resetState();}}><RefreshCw className="mr-2" /> Try Again</Button>
         case 'preview':
             return (
                 <div className="flex gap-4">
-                    <Button variant="secondary" className="w-full" size="lg" onClick={resetState}>Retake</Button>
+                    <Button variant="secondary" className="w-full" size="lg" onClick={() => {setInputMode('camera'); resetState();}}>Retake</Button>
                     <Button className="w-full" size="lg" onClick={handleVerification}>Looks Good, Verify</Button>
                 </div>
             )
@@ -218,7 +220,7 @@ export default function AadhaarVerificationPage() {
              return <Button 
                 className="w-full" 
                 size="lg" 
-                onClick={inputMode === 'camera' ? capturePhoto : () => fileInputRef.current?.click()} 
+                onClick={handleButtonClick} 
                 disabled={inputMode === 'camera' && !videoRef.current?.srcObject}>
                 <Camera className="mr-2"/> 
                 {inputMode === 'camera' ? 'Capture & Verify' : 'Select File to Verify'}
