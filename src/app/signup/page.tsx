@@ -148,6 +148,9 @@ export default function SignupPage() {
                             </CommandGroup>
                           </CommandList>
                         </Command>
+                        <div className="p-2 text-center border-t border-border">
+                            <p className="text-xs font-bold text-red-500">Press enter to select.</p>
+                        </div>
                     </PopoverContent>
                   </Popover>
                 )}
