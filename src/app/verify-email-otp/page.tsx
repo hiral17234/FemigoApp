@@ -154,12 +154,24 @@ export default function VerifyEmailOtpPage() {
     // Simulate OTP check
     setTimeout(() => {
         if (data.pin === otp) {
-            toast({
-                variant: "success",
-                title: "Email Verified! ✅",
-                description: "Your account is now fully set up.",
-            });
-            router.push("/congratulations");
+            const isPasswordReset = localStorage.getItem("passwordResetFlow") === "true";
+            
+            if (isPasswordReset) {
+                localStorage.removeItem("passwordResetFlow");
+                toast({
+                    variant: "success",
+                    title: "Verified! ✅",
+                    description: "You can now change your password.",
+                });
+                router.push("/settings/change-password");
+            } else {
+                toast({
+                    variant: "success",
+                    title: "Email Verified! ✅",
+                    description: "Your account is now fully set up.",
+                });
+                router.push("/congratulations");
+            }
         } else {
             toast({
                 variant: "destructive",
