@@ -19,7 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 
-function CustomOtpNotification({ otp, phone, visible }: { otp: string, phone: string, visible: boolean }) {
+function CustomOtpNotification({ otp, visible }: { otp: string, visible: boolean }) {
     const { toast } = useToast();
 
     const handleCopy = () => {
@@ -37,7 +37,7 @@ function CustomOtpNotification({ otp, phone, visible }: { otp: string, phone: st
                 <div className="flex justify-between items-center">
                     <div>
                         <p className="text-sm font-semibold text-blue-600">Femigo Verification</p>
-                        <p className="text-2xl font-bold tracking-widest mt-1">{otp}</p>
+                        <p className="text-2xl font-bold tracking-widest mt-1 text-black">{otp}</p>
                     </div>
                     <Button variant="ghost" size="icon" onClick={handleCopy}>
                         <Copy className="h-5 w-5 text-blue-600" />
@@ -73,6 +73,31 @@ export default function PhoneVerificationPage() {
     }
   }, []);
   
+  // This effect runs when the component switches to the 'otp' step
+  useEffect(() => {
+    if (step === 'otp') {
+        // Generate a random 6-digit OTP
+        const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        setDemoOtp(newOtp);
+
+        // Show the custom notification after a short delay
+        const showTimeout = setTimeout(() => {
+            setShowOtpNotification(true);
+        }, 500);
+
+        // Hide the notification after a few seconds
+        const hideTimeout = setTimeout(() => {
+            setShowOtpNotification(false);
+        }, 4500); // Display for 4 seconds
+
+        return () => {
+            clearTimeout(showTimeout);
+            clearTimeout(hideTimeout);
+        }
+    }
+  }, [step]);
+
+
   const onSendOtp = async () => {
     if (phone.length < 8) {
         toast({variant: 'destructive', title: 'Invalid Phone Number', description: 'Please enter a valid phone number.'});
@@ -80,23 +105,17 @@ export default function PhoneVerificationPage() {
     }
     setIsSubmitting(true);
     
-    // Generate a random 6-digit OTP
-    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setDemoOtp(newOtp);
+    // Show the standard toast notification
+    toast({
+        title: "OTP Sent!",
+        description: `We've sent a verification code to ${countryCode}${phone}`,
+    });
 
-    // Show the custom notification
-    setShowOtpNotification(true);
-
-    // Hide the notification after a few seconds
-    setTimeout(() => {
-        setShowOtpNotification(false);
-    }, 4000);
-
-    // Wait for the notification to hide, then move to the next step
+    // Move to next step after a delay
     setTimeout(() => {
         setIsSubmitting(false);
         setStep('otp');
-    }, 4500); // A bit longer than the notification display time
+    }, 1500);
   }
 
   const onVerifyOtp = async () => {
@@ -130,7 +149,7 @@ export default function PhoneVerificationPage() {
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
-        <CustomOtpNotification otp={demoOtp} phone={`${countryCode}${phone}`} visible={showOtpNotification} />
+        <CustomOtpNotification otp={demoOtp} visible={showOtpNotification} />
         <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
         
         <div className="absolute top-8 left-8 z-10">
@@ -208,7 +227,7 @@ export default function PhoneVerificationPage() {
                                 type="tel" 
                                 placeholder="Phone number" 
                                 value={phone}
-                                onChange={(e) => setPhone(e.target.value)}
+                                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                                 className="focus:ring-primary focus:border-primary"
                             />
                         </div>
@@ -226,7 +245,7 @@ export default function PhoneVerificationPage() {
                         <p className="text-muted-foreground max-w-xs mx-auto">A 6-digit code has been sent to your device. Check the notification and enter the code below.</p>
                     </div>
                     <div className="space-y-2 pt-4">
-                        <label className="text-sm font-medium">Verification Code</label>
+                        <label className="text-sm font-medium text-left w-full block">Verification Code</label>
                          <div className="flex justify-center">
                             <InputOTP maxLength={6} value={otp} onChange={handleOtpChange}>
                                 <InputOTPGroup>
@@ -254,5 +273,3 @@ export default function PhoneVerificationPage() {
     </main>
   )
 }
-
-    
