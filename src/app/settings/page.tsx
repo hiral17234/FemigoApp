@@ -173,13 +173,15 @@ export default function SettingsPage() {
                     {/* Profile Section */}
                     <div className="space-y-2">
                         <h3 className="text-sm font-semibold uppercase text-muted-foreground">{t.profile}</h3>
-                        <div className="flex items-center justify-between rounded-lg bg-black/20 p-4">
-                            <div className="flex items-center gap-4">
-                                <User className="h-5 w-5 text-primary" />
-                                <span>{t.editProfile}</span>
+                        <Link href="/settings/profile">
+                            <div className="flex cursor-pointer items-center justify-between rounded-lg bg-black/20 p-4 hover:bg-black/30">
+                                <div className="flex items-center gap-4">
+                                    <User className="h-5 w-5 text-primary" />
+                                    <span>{t.editProfile}</span>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
                             </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                        </div>
+                        </Link>
                     </div>
 
                     {/* Security Section */}
