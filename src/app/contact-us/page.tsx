@@ -47,7 +47,7 @@ export default function ContactUsPage() {
             <MapPin className="h-6 w-6 shrink-0 text-primary" />
             <div>
               <h3 className="font-semibold">Our Office</h3>
-              <p className="text-muted-foreground">123 Safety Lane, Empowerment City, 11202</p>
+              <p className="text-muted-foreground">Citycenter , Gwalior , 474011</p>
             </div>
           </div>
         </CardContent>
