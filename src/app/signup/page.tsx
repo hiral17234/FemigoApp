@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -103,7 +104,7 @@ export default function SignupPage() {
                         variant="outline"
                         role="combobox"
                         className={cn(
-                          "w-full justify-between pl-9",
+                          "w-full justify-between pl-9 relative",
                           !field.value && "text-muted-foreground",
                           errors.country && "border-destructive"
                         )}
