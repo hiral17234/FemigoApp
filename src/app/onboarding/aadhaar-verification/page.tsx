@@ -27,7 +27,6 @@ export default function AadhaarVerificationPage() {
   const [verificationState, setVerificationState] = useState<VerificationState>("idle")
   const [inputMode, setInputMode] = useState<InputMode>("camera");
   const [verificationResult, setVerificationResult] = useState<AadhaarVerificationOutput | null>(null)
-  const [isCameraOn, setIsCameraOn] = useState(false)
   const [userName, setUserName] = useState('')
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
 
@@ -50,27 +49,25 @@ export default function AadhaarVerificationPage() {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach((track) => track.stop())
       videoRef.current.srcObject = null
-      setIsCameraOn(false);
     }
   }, [])
   
   const startCamera = useCallback(async (mode: 'user' | 'environment') => {
-      if (isCameraOn) stopCamera(); // Stop existing stream first
+      stopCamera();
       try {
           const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } })
           if (videoRef.current) {
               videoRef.current.srcObject = stream
+              await videoRef.current.play();
           }
-          setIsCameraOn(true)
       } catch (err) {
           console.error("Error accessing camera:", err)
-          // Fallback to any available camera if the preferred one fails
           try {
               const stream = await navigator.mediaDevices.getUserMedia({ video: true });
               if (videoRef.current) {
                   videoRef.current.srcObject = stream;
+                  await videoRef.current.play();
               }
-              setIsCameraOn(true);
           } catch (fallbackErr) {
               toast({
                   variant: "destructive",
@@ -79,15 +76,19 @@ export default function AadhaarVerificationPage() {
               })
           }
       }
-  }, [isCameraOn, stopCamera, toast]);
+  }, [stopCamera, toast]);
   
   useEffect(() => {
     if (inputMode === 'camera' && verificationState === 'idle') {
         startCamera(facingMode);
-    } else {
-        stopCamera();
     }
+    // Cleanup function to stop the camera when the component unmounts
+    // or when dependencies change that should stop the camera.
+    return () => {
+        stopCamera();
+    };
   }, [inputMode, verificationState, facingMode, startCamera, stopCamera]);
+
 
   const switchCamera = () => {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
@@ -162,12 +163,6 @@ export default function AadhaarVerificationPage() {
     }
   }, [imageDataUrl, router, toast, userName]);
   
-  // Cleanup camera on unmount
-  useEffect(() => {
-      return () => {
-          stopCamera();
-      }
-  }, [stopCamera]);
 
   const getCameraContent = () => {
     switch (verificationState) {
@@ -185,7 +180,6 @@ export default function AadhaarVerificationPage() {
                 return (
                     <>
                         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                        {!isCameraOn && <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-white/50" /></div>}
                         <canvas ref={canvasRef} className="hidden" />
                          <Button variant="ghost" size="icon" onClick={switchCamera} className="absolute top-2 right-2 bg-black/30 text-white hover:bg-black/50 rounded-full z-10">
                             <SwitchCamera className="h-5 w-5" />
@@ -212,7 +206,7 @@ export default function AadhaarVerificationPage() {
                 className="w-full" 
                 size="lg" 
                 onClick={inputMode === 'camera' ? capturePhoto : () => fileInputRef.current?.click()} 
-                disabled={inputMode === 'camera' && !isCameraOn}>
+                disabled={inputMode === 'camera' && !videoRef.current?.srcObject}>
                 <Camera className="mr-2"/> 
                 {inputMode === 'camera' ? 'Capture & Verify' : 'Select File to Verify'}
             </Button>
@@ -239,16 +233,16 @@ export default function AadhaarVerificationPage() {
             </div>
             
             <div className="grid grid-cols-2 gap-4 mb-4">
-                <Button variant={inputMode === 'camera' ? 'secondary' : 'ghost'} onClick={() => setInputMode('camera')}>
+                <Button variant={inputMode === 'camera' ? 'secondary' : 'ghost'} onClick={() => {setInputMode('camera'); setVerificationState('idle');}}>
                     <Camera className="mr-2 h-4 w-4"/> Scan Card
                 </Button>
-                <Button variant={inputMode === 'upload' ? 'secondary' : 'ghost'} onClick={() => fileInputRef.current?.click()}>
+                <Button variant={inputMode === 'upload' ? 'secondary' : 'ghost'} onClick={() => { setInputMode('upload'); fileInputRef.current?.click(); }}>
                     <Upload className="mr-2 h-4 w-4"/> Upload File
                 </Button>
                 <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
             </div>
 
-            <div className="relative w-full aspect-video rounded-lg bg-black overflow-hidden flex items-center justify-center border-2 border-primary/50">
+            <div className="relative w-full aspect-video rounded-lg bg-muted overflow-hidden flex items-center justify-center border-2 border-primary/50">
                {getCameraContent()}
             </div>
             
