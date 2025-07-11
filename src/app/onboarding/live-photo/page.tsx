@@ -39,6 +39,7 @@ export default function LivePhotoPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        await videoRef.current.play() // This line is added to start the video playback
       }
     } catch (err) {
       console.error("Error accessing camera:", err)
