@@ -127,7 +127,6 @@ export default function PhoneVerificationPage() {
   const handleOtpChange = (newOtp: string) => {
     setOtp(newOtp);
     if (newOtp.length === 6) {
-        // Automatically submit when OTP is fully entered
         onVerifyOtp();
     }
   }
@@ -178,7 +177,7 @@ export default function PhoneVerificationPage() {
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 country-list-popover">
                             <Command>
                                 <CommandInput placeholder="Search country..." />
                                 <CommandList>

@@ -98,18 +98,18 @@
 }
 
 @layer components {
-    /* Custom scrollbar for CMDK Command List */
-    [cmdk-list] {
+    /* Custom scrollbar for Country List in Popover */
+    .country-list-popover [cmdk-list] {
         scrollbar-width: auto; /* For Firefox */
         scrollbar-color: hsl(var(--muted)) hsl(var(--popover)); /* For Firefox */
     }
-    [cmdk-list]::-webkit-scrollbar {
+    .country-list-popover [cmdk-list]::-webkit-scrollbar {
         width: 12px;
     }
-    [cmdk-list]::-webkit-scrollbar-track {
+    .country-list-popover [cmdk-list]::-webkit-scrollbar-track {
         background-color: hsl(var(--popover));
     }
-    [cmdk-list]::-webkit-scrollbar-thumb {
+    .country-list-popover [cmdk-list]::-webkit-scrollbar-thumb {
         background-color: hsl(var(--muted));
         border-radius: 6px;
         border: 3px solid hsl(var(--popover));
