@@ -4,14 +4,14 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Loader2, Camera, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react"
+import { ArrowLeft, Loader2, Camera, CheckCircle, AlertTriangle, RefreshCw, User, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { genderCheck } from "@/ai/flows/gender-check-flow"
 import { type GenderCheckOutput } from "@/ai/types"
+import { cn } from "@/lib/utils"
 
 type VerificationState = "idle" | "camera" | "preview" | "verifying" | "success" | "failed" | "error"
 
@@ -57,13 +57,13 @@ export default function LivePhotoPage() {
     }
   }
 
-  const stopCamera = () => {
+  const stopCamera = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach((track) => track.stop())
       videoRef.current.srcObject = null
     }
-  }
+  }, [])
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -73,7 +73,7 @@ export default function LivePhotoPage() {
       canvas.height = video.videoHeight
       const context = canvas.getContext("2d")
       if (context) {
-        // Flip the image horizontally
+        // Flip the image horizontally for a mirror effect
         context.translate(video.videoWidth, 0);
         context.scale(-1, 1);
         context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight)
@@ -106,7 +106,7 @@ export default function LivePhotoPage() {
       if (result.isFemale) {
         setVerificationState("success");
         localStorage.setItem("userPhotoDataUri", imageDataUrl); // Save photo to localStorage
-        toast({ title: 'Photo Verified!', description: result.reason });
+        toast({ variant: 'success', title: 'Photo Verified!', description: result.reason });
         
         const country = localStorage.getItem('userCountry');
         // Conditionally route to Aadhaar verification for India
@@ -133,70 +133,68 @@ export default function LivePhotoPage() {
     }
   }, [imageDataUrl, router, toast]);
 
-  const getCardContent = () => {
+  // Clean up camera on unmount
+  useEffect(() => {
+      return () => {
+          stopCamera();
+      }
+  }, [stopCamera]);
+  
+  const getDisplayContent = () => {
     switch (verificationState) {
+        case 'verifying':
         case 'success':
-            return (
-                <div className="text-center space-y-4 text-green-400">
-                    <CheckCircle className="h-20 w-20 mx-auto animate-pulse" />
-                    <h2 className="text-2xl font-bold">Verification Successful!</h2>
-                    <p className="text-sm text-muted-foreground">Redirecting to the next step...</p>
-                </div>
-            )
         case 'failed':
         case 'error':
-             return (
-                <div className="text-center space-y-4 text-red-500">
-                    <AlertTriangle className="h-20 w-20 mx-auto animate-pulse" />
-                    <h2 className="text-2xl font-bold">Verification Failed</h2>
-                    <p className="text-sm">{verificationResult?.reason}</p>
-                    <Button onClick={handleRetake} className="mt-4">
-                        <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-                    </Button>
-                </div>
-            )
-        case 'verifying':
             return (
-                <div className="text-center space-y-4">
-                    <Loader2 className="h-20 w-20 mx-auto animate-spin text-primary" />
-                    <h2 className="text-2xl font-bold">Verifying...</h2>
-                    <p className="text-muted-foreground">Our AI is checking your photo. Please wait.</p>
-                </div>
-            )
-        case 'preview':
-            return (
-                <div className="flex flex-col items-center gap-4">
-                    <h2 className="text-xl font-semibold">Your Captured Photo</h2>
-                    <Image src={imageDataUrl!} alt="Captured live photo" width={320} height={240} className="rounded-lg" />
-                     <div className="flex gap-4 mt-4">
-                        <Button onClick={handleRetake} variant="secondary">
-                            <RefreshCw className="mr-2 h-4 w-4" /> Retake
+                <div className="flex flex-col items-center justify-center text-center p-8 h-full">
+                    {verificationState === 'verifying' && <>
+                        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                        <h3 className="text-2xl font-bold mt-4">Verifying...</h3>
+                        <p className="text-muted-foreground mt-2">Our AI is checking your photo. Please wait.</p>
+                    </>}
+                    {verificationState === 'success' && <>
+                        <CheckCircle className="h-16 w-16 text-green-500" />
+                        <h3 className="text-2xl font-bold mt-4">Verification Successful!</h3>
+                        <p className="text-muted-foreground mt-2">Redirecting to the next step...</p>
+                    </>}
+                    {(verificationState === 'failed' || verificationState === 'error') && <>
+                        <AlertTriangle className="h-16 w-16 text-red-500" />
+                        <h3 className="text-2xl font-bold mt-4">Verification Failed</h3>
+                        <p className="text-muted-foreground mt-2">{verificationResult?.reason}</p>
+                        <Button onClick={handleRetake} className="mt-6">
+                            <RefreshCw className="mr-2 h-4 w-4" /> Try Again
                         </Button>
-                        <Button onClick={handleVerification}>
-                            Looks Good, Verify
-                        </Button>
-                    </div>
+                    </>}
                 </div>
             )
-        case 'camera':
+        default:
             return (
-                <div className="flex flex-col items-center gap-4">
-                    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden">
-                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover scale-x-[-1]" />
-                        <canvas ref={canvasRef} className="hidden" />
-                    </div>
-                    <Button onClick={capturePhoto} size="lg" className="rounded-full h-16 w-16">
-                        <Camera className="h-8 w-8" />
-                    </Button>
-                </div>
-            )
-        default: // idle
-            return (
-                <div className="flex flex-col items-center justify-center gap-4 h-full p-8 text-center">
-                    <Camera className="h-16 w-16 text-primary" />
-                    <h2 className="text-2xl font-semibold">Live Photo Check</h2>
-                    <p className="text-muted-foreground">We need to take a quick photo to verify you're a real person and confirm you are female, as this is a women's safety app.</p>
-                    <Button onClick={startCamera} size="lg" className="mt-6">Enable Camera</Button>
+                <div className="flex flex-col items-center justify-center h-full">
+                    <div className={cn("relative w-full aspect-video rounded-lg bg-black overflow-hidden flex items-center justify-center", verificationState === 'camera' && 'border-2 border-primary')}>
+                       {verificationState === 'idle' && <Camera className="h-20 w-20 text-muted-foreground/50 opacity-50" />}
+                       <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover scale-x-[-1]", verificationState !== 'camera' && 'hidden')} />
+                       <canvas ref={canvasRef} className="hidden" />
+                       {imageDataUrl && verificationState === 'preview' && (
+                           <Image src={imageDataUrl} alt="Captured live photo" layout="fill" objectFit="cover" />
+                       )}
+                   </div>
+                   {verificationState === 'preview' ? (
+                       <div className="flex gap-4 mt-6 w-full">
+                           <Button onClick={handleRetake} variant="secondary" className="w-full">
+                               <RefreshCw className="mr-2 h-4 w-4" /> Retake
+                           </Button>
+                           <Button onClick={handleVerification} className="w-full">
+                               Looks Good
+                           </Button>
+                       </div>
+                   ) : (
+                       <Button onClick={verificationState === 'camera' ? capturePhoto : startCamera} size="lg" className="mt-6 w-full">
+                           <Camera className="mr-2 h-5 w-5" />
+                           {verificationState === 'camera' ? 'Take Photo' : 'Capture Photo'}
+                       </Button>
+                   )}
+                   {verificationState === 'camera' && <Button onClick={() => setVerificationState('idle')} variant="link" className="mt-2 text-muted-foreground">Cancel</Button>}
                 </div>
             )
     }
@@ -205,26 +203,36 @@ export default function LivePhotoPage() {
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
-      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
-
-      <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
-        <div className="absolute top-0 left-0">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft />
+       <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
+      
+       <div className="absolute top-8 left-8 z-10">
+          <Button onClick={() => router.push('/signup')} variant="ghost" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Account Details
           </Button>
         </div>
 
-        <div className="mb-8 mt-16 px-4">
-            <h1 className="text-center text-3xl font-bold tracking-tight">Identity Verification</h1>
-            <Progress value={(2 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
-        </div>
-
-        <Card className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl min-h-[400px]">
-          <CardContent className="p-0 h-full flex items-center justify-center">
-             {getCardContent()}
-          </CardContent>
+      <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
+        <Card className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
+            <div className="flex items-start gap-4">
+                <User className="h-6 w-6 text-primary" />
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">Step 2: Live Photo &<br/>Gender Check</h1>
+                    <p className="text-muted-foreground mt-2 text-sm">
+                        Please take a clear, live photo. We'll verify you're female to ensure our community is safe and authentic.
+                    </p>
+                    <p className="text-red-500 mt-2 text-sm font-semibold">
+                        Please remove glasses for the photo.
+                    </p>
+                </div>
+            </div>
+            <div className="mt-6 min-h-[300px]">
+                {getDisplayContent()}
+            </div>
         </Card>
       </div>
     </main>
   )
 }
+
+    
