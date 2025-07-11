@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { ArrowLeft, Loader2, Eye, EyeOff, KeyRound } from "lucide-react"
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth"
 
@@ -114,13 +113,14 @@ export default function ChangePasswordPage() {
       <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
         <div className="w-full max-w-md">
-            <Link
-              href="/settings"
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
               className="mb-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
             >
               <ArrowLeft className="h-4 w-4" />
               Back to Settings
-            </Link>
+            </Button>
             <Card className="w-full rounded-2xl border-none bg-black/30 p-8 shadow-2xl shadow-primary/10 backdrop-blur-md">
                 <CardHeader className="p-0 mb-6 text-center">
                     <CardTitle className="text-3xl font-bold tracking-tight">Change Password</CardTitle>
