@@ -8,12 +8,13 @@ import { ArrowLeft, Loader2, Upload, Camera, CheckCircle, AlertTriangle, Refresh
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { verifyAadhaar } from "@/ai/flows/aadhaar-verification-flow"
 import { type AadhaarVerificationOutput } from "@/ai/types"
+import { cn } from "@/lib/utils"
 
 type VerificationState = "idle" | "camera" | "preview" | "verifying" | "success" | "failed" | "error"
+type InputMode = "camera" | "upload"
 
 export default function AadhaarVerificationPage() {
   const router = useRouter()
@@ -24,6 +25,7 @@ export default function AadhaarVerificationPage() {
 
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [verificationState, setVerificationState] = useState<VerificationState>("idle")
+  const [inputMode, setInputMode] = useState<InputMode>("camera");
   const [verificationResult, setVerificationResult] = useState<AadhaarVerificationOutput | null>(null)
   const [isCameraOn, setIsCameraOn] = useState(false)
   const [userName, setUserName] = useState('')
@@ -41,34 +43,42 @@ export default function AadhaarVerificationPage() {
         setUserName(name);
     }
   }, [router, toast])
-
-  const startCamera = async () => {
-    try {
-      // Prefer the rear camera for documents
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
-      setIsCameraOn(true)
-      setVerificationState("camera");
-    } catch (err) {
-      console.error("Error accessing camera:", err)
-      toast({
-        variant: "destructive",
-        title: "Camera Error",
-        description: "Could not access the camera. Please check permissions and try again.",
-      })
-    }
-  }
-
+  
   const stopCamera = useCallback(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream
       stream.getTracks().forEach((track) => track.stop())
       videoRef.current.srcObject = null
+      setIsCameraOn(false);
     }
-    setIsCameraOn(false)
   }, [])
+  
+  useEffect(() => {
+    if (inputMode === 'camera' && verificationState === 'idle') {
+        const startCamera = async () => {
+            if (isCameraOn) return;
+            try {
+                // Prefer the rear camera for documents
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                if (videoRef.current) {
+                    videoRef.current.srcObject = stream
+                }
+                setIsCameraOn(true)
+            } catch (err) {
+                console.error("Error accessing camera:", err)
+                toast({
+                    variant: "destructive",
+                    title: "Camera Error",
+                    description: "Could not access camera. Please check permissions.",
+                })
+            }
+        }
+        startCamera();
+    } else {
+        stopCamera();
+    }
+  }, [inputMode, verificationState, isCameraOn, toast, stopCamera]);
+
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -103,7 +113,7 @@ export default function AadhaarVerificationPage() {
     setImageDataUrl(null)
     setVerificationState("idle")
     setVerificationResult(null)
-    stopCamera()
+    setInputMode("camera");
   }
 
   const handleVerification = useCallback(async () => {
@@ -120,7 +130,7 @@ export default function AadhaarVerificationPage() {
       if (result.verificationPassed) {
         setVerificationState("success");
         localStorage.setItem("userAadhaarDataUri", imageDataUrl);
-        toast({ title: 'Aadhaar Verified!', description: result.reason });
+        toast({ variant: 'success', title: 'Aadhaar Verified!', description: result.reason });
         setTimeout(() => router.push('/onboarding/phone-verification'), 2000);
       } else {
         setVerificationState("failed");
@@ -146,82 +156,50 @@ export default function AadhaarVerificationPage() {
       }
   }, [stopCamera]);
 
-  const getCardContent = () => {
+  const getCameraContent = () => {
     switch (verificationState) {
+        case 'verifying':
+            return <div className="flex flex-col items-center justify-center h-full text-center space-y-4"><Loader2 className="h-16 w-16 animate-spin text-primary" /><p className="text-muted-foreground">Verifying...</p></div>
         case 'success':
-            return (
-                <div className="text-center space-y-4 text-green-400">
-                    <CheckCircle className="h-20 w-20 mx-auto animate-pulse" />
-                    <h2 className="text-2xl font-bold">Verification Successful!</h2>
-                    <p className="text-sm">{verificationResult?.reason}</p>
-                    <p className="text-sm text-muted-foreground">Redirecting...</p>
-                </div>
-            )
+            return <div className="flex flex-col items-center justify-center h-full text-center space-y-4 text-green-400"><CheckCircle className="h-16 w-16" /><p>Success!</p></div>
         case 'failed':
         case 'error':
-             return (
-                <div className="text-center space-y-4 text-red-500">
-                    <AlertTriangle className="h-20 w-20 mx-auto animate-pulse" />
-                    <h2 className="text-2xl font-bold">Verification Failed</h2>
-                    <p className="text-sm">{verificationResult?.reason}</p>
-                    <Button onClick={resetState} className="mt-4">
-                        <RefreshCw className="mr-2 h-4 w-4" /> Try Again
-                    </Button>
-                </div>
-            )
-        case 'verifying':
-            return (
-                <div className="text-center space-y-4">
-                    <Loader2 className="h-20 w-20 mx-auto animate-spin text-primary" />
-                    <h2 className="text-2xl font-bold">Verifying Aadhaar...</h2>
-                    <p className="text-muted-foreground">Our AI is analyzing your document. Please wait.</p>
-                </div>
-            )
-        case 'camera':
-            return (
-                <div className="flex flex-col items-center gap-4 h-full">
-                    <div className="relative w-full aspect-[16/10] bg-muted rounded-lg overflow-hidden border-2 border-primary">
-                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
-                        <canvas ref={canvasRef} className="hidden" />
-                    </div>
-                    <div className="flex gap-4">
-                        <Button onClick={capturePhoto} size="lg" className="rounded-full h-16 w-16">
-                            <Camera className="h-8 w-8" />
-                        </Button>
-                        <Button onClick={resetState} variant="destructive">Cancel</Button>
-                    </div>
-                </div>
-            );
+             return <div className="flex flex-col items-center justify-center h-full text-center space-y-4 text-red-500"><AlertTriangle className="h-16 w-16" /><p>{verificationResult?.reason || "An error occurred."}</p></div>
         case 'preview':
-             return (
-                <div className="flex flex-col items-center gap-4 h-full">
-                    <Image src={imageDataUrl!} alt="Aadhaar Preview" width={400} height={250} className="rounded-lg max-w-full" />
-                    <div className="flex gap-4 w-full">
-                        <Button onClick={resetState} variant="secondary" className="w-full">
-                            <RefreshCw className="mr-2 h-4 w-4" /> Retake
-                        </Button>
-                        <Button onClick={handleVerification} className="w-full">
-                            Looks Good
-                        </Button>
-                    </div>
-                </div>
-            )
+             return <Image src={imageDataUrl!} alt="Aadhaar Preview" layout="fill" objectFit="contain" className="rounded-lg" />
         default: // idle
-            return (
-                <div className="flex flex-col items-center justify-center gap-6 h-full p-8 text-center">
-                    <h2 className="text-2xl font-semibold">Upload Your Aadhaar Card</h2>
-                    <p className="text-muted-foreground">You can either upload a photo of the front of your card or use your phone's camera.</p>
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                    <div className="w-full space-y-4">
-                        <Button onClick={() => fileInputRef.current?.click()} size="lg" className="w-full">
-                            <Upload className="mr-2 h-5 w-5" /> Upload Photo
-                        </Button>
-                        <Button onClick={startCamera} size="lg" variant="secondary" className="w-full">
-                            <Camera className="mr-2 h-5 w-5" /> Use Camera
-                        </Button>
-                    </div>
-                </div>
-            )
+            if (inputMode === 'camera') {
+                return (
+                    <>
+                        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                        {!isCameraOn && <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-white/50" /></div>}
+                        <canvas ref={canvasRef} className="hidden" />
+                    </>
+                )
+            }
+            return <div className="flex items-center justify-center h-full"><p className="text-muted-foreground">Please upload an image.</p></div>
+    }
+  }
+  
+  const getActionButton = () => {
+    switch (verificationState) {
+        case 'verifying':
+        case 'success':
+            return <Button className="w-full" size="lg" disabled>Verifying...</Button>
+        case 'failed':
+        case 'error':
+            return <Button className="w-full" size="lg" onClick={resetState}><RefreshCw className="mr-2" /> Try Again</Button>
+        case 'preview':
+            return <Button className="w-full" size="lg" onClick={handleVerification}>Looks Good, Verify</Button>
+        default: // idle
+             return <Button 
+                className="w-full" 
+                size="lg" 
+                onClick={inputMode === 'camera' ? capturePhoto : () => fileInputRef.current?.click()} 
+                disabled={inputMode === 'camera' && !isCameraOn}>
+                <Camera className="mr-2"/> 
+                {inputMode === 'camera' ? 'Capture & Verify' : 'Select File to Verify'}
+            </Button>
     }
   }
 
@@ -238,22 +216,37 @@ export default function AadhaarVerificationPage() {
       />
       <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
-      <div className="relative z-20 w-full max-w-lg animate-in fade-in-0 zoom-in-95 duration-500">
-        <div className="absolute top-0 left-0">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft />
+      <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
+          <Button onClick={() => router.push('/onboarding/live-photo')} variant="ghost" className="absolute -top-10 left-0 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Live Photo
           </Button>
-        </div>
 
-        <div className="mb-8 mt-16 px-4">
-            <h1 className="text-center text-3xl font-bold tracking-tight">Step 3: Aadhaar Verification</h1>
-            <Progress value={(3 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
-        </div>
+        <Card className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
+           <div className="text-center mb-6">
+                <h1 className="text-2xl font-bold tracking-tight">Step 3: Aadhaar Verification</h1>
+                <p className="text-muted-foreground mt-2 text-sm">
+                    As an additional step for users in India, please capture or upload a clear image of your Aadhaar card.
+                </p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+                <Button variant={inputMode === 'camera' ? 'secondary' : 'ghost'} onClick={() => setInputMode('camera')}>
+                    <Camera className="mr-2 h-4 w-4"/> Scan Card
+                </Button>
+                <Button variant={inputMode === 'upload' ? 'secondary' : 'ghost'} onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="mr-2 h-4 w-4"/> Upload File
+                </Button>
+                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+            </div>
 
-        <Card className="w-full rounded-2xl border border-white/10 bg-card/80 p-8 shadow-2xl backdrop-blur-xl min-h-[400px]">
-          <CardContent className="p-0 h-full flex items-center justify-center">
-             {getCardContent()}
-          </CardContent>
+            <div className="relative w-full aspect-video rounded-lg bg-black overflow-hidden flex items-center justify-center border-2 border-primary/50">
+               {getCameraContent()}
+            </div>
+            
+             <div className="mt-6">
+                {getActionButton()}
+             </div>
         </Card>
       </div>
     </main>
