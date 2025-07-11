@@ -8,7 +8,7 @@ import * as z from "zod"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
-import { createUserWithEmailAndPassword } from "firebase/auth"
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
@@ -65,11 +65,21 @@ export default function OnboardingPasswordPage() {
 
     setIsSubmitting(true)
     try {
+      // Retrieve all the data from localStorage first
       const storedEmail = localStorage.getItem("userEmail")
-      if (!storedEmail) {
-        throw new Error("Email not found. Please restart the signup process.")
+      const storedName = localStorage.getItem("userName")
+      const storedCountry = localStorage.getItem("userCountry")
+      const storedPhone = localStorage.getItem("userPhone")
+      const storedLivePhoto = localStorage.getItem("userLivePhoto")
+      const storedAadhaarImage = localStorage.getItem("aadhaarImage")
+      const onboardingDetailsJSON = localStorage.getItem("onboardingDetails");
+      const onboardingDetails = onboardingDetailsJSON ? JSON.parse(onboardingDetailsJSON) : {};
+
+      if (!storedEmail || !storedName || !storedCountry) {
+        throw new Error("Core user information is missing. Please restart the signup process.")
       }
 
+      // Step 1: Create the user in Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         storedEmail,
@@ -77,16 +87,16 @@ export default function OnboardingPasswordPage() {
       )
       const user = userCredential.user
 
-      const onboardingDetailsJSON = localStorage.getItem("onboardingDetails");
-      const onboardingDetails = onboardingDetailsJSON ? JSON.parse(onboardingDetailsJSON) : {};
-
-      // Compile all data into a user profile object
+      // Step 2: Update the auth user's profile with the display name
+      await updateProfile(user, { displayName: storedName });
+      
+      // Step 3: Compile all data into a user profile object for Firestore
       const userProfile = {
         uid: user.uid,
-        displayName: localStorage.getItem("userName") || "",
+        displayName: storedName,
         email: storedEmail,
-        country: localStorage.getItem("userCountry") || "",
-        phone: localStorage.getItem("userPhone") || "",
+        country: storedCountry,
+        phone: storedPhone || "",
         age: onboardingDetails.age || null,
         nickname: onboardingDetails.nickname || "",
         address1: onboardingDetails.address1 || "",
@@ -98,13 +108,15 @@ export default function OnboardingPasswordPage() {
             ? `+${onboardingDetails.altCountryCode}${onboardingDetails.altPhone}`
             : "",
         createdAt: new Date().toISOString(),
-        photoURL: ""
+        photoURL: "", // Will be updated later from profile page
+        // We are not storing the raw live photo or aadhaar image data uris in firestore
+        // for privacy and storage cost reasons. This can be changed if needed.
       }
 
-      // Save the compiled profile to Firestore
+      // Step 4: Save the compiled profile to its Firestore document
       await setDoc(doc(db, "users", user.uid), userProfile)
 
-      // Optionally, clear localStorage after successful creation
+      // Step 5: Clear localStorage after successful creation to clean up
       localStorage.removeItem("userName")
       localStorage.removeItem("userCountry")
       localStorage.removeItem("userLivePhoto")
@@ -124,7 +136,7 @@ export default function OnboardingPasswordPage() {
       let errorMessage = "An unexpected error occurred. Please try again."
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = "This email is already registered. Please log in instead."
-      } else if (error.message.includes("Email not found")) {
+      } else if (error.message.includes("Core user information")) {
         errorMessage = error.message;
       }
       
