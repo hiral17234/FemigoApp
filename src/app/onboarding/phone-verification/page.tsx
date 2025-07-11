@@ -3,18 +3,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, CheckCircle2, ChevronRight } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check } from "lucide-react"
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   InputOTP,
   InputOTPGroup,
@@ -23,6 +16,10 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { auth, firebaseError } from "@/lib/firebase"
 import { countries } from "@/lib/countries"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { cn } from "@/lib/utils"
+
 
 declare global {
   interface Window {
@@ -41,6 +38,7 @@ export default function PhoneVerificationPage() {
   const [step, setStep] = useState<"phone" | "otp">("phone")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
+  const [popoverOpen, setPopoverOpen] = useState(false)
 
   // Get user country from local storage to set a default
   useEffect(() => {
@@ -57,7 +55,8 @@ export default function PhoneVerificationPage() {
       return;
     }
     // Make sure recaptcha container is on the page
-    if (document.getElementById("recaptcha-container")) {
+    const recaptchaContainer = document.getElementById("recaptcha-container");
+    if (recaptchaContainer && !window.recaptchaVerifier) {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
           'size': "invisible",
           'callback': (response: any) => {
@@ -80,7 +79,10 @@ export default function PhoneVerificationPage() {
         const confirmationResult = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
         window.confirmationResult = confirmationResult;
         setStep("otp");
-        toast({title: 'OTP Sent!', description: `An OTP has been sent to ${fullPhoneNumber}`});
+        toast({
+            title: 'OTP Sent!', 
+            description: `We've sent a verification code to ${fullPhoneNumber}`
+        });
     } catch(error: any) {
         console.error("Error sending OTP", error);
         let errorMessage = "Failed to send OTP. Please try again.";
@@ -107,7 +109,7 @@ export default function PhoneVerificationPage() {
         // Save the verified phone number to localStorage
         localStorage.setItem("userPhone", countryCode + phone);
         toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.'});
-        setTimeout(() => router.push('/onboarding/email-verification'), 2000);
+        setTimeout(() => router.push('/onboarding/details'), 2000);
     } catch(error: any) {
         console.error("Error verifying OTP", error);
          let errorMessage = "Failed to verify OTP. Please try again.";
@@ -165,14 +167,47 @@ export default function PhoneVerificationPage() {
                 <div className="space-y-2">
                     <label className="text-sm font-medium">Phone Number</label>
                     <div className="flex gap-2">
-                        <Select value={countryCode} onValueChange={setCountryCode}>
-                            <SelectTrigger className="w-28">
-                                <SelectValue placeholder="Code" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {countries.map(c => <SelectItem key={c.code} value={`+${c.phone}`}>{c.emoji} +{c.phone}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
+                        <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className="w-36 justify-between"
+                            >
+                              {countryCode}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                            <Command>
+                                <CommandInput placeholder="Search country..." />
+                                <CommandList>
+                                <CommandEmpty>No country found.</CommandEmpty>
+                                <CommandGroup>
+                                    {countries.map((c) => (
+                                    <CommandItem
+                                        key={c.code}
+                                        value={`${c.label} (+${c.phone})`}
+                                        onSelect={() => {
+                                            setCountryCode(`+${c.phone}`);
+                                            setPopoverOpen(false);
+                                        }}
+                                    >
+                                        <Check className={cn("mr-2 h-4 w-4", `+${c.phone}` === countryCode ? "opacity-100" : "opacity-0")} />
+                                        <span className="mr-2">{c.emoji}</span>
+                                        <span className="mr-2">{c.label}</span>
+                                        <span className="text-muted-foreground">(+{c.phone})</span>
+                                    </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                                </CommandList>
+                                <div className="p-2 text-center border-t border-border">
+                                    <p className="text-xs font-bold text-red-500">Press enter to select.</p>
+                                </div>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+
                         <Input 
                             type="tel" 
                             placeholder="9238099587" 
