@@ -44,9 +44,21 @@ function VerificationResult({ result, image, onContinue }: { result: AadhaarVeri
             </div>
             
             <div className="space-y-2">
-                <VerificationItem label="Name Matched" value={null} passed={!!result.extractedName && result.verificationPassed} />
-                <VerificationItem label="Gender Verified" value={result.extractedGender || null} passed={!!result.extractedGender && result.extractedGender.toLowerCase() === 'female'} />
-                <VerificationItem label="Aadhaar Number Valid" value="N/A" passed={!!result.extractedAadhaarNumber && result.verificationPassed} />
+                <VerificationItem 
+                    label="Name Matched" 
+                    value={result.extractedName || null} 
+                    passed={!!result.extractedName && result.verificationPassed} 
+                />
+                <VerificationItem 
+                    label="Gender Verified" 
+                    value={result.extractedGender || null} 
+                    passed={!!result.extractedGender && result.extractedGender.toLowerCase() === 'female'} 
+                />
+                <VerificationItem 
+                    label="Aadhaar Number Valid" 
+                    value={result.verificationPassed ? result.extractedAadhaarNumber : "N/A"} 
+                    passed={!!result.extractedAadhaarNumber && result.verificationPassed} 
+                />
             </div>
 
             <Button onClick={onContinue} className="w-full mt-6" size="lg">
