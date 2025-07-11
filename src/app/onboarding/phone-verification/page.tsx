@@ -210,7 +210,7 @@ export default function PhoneVerificationPage() {
 
                         <Input 
                             type="tel" 
-                            placeholder="9238099587" 
+                            placeholder="Phone number" 
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             className="focus:ring-primary focus:border-primary"
