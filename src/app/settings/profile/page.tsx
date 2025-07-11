@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const profileSchema = z.object({
+  email: z.string().email("Please enter a valid email address."),
   nickname: z.string().optional(),
   age: z.coerce.number().min(13, "You must be at least 13 years old.").optional(),
   address1: z.string().optional(),
@@ -109,6 +110,7 @@ export default function EditProfilePage() {
                     setUserData(data);
                     // Populate form with existing data
                     form.reset({
+                        email: data.email || "",
                         nickname: data.nickname || "",
                         age: data.age || undefined,
                         address1: data.address1 || "",
@@ -166,6 +168,8 @@ export default function EditProfilePage() {
         setIsSubmitting(true);
         try {
             const userDocRef = doc(db, "users", user.uid);
+            // Note: This only updates the email in Firestore, not in Firebase Auth.
+            // A full implementation would require re-authentication to change the login email.
             await updateDoc(userDocRef, data);
             toast({ title: 'Profile Updated!', description: 'Your changes have been saved successfully.' });
         } catch (error) {
@@ -217,10 +221,25 @@ export default function EditProfilePage() {
                         <CardContent className="flex flex-col items-center gap-6 p-6">
                             <div className="text-center">
                                 <h1 className="text-3xl font-bold">{userData.displayName}</h1>
-                                <p className="text-muted-foreground">{userData.email}</p>
                             </div>
 
                             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
+                                <div className="space-y-1">
+                                    <Label htmlFor="displayName">Full Name (Non-editable)</Label>
+                                    <Input id="displayName" value={userData.displayName} readOnly disabled className="bg-muted/30" />
+                                </div>
+                                <div className="space-y-1">
+                                    <Label htmlFor="phone">Phone (Non-editable)</Label>
+                                    <Input id="phone" value={userData.phone} readOnly disabled className="bg-muted/30" />
+                                </div>
+                                 <div className="space-y-1">
+                                    <Label htmlFor="email">Email Address</Label>
+                                    <Input id="email" {...form.register("email")} placeholder="your.email@example.com" />
+                                    {form.formState.errors.email && <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>}
+                                </div>
+
+                                <Separator />
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                      <div className="space-y-1">
                                         <Label htmlFor="nickname">Nickname</Label>
@@ -233,7 +252,7 @@ export default function EditProfilePage() {
                                         {form.formState.errors.age && <p className="text-xs text-destructive">{form.formState.errors.age.message}</p>}
                                     </div>
                                 </div>
-                                <Separator />
+                                
                                 <div className="space-y-2">
                                     <Label>Address</Label>
                                     <Input {...form.register("address1")} placeholder="Address Line 1" />
@@ -256,4 +275,3 @@ export default function EditProfilePage() {
         </main>
     );
 }
-
