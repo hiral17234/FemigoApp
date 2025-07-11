@@ -168,7 +168,7 @@ export default function DashboardLayout({
 
   const bottomMenuItems = [
     { href: "/contact-us", icon: LifeBuoy, label: "Contact Support" },
-    { href: "/dashboard", icon: Settings, label: "Settings" },
+    { href: "/settings", icon: Settings, label: "Settings" },
   ]
 
   return (
