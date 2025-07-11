@@ -77,26 +77,28 @@ export default function OnboardingPasswordPage() {
       )
       const user = userCredential.user
 
-      const onboardingDetails = JSON.parse(localStorage.getItem("onboardingDetails") || "{}");
+      const onboardingDetailsJSON = localStorage.getItem("onboardingDetails");
+      const onboardingDetails = onboardingDetailsJSON ? JSON.parse(onboardingDetailsJSON) : {};
 
       // Compile all data into a user profile object
       const userProfile = {
         uid: user.uid,
-        displayName: localStorage.getItem("userName"),
+        displayName: localStorage.getItem("userName") || "",
         email: storedEmail,
-        country: localStorage.getItem("userCountry"),
-        phone: localStorage.getItem("userPhone"),
-        age: onboardingDetails.age,
-        nickname: onboardingDetails.nickname,
-        address1: onboardingDetails.address1,
-        address2: onboardingDetails.address2,
-        address3: onboardingDetails.address3,
-        state: onboardingDetails.state === 'Other' ? onboardingDetails.otherState : onboardingDetails.state,
-        city: onboardingDetails.city === 'Other' ? onboardingDetails.otherCity : onboardingDetails.city,
+        country: localStorage.getItem("userCountry") || "",
+        phone: localStorage.getItem("userPhone") || "",
+        age: onboardingDetails.age || null,
+        nickname: onboardingDetails.nickname || "",
+        address1: onboardingDetails.address1 || "",
+        address2: onboardingDetails.address2 || "",
+        address3: onboardingDetails.address3 || "",
+        state: onboardingDetails.state === 'Other' ? onboardingDetails.otherState : (onboardingDetails.state || ""),
+        city: onboardingDetails.city === 'Other' ? onboardingDetails.otherCity : (onboardingDetails.city || ""),
         altPhone: onboardingDetails.altCountryCode && onboardingDetails.altPhone 
             ? `+${onboardingDetails.altCountryCode}${onboardingDetails.altPhone}`
-            : null,
+            : "",
         createdAt: new Date().toISOString(),
+        photoURL: ""
       }
 
       // Save the compiled profile to Firestore
