@@ -3,28 +3,23 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { useForm, type SubmitHandler } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { ArrowLeft, User, Globe, ChevronsUpDown, Check, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { countries } from "@/lib/countries"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { cn } from "@/lib/utils"
 
 const signupSchema = z.object({
   fullName: z.string().min(3, { message: "Full name must be at least 3 characters." }),
-  country: z.string().min(1, { message: "Please select your country." }),
+  country: z.string({ required_error: "Please select your country." }),
 })
 
 type SignupFormValues = z.infer<typeof signupSchema>
@@ -33,16 +28,19 @@ export default function SignupPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [popoverOpen, setPopoverOpen] = useState(false)
+
   const {
     register,
     handleSubmit,
+    control,
     setValue,
     formState: { errors },
   } = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
   })
 
-  const onSubmit: SubmitHandler<SignupFormValues> = (data) => {
+  const onSubmit = (data: SignupFormValues) => {
     setIsSubmitting(true)
     
     // Save to localStorage for subsequent steps
@@ -50,8 +48,9 @@ export default function SignupPage() {
     localStorage.setItem("userCountry", data.country)
 
     toast({
-      title: "Welcome!",
+      title: `Welcome, ${data.fullName}!`,
       description: "Let's get you set up.",
+      variant: 'default',
     })
     
     // Redirect to the next step in the onboarding flow
@@ -61,77 +60,114 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black p-4 text-white">
-      <video
-        src="https://media.istockphoto.com/id/1456520455/nl/video/sulfur-cosmos-flowers-bloom-in-the-garden.mp4?s=mp4-480x480-is&k=20&c=xbZAFUX4xgFK_GWD71mYxPUwCZr-qTb9wObCrWMB8ak="
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
-
-      <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
-        <div className="absolute top-0 left-0">
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft />
-            </Button>
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
+       <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
+      
+       <div className="absolute top-8 left-8 z-10">
+          <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
           </Link>
         </div>
 
-        <div className="mb-8 mt-16 px-4 text-center">
-          <h1 className="text-3xl font-bold tracking-tight">Create Your Account</h1>
-          <p className="text-muted-foreground mt-2 text-sm">Join Femigo and take a step towards a safer tomorrow.</p>
-          <Progress value={(1 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
-        </div>
-
-        <div className="w-full rounded-2xl border border-white/10 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+      <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
+        <div className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold tracking-tight">Create Account</h1>
+            <p className="text-muted-foreground mt-2 text-sm">Join Femigo and be part of our community.</p>
+          </div>
+          
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium">Full Name</label>
-              <Input
-                id="fullName"
-                placeholder="Enter your full name"
-                {...register("fullName")}
-                className={errors.fullName ? "border-destructive" : ""}
-              />
-              {errors.fullName && <p className="text-xs text-destructive">{errors.fullName.message}</p>}
+              <label htmlFor="fullName" className="text-sm font-medium">Name</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  id="fullName"
+                  placeholder="Your Name"
+                  {...register("fullName")}
+                  className={cn("pl-9", errors.fullName && "border-destructive")}
+                />
+              </div>
+              {errors.fullName && <p className="text-xs text-destructive mt-1">{errors.fullName.message}</p>}
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="country" className="text-sm font-medium">Country</label>
-               <Select onValueChange={(value) => setValue("country", value, { shouldValidate: true })}>
-                  <SelectTrigger className={errors.country ? "border-destructive" : ""}>
-                      <SelectValue placeholder="Select your country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                      {countries.map((country) => (
-                          <SelectItem key={country.value} value={country.value}>
-                              <div className="flex items-center gap-2">
-                                <span>{country.emoji}</span>
-                                <span>{country.label}</span>
-                              </div>
-                          </SelectItem>
-                      ))}
-                  </SelectContent>
-              </Select>
-               {errors.country && <p className="text-xs text-destructive">{errors.country.message}</p>}
+              <label className="text-sm font-medium">Country</label>
+               <Controller
+                control={control}
+                name="country"
+                render={({ field }) => (
+                  <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className={cn(
+                          "w-full justify-between pl-9",
+                          !field.value && "text-muted-foreground",
+                          errors.country && "border-destructive"
+                        )}
+                      >
+                         <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                        {field.value
+                          ? countries.find(
+                              (country) => country.value === field.value
+                            )?.label
+                          : "Select your country"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                       <Command>
+                          <CommandInput placeholder="Search country..." />
+                          <CommandList>
+                            <CommandEmpty>No country found.</CommandEmpty>
+                            <CommandGroup>
+                              {countries.map((country) => (
+                                <CommandItem
+                                  key={country.value}
+                                  value={country.label}
+                                  onSelect={() => {
+                                    setValue("country", country.value)
+                                    setPopoverOpen(false)
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === country.value
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                   <span className="mr-2">{country.emoji}</span>
+                                  {country.label}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              />
+              {errors.country && <p className="text-xs text-destructive mt-1">{errors.country.message}</p>}
             </div>
 
-            <Button type="submit" className="w-full bg-primary py-3 text-lg" disabled={isSubmitting}>
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Continue"}
+            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground py-3 text-lg" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "Create Account"}
             </Button>
           </form>
 
           <p className="pt-6 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link href="/login" className="font-semibold text-primary hover:underline">
-              Log In
+              Log in
             </Link>
           </p>
         </div>
+        <div className="absolute bottom-[-50px] left-4 h-10 w-10 rounded-full border border-white/10 flex items-center justify-center font-bold text-lg">N</div>
       </div>
     </main>
   )

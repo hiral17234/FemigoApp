@@ -15,7 +15,6 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { auth, db } from "@/lib/firebase"
-import { PasswordStrength } from "@/components/ui/password-strength"
 import { cn } from "@/lib/utils"
 
 const passwordSchema = z
@@ -55,10 +54,16 @@ export default function PasswordPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
   })
+
+  useEffect(() => {
+    const subscription = watch((value) => setPassword(value.password || ""));
+    return () => subscription.unsubscribe();
+  }, [watch]);
 
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
     setIsSubmitting(true)
@@ -94,8 +99,8 @@ export default function PasswordPage() {
         email: user.email,
         displayName,
         country,
-        phone,
-        photoURL,
+        phone: phone || '',
+        photoURL: photoURL || '',
         ...details,
         createdAt: new Date().toISOString(),
       }
@@ -129,16 +134,8 @@ export default function PasswordPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black p-4 text-white">
-      <video
-        src="https://media.istockphoto.com/id/1456520455/nl/video/sulfur-cosmos-flowers-bloom-in-the-garden.mp4?s=mp4-480x480-is&k=20&c=xbZAFUX4xgFK_GWD71mYxPUwCZr-qTb9wObCrWMB8ak="
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
+      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
 
       <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
         <div className="absolute top-0 left-0">
@@ -155,7 +152,7 @@ export default function PasswordPage() {
           <Progress value={(6 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <div className="w-full rounded-2xl border border-white/10 bg-transparent p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="password">Password</label>
@@ -164,9 +161,7 @@ export default function PasswordPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
-                  {...register("password", {
-                    onChange: (e) => setPassword(e.target.value)
-                  })}
+                  {...register("password")}
                   className={errors.password ? "border-destructive pr-10" : "pr-10"}
                 />
                  <button
@@ -180,22 +175,21 @@ export default function PasswordPage() {
               {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
 
-             <div className="space-y-2">
-                <label>Password must contain:</label>
-                <ul className="space-y-1 text-xs">
-                    <li className={cn("flex items-center gap-2", checks.length ? "text-green-400" : "text-muted-foreground")}>
+             <div className="space-y-2 pt-2">
+                <ul className="space-y-1.5 text-xs">
+                    <li className={cn("flex items-center gap-2 transition-colors", checks.length ? "text-green-400" : "text-muted-foreground")}>
                         <CheckCircle2 className="h-4 w-4" /> At least 8 characters
                     </li>
-                    <li className={cn("flex items-center gap-2", checks.uppercase ? "text-green-400" : "text-muted-foreground")}>
+                    <li className={cn("flex items-center gap-2 transition-colors", checks.uppercase ? "text-green-400" : "text-muted-foreground")}>
                         <CheckCircle2 className="h-4 w-4" /> An uppercase letter (A-Z)
                     </li>
-                     <li className={cn("flex items-center gap-2", checks.lowercase ? "text-green-400" : "text-muted-foreground")}>
+                     <li className={cn("flex items-center gap-2 transition-colors", checks.lowercase ? "text-green-400" : "text-muted-foreground")}>
                         <CheckCircle2 className="h-4 w-4" /> A lowercase letter (a-z)
                     </li>
-                    <li className={cn("flex items-center gap-2", checks.number ? "text-green-400" : "text-muted-foreground")}>
+                    <li className={cn("flex items-center gap-2 transition-colors", checks.number ? "text-green-400" : "text-muted-foreground")}>
                         <CheckCircle2 className="h-4 w-4" /> A number (0-9)
                     </li>
-                    <li className={cn("flex items-center gap-2", checks.special ? "text-green-400" : "text-muted-foreground")}>
+                    <li className={cn("flex items-center gap-2 transition-colors", checks.special ? "text-green-400" : "text-muted-foreground")}>
                         <CheckCircle2 className="h-4 w-4" /> A special character (!@#$%)
                     </li>
                 </ul>
@@ -224,7 +218,7 @@ export default function PasswordPage() {
               )}
             </div>
 
-            <Button type="submit" className="w-full bg-primary py-3 text-lg" disabled={isSubmitting}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground py-3 text-lg" disabled={isSubmitting}>
               {isSubmitting ? (
                 <Loader2 className="animate-spin" />
               ) : (

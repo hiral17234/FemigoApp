@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { ArrowLeft, Loader2, Camera, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react"
@@ -24,6 +24,20 @@ export default function LivePhotoPage() {
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
   const [verificationState, setVerificationState] = useState<VerificationState>("idle")
   const [verificationResult, setVerificationResult] = useState<GenderCheckOutput | null>(null)
+  
+  useEffect(() => {
+    // On page load, ensure we have the prerequisite data. If not, go back to start.
+    const userName = localStorage.getItem("userName");
+    if (!userName) {
+        toast({
+            title: "Something went wrong",
+            description: "We need your name to continue. Please start over.",
+            variant: "destructive",
+        });
+        router.push("/signup");
+    }
+  }, [router, toast]);
+
 
   const startCamera = async () => {
     setVerificationState("camera")
@@ -190,16 +204,8 @@ export default function LivePhotoPage() {
 
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black p-4 text-white">
-      <video
-        src="https://media.istockphoto.com/id/1456520455/nl/video/sulfur-cosmos-flowers-bloom-in-the-garden.mp4?s=mp4-480x480-is&k=20&c=xbZAFUX4xgFK_GWD71mYxPUwCZr-qTb9wObCrWMB8ak="
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
-      />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
+      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
 
       <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
         <div className="absolute top-0 left-0">
@@ -213,7 +219,7 @@ export default function LivePhotoPage() {
             <Progress value={(2 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <Card className="w-full rounded-2xl border border-white/10 bg-card/80 p-8 shadow-2xl backdrop-blur-xl min-h-[400px]">
+        <Card className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl min-h-[400px]">
           <CardContent className="p-0 h-full flex items-center justify-center">
              {getCardContent()}
           </CardContent>
