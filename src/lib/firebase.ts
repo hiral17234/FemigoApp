@@ -39,19 +39,15 @@ if (missingOrInvalidKeys.length > 0) {
     const errorDetails = missingOrInvalidKeys.join(", ");
     firebaseError = `${errorIntro}\n\n- ${errorDetails}`;
     console.error(firebaseError);
-}
-
-// Initialize Firebase only if the config is valid.
-if (!firebaseError) {
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-} else {
     // Provide dummy objects to prevent the app from crashing where auth/db is used.
     app = {} as FirebaseApp;
     auth = {} as Auth;
     db = {} as Firestore;
+} else {
+    // Initialize Firebase only if the config is valid.
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
 }
-
 
 export { app, auth, db, firebaseError };
