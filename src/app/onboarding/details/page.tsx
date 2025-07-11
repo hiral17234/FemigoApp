@@ -184,7 +184,7 @@ export default function OnboardingDetailsPage() {
               <ArrowLeft className="h-4 w-4" />
               Back
             </Link>
-            <div className="w-full rounded-2xl border border-white/10 bg-card/80 p-8 shadow-2xl backdrop-blur-xl">
+            <div className="w-full rounded-2xl border border-white/10 bg-transparent p-8 shadow-2xl backdrop-blur-xl">
               <h1 className="mb-2 text-center text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                 Tell Us About Yourself
               </h1>
