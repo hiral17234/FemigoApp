@@ -5,6 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
 export default function WelcomePage() {
   const router = useRouter()
@@ -33,13 +34,13 @@ export default function WelcomePage() {
           </p>
 
           <div className="mt-12 w-full space-y-4">
-            <button
+            <Button
               onClick={() => router.push('/signup')}
               className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-secondary py-4 text-lg font-semibold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/50"
             >
               Get Started
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-            </button>
+            </Button>
 
             <p className="pt-4 text-sm text-white/50">
               Already have an account?{" "}

@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation"
 import Confetti from "react-confetti"
 
 import { Button } from "@/components/ui/button"
+import { useToast } from "@/hooks/use-toast"
 
 export default function CongratulationsPage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [userName, setUserName] = useState<string | null>(null)
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
 
@@ -44,12 +46,19 @@ export default function CongratulationsPage() {
     }
     window.addEventListener('resize', handleResize)
     handleResize()
+    
+    // Show success toast
+    toast({
+        variant: "success",
+        title: "Account Created!",
+        description: "Your Femigo account has been successfully created.",
+    })
 
     return () => {
         window.removeEventListener('resize', handleResize)
         clearTimeout(cleanupTimeout)
     }
-  }, [router])
+  }, [router, toast])
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black p-4 text-white">
