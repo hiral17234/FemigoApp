@@ -158,9 +158,7 @@ export default function AadhaarVerificationPage() {
   }
   
   const openFilePicker = () => {
-    if (inputMode === 'upload') {
-        fileInputRef.current?.click();
-    }
+    fileInputRef.current?.click();
   };
 
   const resetState = () => {
@@ -279,13 +277,13 @@ export default function AadhaarVerificationPage() {
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
        <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
-      <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
+      <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
           <Button onClick={() => router.push('/onboarding/live-photo')} variant="ghost" className="absolute -top-10 left-0 flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <ArrowLeft className="h-4 w-4" />
             Back to Live Photo
           </Button>
 
-        <Card className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
+        <Card className="w-full rounded-2xl bg-black/50 p-10 shadow-2xl backdrop-blur-lg">
            <div className="text-center mb-6">
                 <h1 className="text-2xl font-bold tracking-tight">Step 3: Aadhaar Verification</h1>
                 <p className="text-muted-foreground mt-2 text-sm">
