@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect, useRef } from "react";
@@ -133,7 +132,7 @@ export default function EditProfilePage() {
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !user) return;
+        if (!file || !user || !db) return;
 
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -161,7 +160,7 @@ export default function EditProfilePage() {
     };
 
     const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
-        if (!user) {
+        if (!user || !db) {
             toast({ variant: 'destructive', title: 'Not Authenticated' });
             return;
         }
