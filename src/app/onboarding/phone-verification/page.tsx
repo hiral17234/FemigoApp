@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check, Copy } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +19,35 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 
-const DEMO_OTP = "123456";
+function CustomOtpNotification({ otp, phone, visible }: { otp: string, phone: string, visible: boolean }) {
+    const { toast } = useToast();
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(otp).then(() => {
+            toast({ title: "OTP Copied!", variant: "default" });
+        });
+    }
+
+    return (
+        <div className={cn(
+            "fixed top-0 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm p-4 transition-transform duration-500 ease-in-out",
+            visible ? "translate-y-4" : "-translate-y-full"
+        )}>
+            <div className="bg-white text-black rounded-xl shadow-2xl p-4">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <p className="text-sm font-semibold text-blue-600">Femigo Verification</p>
+                        <p className="text-2xl font-bold tracking-widest mt-1">{otp}</p>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={handleCopy}>
+                        <Copy className="h-5 w-5 text-blue-600" />
+                    </Button>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 
 export default function PhoneVerificationPage() {
   const router = useRouter()
@@ -32,6 +60,9 @@ export default function PhoneVerificationPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
+
+  const [demoOtp, setDemoOtp] = useState("");
+  const [showOtpNotification, setShowOtpNotification] = useState(false);
 
   // Get user country from local storage to set a default
   useEffect(() => {
@@ -49,18 +80,23 @@ export default function PhoneVerificationPage() {
     }
     setIsSubmitting(true);
     
-    // DEMO MODE: Simulate sending OTP using the standard toast
-    toast({
-        title: "OTP Sent!",
-        description: `We've sent a verification code to ${countryCode}${phone}.`,
-        variant: 'default', // This will be the dark style
-    });
+    // Generate a random 6-digit OTP
+    const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setDemoOtp(newOtp);
 
-    // Wait for a moment to let the user see the toast, then proceed
+    // Show the custom notification
+    setShowOtpNotification(true);
+
+    // Hide the notification after a few seconds
+    setTimeout(() => {
+        setShowOtpNotification(false);
+    }, 4000);
+
+    // Wait for the notification to hide, then move to the next step
     setTimeout(() => {
         setIsSubmitting(false);
         setStep('otp');
-    }, 2000); // 2-second delay
+    }, 4500); // A bit longer than the notification display time
   }
 
   const onVerifyOtp = async () => {
@@ -70,9 +106,9 @@ export default function PhoneVerificationPage() {
     }
     setIsSubmitting(true);
 
-    // DEMO MODE: Verify against the hardcoded OTP
+    // DEMO MODE: Verify against the generated demo OTP
     setTimeout(() => {
-        if (otp === DEMO_OTP) {
+        if (otp === demoOtp) {
             setIsVerified(true);
             // Save the verified phone number to localStorage
             localStorage.setItem("userPhone", countryCode + phone);
@@ -94,6 +130,7 @@ export default function PhoneVerificationPage() {
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
+        <CustomOtpNotification otp={demoOtp} phone={`${countryCode}${phone}`} visible={showOtpNotification} />
         <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
         
         <div className="absolute top-8 left-8 z-10">
@@ -217,3 +254,5 @@ export default function PhoneVerificationPage() {
     </main>
   )
 }
+
+    
