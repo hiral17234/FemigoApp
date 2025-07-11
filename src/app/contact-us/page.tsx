@@ -33,7 +33,7 @@ export default function ContactUsPage() {
             <Mail className="h-6 w-6 shrink-0 text-primary" />
             <div>
               <h3 className="font-semibold">Email Us</h3>
-              <p className="text-muted-foreground">support@femigo.app</p>
+              <a href="mailto:support@femigo.app" className="text-muted-foreground hover:underline">support@femigo.app</a>
             </div>
           </div>
           <Separator className="bg-border/50" />
@@ -41,7 +41,7 @@ export default function ContactUsPage() {
             <Phone className="h-6 w-6 shrink-0 text-primary" />
             <div>
               <h3 className="font-semibold">Call Us</h3>
-              <p className="text-muted-foreground">+1 (555) 123-4567</p>
+              <a href="tel:+15551234567" className="text-muted-foreground hover:underline">+1 (555) 123-4567</a>
             </div>
           </div>
           <Separator className="bg-border/50" />
