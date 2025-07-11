@@ -51,7 +51,7 @@ export default function LoginPage() {
         toast({
             variant: "destructive",
             title: "Configuration Error",
-            description: firebaseError || "Firebase is not configured.",
+            description: firebaseError || "Firebase is not configured correctly. Please check API keys.",
         });
         return;
     }
@@ -60,14 +60,18 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, values.email, values.password)
       toast({
         title: "Logged In!",
-        description: "Welcome back.",
+        description: "Welcome back. Redirecting to your dashboard...",
       })
       router.push("/dashboard")
     } catch (error: any) {
-      console.error("Login error:", error)
-      const errorMessage = error.code === 'auth/invalid-credential'
-        ? "Invalid email or password. Please check your credentials and try again."
-        : `An unexpected error occurred. Please try again. (${error.code})`;
+      console.error("Login error:", error.code, error.message)
+      
+      let errorMessage = "An unexpected error occurred. Please try again."
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
+        errorMessage = "Invalid email or password. Please check your credentials and try again."
+      } else if (error.code === 'auth/too-many-requests') {
+          errorMessage = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later."
+      }
 
       toast({
         variant: "destructive",
@@ -111,7 +115,7 @@ export default function LoginPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
-          <div className="w-full rounded-2xl border border-white/10 bg-transparent p-8 shadow-2xl">
+          <div className="w-full rounded-2xl border border-white/10 bg-transparent p-8 shadow-2xl backdrop-blur-xl">
             <div className="flex flex-col items-center space-y-6 text-center">
               <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">
