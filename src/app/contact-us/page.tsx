@@ -14,9 +14,8 @@ export default function ContactUsPage() {
       
       <div className="absolute top-4 left-4 sm:top-8 sm:left-8">
         <Link href="/dashboard">
-          <Button variant="ghost" className="flex items-center gap-2 text-muted-foreground hover:text-primary">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
           </Button>
         </Link>
       </div>
