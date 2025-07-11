@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -54,6 +53,10 @@ export default function ContactUsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="absolute bottom-4 right-4 text-xs text-white">
+        Real details will be uploaded soon.
+      </div>
     </main>
   )
 }
