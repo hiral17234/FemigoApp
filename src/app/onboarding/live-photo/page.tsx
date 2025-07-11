@@ -22,24 +22,18 @@ export default function LivePhotoPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null)
-  const [verificationState, setVerificationState] = useState<VerificationState>("idle")
+  const [verificationState, setVerificationState] = useState<VerificationState>("camera")
   const [verificationResult, setVerificationResult] = useState<GenderCheckOutput | null>(null)
   
-  useEffect(() => {
-    // On page load, ensure we have the prerequisite data. If not, go back to start.
-    const userName = localStorage.getItem("userName");
-    if (!userName) {
-        toast({
-            title: "Something went wrong",
-            description: "We need your name to continue. Please start over.",
-            variant: "destructive",
-        });
-        router.push("/signup");
+  const stopCamera = useCallback(() => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach((track) => track.stop())
+      videoRef.current.srcObject = null
     }
-  }, [router, toast]);
-
-
-  const startCamera = async () => {
+  }, [])
+  
+  const startCamera = useCallback(async () => {
     setVerificationState("camera")
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
@@ -55,15 +49,28 @@ export default function LivePhotoPage() {
       })
       setVerificationState("idle")
     }
-  }
+  }, [toast])
 
-  const stopCamera = useCallback(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream
-      stream.getTracks().forEach((track) => track.stop())
-      videoRef.current.srcObject = null
+  useEffect(() => {
+    // On page load, ensure we have the prerequisite data. If not, go back to start.
+    const userName = localStorage.getItem("userName");
+    if (!userName) {
+        toast({
+            title: "Something went wrong",
+            description: "We need your name to continue. Please start over.",
+            variant: "destructive",
+        });
+        router.push("/signup");
+    } else {
+        startCamera();
     }
-  }, [])
+    
+    // Cleanup camera on unmount
+    return () => {
+        stopCamera();
+    }
+  }, [router, toast, startCamera, stopCamera]);
+
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -132,13 +139,6 @@ export default function LivePhotoPage() {
         });
     }
   }, [imageDataUrl, router, toast]);
-
-  // Clean up camera on unmount
-  useEffect(() => {
-      return () => {
-          stopCamera();
-      }
-  }, [stopCamera]);
   
   const getDisplayContent = () => {
     switch (verificationState) {
