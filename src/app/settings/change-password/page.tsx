@@ -8,7 +8,7 @@ import * as z from "zod"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Loader2, Eye, EyeOff, KeyRound } from "lucide-react"
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth"
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, sendPasswordResetEmail } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -43,6 +43,7 @@ export default function ChangePasswordPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSendingReset, setIsSendingReset] = useState(false)
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -56,6 +57,32 @@ export default function ChangePasswordPage() {
       confirmPassword: "",
     },
   })
+
+  async function handleForgotPassword() {
+    const user = auth?.currentUser;
+    if (!user || !user.email) {
+      toast({ variant: "destructive", title: "Error", description: "Could not find your user information." });
+      return;
+    }
+
+    setIsSendingReset(true);
+    try {
+      await sendPasswordResetEmail(auth, user.email);
+      toast({
+        title: "Password Reset Email Sent",
+        description: `An email has been sent to ${user.email} with instructions to reset your password.`,
+      });
+    } catch (error) {
+      console.error("Password reset email failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Request Failed",
+        description: "Could not send password reset email. Please try again later.",
+      });
+    } finally {
+      setIsSendingReset(false);
+    }
+  }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
@@ -83,7 +110,7 @@ export default function ChangePasswordPage() {
     } catch (error: any) {
       console.error("Password change failed:", error)
       let errorMessage = "An unexpected error occurred. Please try again."
-      if (error.code === 'auth/wrong-password') {
+      if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         errorMessage = "The current password you entered is incorrect."
       } else if (error.code === 'auth/too-many-requests') {
         errorMessage = "Too many attempts. Please try again later."
@@ -139,6 +166,17 @@ export default function ChangePasswordPage() {
                                         </button>
                                     </div>
                                 </FormControl>
+                                <div className="text-right">
+                                    <button
+                                      type="button"
+                                      disabled={isSendingReset}
+                                      onClick={handleForgotPassword}
+                                      className="text-xs font-semibold text-red-500 transition-colors hover:text-red-400 disabled:opacity-50"
+                                      style={{ textShadow: '0 0 8px hsl(0 100% 50% / 0.5)' }}
+                                    >
+                                      {isSendingReset ? 'Sending...' : 'Forgot Password?'}
+                                    </button>
+                                </div>
                                 <FormMessage />
                             </FormItem>
                             )} />
