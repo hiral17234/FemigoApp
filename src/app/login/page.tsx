@@ -1,4 +1,3 @@
-
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -117,7 +116,7 @@ export default function LoginPage() {
                       <Input
                         placeholder="your.email@example.com"
                         {...field}
-                        className={cn("pl-9", errors.email && "border-destructive")}
+                        className={cn("pl-9", form.formState.errors.email && "border-destructive")}
                         disabled={isSubmitting}
                       />
                     </div>
@@ -138,7 +137,7 @@ export default function LoginPage() {
                         type={showPassword ? "text" : "password"}
                         placeholder="Your Password"
                         {...field}
-                        className={cn("pl-9 pr-10", errors.password && "border-destructive")}
+                        className={cn("pl-9 pr-10", form.formState.errors.password && "border-destructive")}
                         disabled={isSubmitting}
                       />
                       <button
@@ -176,7 +175,6 @@ export default function LoginPage() {
             </Link>
           </p>
         </div>
-        <div className="absolute bottom-[-50px] left-4 h-10 w-10 rounded-full border border-white/10 flex items-center justify-center font-bold text-lg">N</div>
       </div>
     </main>
   )

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -167,7 +166,6 @@ export default function SignupPage() {
             </Link>
           </p>
         </div>
-        <div className="absolute bottom-[-50px] left-4 h-10 w-10 rounded-full border border-white/10 flex items-center justify-center font-bold text-lg">N</div>
       </div>
     </main>
   )
