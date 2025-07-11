@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, Loader2, Upload, Camera, CheckCircle, AlertTriangle, RefreshCw } from "lucide-react"
+import { ArrowLeft, Loader2, Upload, Camera, CheckCircle, AlertTriangle, RefreshCw, SwitchCamera } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -29,6 +29,7 @@ export default function AadhaarVerificationPage() {
   const [verificationResult, setVerificationResult] = useState<AadhaarVerificationOutput | null>(null)
   const [isCameraOn, setIsCameraOn] = useState(false)
   const [userName, setUserName] = useState('')
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
 
   useEffect(() => {
     const name = localStorage.getItem('userName');
@@ -53,32 +54,44 @@ export default function AadhaarVerificationPage() {
     }
   }, [])
   
+  const startCamera = useCallback(async (mode: 'user' | 'environment') => {
+      if (isCameraOn) stopCamera(); // Stop existing stream first
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } })
+          if (videoRef.current) {
+              videoRef.current.srcObject = stream
+          }
+          setIsCameraOn(true)
+      } catch (err) {
+          console.error("Error accessing camera:", err)
+          // Fallback to any available camera if the preferred one fails
+          try {
+              const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+              if (videoRef.current) {
+                  videoRef.current.srcObject = stream;
+              }
+              setIsCameraOn(true);
+          } catch (fallbackErr) {
+              toast({
+                  variant: "destructive",
+                  title: "Camera Error",
+                  description: "Could not access camera. Please check permissions.",
+              })
+          }
+      }
+  }, [isCameraOn, stopCamera, toast]);
+  
   useEffect(() => {
     if (inputMode === 'camera' && verificationState === 'idle') {
-        const startCamera = async () => {
-            if (isCameraOn) return;
-            try {
-                // Prefer the rear camera for documents
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream
-                }
-                setIsCameraOn(true)
-            } catch (err) {
-                console.error("Error accessing camera:", err)
-                toast({
-                    variant: "destructive",
-                    title: "Camera Error",
-                    description: "Could not access camera. Please check permissions.",
-                })
-            }
-        }
-        startCamera();
+        startCamera(facingMode);
     } else {
         stopCamera();
     }
-  }, [inputMode, verificationState, isCameraOn, toast, stopCamera]);
+  }, [inputMode, verificationState, facingMode, startCamera, stopCamera]);
 
+  const switchCamera = () => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+  };
 
   const capturePhoto = () => {
     if (videoRef.current && canvasRef.current) {
@@ -174,6 +187,9 @@ export default function AadhaarVerificationPage() {
                         <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
                         {!isCameraOn && <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-white/50" /></div>}
                         <canvas ref={canvasRef} className="hidden" />
+                         <Button variant="ghost" size="icon" onClick={switchCamera} className="absolute top-2 right-2 bg-black/30 text-white hover:bg-black/50 rounded-full z-10">
+                            <SwitchCamera className="h-5 w-5" />
+                        </Button>
                     </>
                 )
             }
