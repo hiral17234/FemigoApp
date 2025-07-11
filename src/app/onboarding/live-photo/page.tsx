@@ -171,7 +171,7 @@ export default function LivePhotoPage() {
         default:
             return (
                 <div className="flex flex-col items-center justify-center h-full">
-                    <div className={cn("relative w-full aspect-video rounded-lg bg-muted overflow-hidden flex items-center justify-center border-2 border-transparent", verificationState === 'camera' && 'border-primary')}>
+                    <div className={cn("relative w-full aspect-video rounded-lg bg-muted overflow-hidden flex items-center justify-center border-2 border-primary", verificationState === 'camera' && 'border-primary')}>
                        {verificationState === 'idle' && <Camera className="h-20 w-20 text-muted-foreground/50 opacity-50" />}
                        <video ref={videoRef} autoPlay playsInline muted className={cn("w-full h-full object-cover scale-x-[-1]", verificationState !== 'camera' && 'hidden')} />
                        <canvas ref={canvasRef} className="hidden" />
@@ -212,8 +212,8 @@ export default function LivePhotoPage() {
           </Button>
         </div>
 
-      <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
-        <Card className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
+      <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
+        <Card className="w-full rounded-2xl bg-black/50 p-10 shadow-2xl backdrop-blur-lg">
             <div className="flex items-start gap-4">
                 <User className="h-8 w-8 text-primary shrink-0 mt-1" />
                 <div>
