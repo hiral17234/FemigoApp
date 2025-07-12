@@ -49,30 +49,36 @@ export default function LoginPage() {
     setIsSubmitting(true)
     try {
       // Find user in localStorage
-      const users = JSON.parse(localStorage.getItem('femigo-users') || '[]');
+      const usersJSON = localStorage.getItem('femigo-users');
+      const users = usersJSON ? JSON.parse(usersJSON) : [];
+      
       const user = users.find(
-        (u: any) => u.email === values.email && u.password === values.password
+        (u: any) => u.email === values.email
       );
 
-      if (user) {
-        // "Log in" the user by storing their profile and a logged-in flag
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Account not found. Please sign up to continue.",
+        })
+      } else if (user.password !== values.password) {
+         toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Invalid email or password. Please check your credentials and try again.",
+        })
+      } else {
+        // Correct user and password. "Log in" the user.
         localStorage.setItem('femigo-user-profile', JSON.stringify(user));
         localStorage.setItem('femigo-is-logged-in', 'true');
-        // We also need their name for the dashboard, which might have been cleared
         localStorage.setItem('userName', user.displayName);
-
 
         toast({
           title: "Logged In!",
           description: "Welcome back. Redirecting to your dashboard...",
         })
         router.push("/dashboard")
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "Invalid email or password. Please check your credentials and try again.",
-        })
       }
     } catch (error: any) {
       console.error("Login error:", error)
