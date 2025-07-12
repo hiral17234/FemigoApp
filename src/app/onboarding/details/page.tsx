@@ -7,6 +7,7 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2 } from "lucide-react"
+import { doc, getDoc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,6 +22,7 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { countries } from "@/lib/countries"
 import { locationData } from "@/lib/location-data"
+import { auth, db } from "@/lib/firebase"
 
 const detailsSchema = z.object({
   age: z.coerce
@@ -70,16 +72,34 @@ export default function DetailsPage() {
   
   const countryConfig = userCountry ? locationData[userCountry] : null
 
-  const onSubmit: SubmitHandler<DetailsFormValues> = (data) => {
+  const onSubmit: SubmitHandler<DetailsFormValues> = async (data) => {
     setIsSubmitting(true)
-    // For this prototype, we'll save it to localStorage.
-    localStorage.setItem("onboarding-details", JSON.stringify(data))
-    toast({
-      title: "Details Saved!",
-      description: "Proceeding to the next step.",
-    })
-    router.push("/onboarding/password")
-    setIsSubmitting(false)
+    const user = auth.currentUser
+
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Not authenticated. Please start over.' });
+        router.push('/signup');
+        setIsSubmitting(false);
+        return;
+    }
+    
+    try {
+        const userDocRef = doc(db, "users", user.uid);
+        // Using set with merge:true will create or update the document
+        await setDoc(userDocRef, data, { merge: true });
+
+        toast({
+            title: "Details Saved!",
+            description: "Proceeding to the next step.",
+        })
+        router.push("/onboarding/password")
+
+    } catch (error) {
+        console.error("Failed to save details to Firestore:", error);
+        toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save your details. Please try again.' });
+    } finally {
+        setIsSubmitting(false)
+    }
   }
 
   return (
