@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -42,28 +43,6 @@ export default function PasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [password, setPassword] = useState("")
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    // For the simplified flow, we'll get email from the congratulations/final step.
-    // For now, let's create a placeholder email and get the real one later.
-    const tempEmail = localStorage.getItem('userEmail');
-    if (tempEmail) {
-        setUserEmail(tempEmail);
-    } else {
-        // This is a fallback in case the email step was skipped.
-        // A more robust solution might force them back to the email step.
-        const randomId = Math.random().toString(36).substring(2, 10);
-        const generatedEmail = `user-${randomId}@femigo.app`;
-        setUserEmail(generatedEmail);
-        localStorage.setItem('userEmail', generatedEmail); // Save for this session
-         toast({
-            title: "Email Missing",
-            description: "A temporary email has been generated. You can change it later in settings.",
-            variant: "default"
-        })
-    }
-  }, [toast]);
 
   const checks = {
     length: password.length >= 8,
@@ -90,7 +69,7 @@ export default function PasswordPage() {
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
     setIsSubmitting(true)
     
-    const finalEmail = userEmail; // Use the email from state
+    const finalEmail = localStorage.getItem('userEmail');
     if (!finalEmail) {
       toast({
         variant: "destructive",
@@ -133,7 +112,6 @@ export default function PasswordPage() {
       await setDoc(userDocRef, {
         uid: user.uid,
         email: user.email,
-        isAnonymous: false,
         createdAt: new Date().toISOString(),
         ...userDataFromStorage
       });
@@ -174,7 +152,7 @@ export default function PasswordPage() {
           <p className="text-muted-foreground mt-2 text-sm">
             This is the final step! Choose a strong, secure password.
           </p>
-          <Progress value={(6 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
+          <Progress value={(5 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
         <div className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl">
