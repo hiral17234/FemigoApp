@@ -5,7 +5,6 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { signOut } from "firebase/auth"
 import {
   Home,
   User,
@@ -39,7 +38,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSidebar } from "@/components/ui/sidebar"
 import { useToast } from "@/hooks/use-toast"
-import { auth } from "@/lib/firebase"
 
 
 const translations = {
@@ -151,6 +149,7 @@ export default function DashboardLayout({
   const { theme } = useTheme();
 
   const [userName, setUserName] = React.useState<string | null>(null)
+  const [userPhoto, setUserPhoto] = React.useState<string | null>(null)
   const [userInitial, setUserInitial] = React.useState("")
   const [isLoadingUser, setIsLoadingUser] = React.useState(true)
   const [language, setLanguage] = React.useState('en');
@@ -164,23 +163,27 @@ export default function DashboardLayout({
 
   React.useEffect(() => {
     setIsLoadingUser(true);
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        const nameToDisplay = user.displayName || 'User';
+    const isLoggedIn = localStorage.getItem('femigo-is-logged-in');
+    const profileJson = localStorage.getItem('femigo-user-profile');
+    
+    if (isLoggedIn === 'true' && profileJson) {
+      try {
+        const profile = JSON.parse(profileJson);
+        const nameToDisplay = profile.displayName || 'User';
         setUserName(nameToDisplay);
         setUserInitial(nameToDisplay.charAt(0).toUpperCase());
-      } else {
-        router.push("/login");
+        setUserPhoto(profile.photoURL || null);
+      } catch (e) {
+         router.push("/login");
       }
-      setIsLoadingUser(false);
-    });
-
-    return () => unsubscribe();
+    } else {
+      router.push("/login");
+    }
+    setIsLoadingUser(false);
   }, [router]);
 
   const handleLogout = async () => {
     try {
-        await signOut(auth);
         localStorage.removeItem('femigo-is-logged-in');
         localStorage.removeItem('femigo-user-profile');
         localStorage.removeItem('userName');
@@ -284,7 +287,7 @@ export default function DashboardLayout({
             <div className="relative">
                 <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-primary to-primary/50 opacity-75 blur"></div>
                 <Avatar className="relative h-10 w-10 border-2 border-background">
-                    <AvatarImage data-ai-hint="logo" src={auth.currentUser?.photoURL || (theme === 'light' ? 'https://i.ibb.co/hxw67qkn/Whats-App-Image-2025-07-01-at-15-37-58-9a9d376f.jpg' : 'https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg')} alt="Femigo Logo" />
+                    <AvatarImage data-ai-hint="logo" src={userPhoto || (theme === 'light' ? 'https://i.ibb.co/hxw67qkn/Whats-App-Image-2025-07-01-at-15-37-58-9a9d376f.jpg' : 'https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg')} alt="Femigo Logo" />
                     <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
                 </Avatar>
             </div>

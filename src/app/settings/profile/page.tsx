@@ -9,8 +9,6 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowLeft, User as UserIcon, Mail, Phone, Calendar, Home, Save, Loader2, Edit2, Camera } from "lucide-react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { updateProfile } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,7 +18,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { auth, db } from "@/lib/firebase";
 
 const profileSchema = z.object({
   displayName: z.string().min(3, "Full name must be at least 3 characters."),
@@ -48,6 +45,25 @@ type UserData = {
     city: string;
     state: string;
     photoURL?: string;
+};
+
+const getFromStorage = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+};
+
+const saveToStorage = <T,>(key: string, value: T) => {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error writing to localStorage key “${key}”:`, error);
+    }
 };
 
 const ProfileSkeleton = () => (
@@ -94,42 +110,36 @@ export default function EditProfilePage() {
     });
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            const user = auth.currentUser;
-            if (user) {
-                const userDocRef = doc(db, "users", user.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                    const data = userDoc.data() as UserData;
-                    setUserData(data);
-                    form.reset({
-                        displayName: data.displayName || "",
-                        email: data.email || "",
-                        nickname: data.nickname || "",
-                        age: data.age || undefined,
-                        address1: data.address1 || "",
-                        address2: data.address2 || "",
-                        address3: data.address3 || "",
-                        city: data.city || "",
-                        state: data.state || "",
-                    });
-                } else {
-                     toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profile in database.' });
-                     router.push('/login');
-                }
-            } else {
-                 toast({ variant: 'destructive', title: 'Error', description: 'You are not logged in.' });
-                 router.push('/login');
+        const profileJson = localStorage.getItem('femigo-user-profile');
+        if (profileJson) {
+            try {
+                const data = JSON.parse(profileJson);
+                setUserData(data);
+                form.reset({
+                    displayName: data.displayName || "",
+                    email: data.email || "",
+                    nickname: data.nickname || "",
+                    age: data.age || undefined,
+                    address1: data.address1 || "",
+                    address2: data.address2 || "",
+                    address3: data.address3 || "",
+                    city: data.city || "",
+                    state: data.state || "",
+                });
+            } catch (e) {
+                toast({ variant: 'destructive', title: 'Error', description: 'Could not load user profile.' });
+                router.push('/login');
             }
-            setIsLoading(false);
-        };
-        fetchUserData();
+        } else {
+             toast({ variant: 'destructive', title: 'Error', description: 'You are not logged in.' });
+             router.push('/login');
+        }
+        setIsLoading(false);
     }, [router, toast, form]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        const user = auth.currentUser;
-        if (!file || !userData || !user) return;
+        if (!file || !userData) return;
 
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -139,17 +149,20 @@ export default function EditProfilePage() {
             try {
                 toast({ title: 'Updating...', description: 'Your new profile picture is being saved.' });
                 
-                // Note: In a real app, you would upload the file to Firebase Storage
-                // and then update the user's profile with the new URL.
-                // For this project, we'll just use the Data URL directly for simplicity.
-                await updateProfile(user, { photoURL: photoURL });
-                
-                const userDocRef = doc(db, "users", user.uid);
-                await setDoc(userDocRef, { photoURL: photoURL }, { merge: true });
-
                 const updatedUserData = { ...userData, photoURL };
                 setUserData(updatedUserData);
                 
+                // Update the master list of accounts
+                const allAccounts = getFromStorage<any[]>('femigo-accounts', []);
+                const accountIndex = allAccounts.findIndex(acc => acc.email === userData.email);
+                if (accountIndex > -1) {
+                    allAccounts[accountIndex] = updatedUserData;
+                    saveToStorage('femigo-accounts', allAccounts);
+                }
+
+                // Update the currently logged-in user profile
+                saveToStorage('femigo-user-profile', updatedUserData);
+
                 toast({ title: 'Success!', description: 'Profile picture updated.' });
             } catch (error) {
                 console.error("Error saving profile picture:", error);
@@ -159,21 +172,26 @@ export default function EditProfilePage() {
     };
 
     const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
-        const user = auth.currentUser;
-        if (!user) {
+        if (!userData) {
             toast({ variant: 'destructive', title: 'Not Authenticated' });
             return;
         }
         setIsSubmitting(true);
         try {
-            const userDocRef = doc(db, "users", user.uid);
-            await setDoc(userDocRef, data, { merge: true });
-
-            if (data.displayName !== user.displayName) {
-                await updateProfile(user, { displayName: data.displayName });
+            const updatedUserData = { ...userData, ...data };
+            
+            // Update the master list of accounts
+            const allAccounts = getFromStorage<any[]>('femigo-accounts', []);
+            const accountIndex = allAccounts.findIndex(acc => acc.email === userData.email);
+            if (accountIndex > -1) {
+                allAccounts[accountIndex] = updatedUserData;
+                saveToStorage('femigo-accounts', allAccounts);
             }
 
-            setUserData(prevData => prevData ? { ...prevData, ...data } : null);
+            // Update the currently logged-in user profile
+            saveToStorage('femigo-user-profile', updatedUserData);
+            setUserData(updatedUserData);
+
             localStorage.setItem('userName', data.displayName);
             toast({ title: 'Profile Updated!', description: 'Your changes have been saved successfully.' });
         } catch (error) {
@@ -192,7 +210,7 @@ export default function EditProfilePage() {
          return <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">Could not load user data.</main>
     }
     
-    const userPhoto = auth.currentUser?.photoURL || userData.photoURL;
+    const userPhoto = userData.photoURL;
 
     return (
         <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">

@@ -7,15 +7,12 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { PasswordStrength } from "@/components/ui/password-strength"
-import { auth, db } from "@/lib/firebase"
 
 const passwordSchema = z
   .object({
@@ -34,6 +31,27 @@ const passwordSchema = z
   })
 
 type PasswordFormValues = z.infer<typeof passwordSchema>
+
+const getFromStorage = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        console.error(`Error reading from localStorage key “${key}”:`, error);
+        return fallback;
+    }
+};
+
+const saveToStorage = <T,>(key: string, value: T) => {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error writing to localStorage key “${key}”:`, error);
+    }
+};
+
 
 export default function PasswordPage() {
   const router = useRouter()
@@ -76,22 +94,13 @@ export default function PasswordPage() {
     setIsSubmitting(true)
     
     try {
-      // 1. Create user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, userEmail, data.password);
-      const user = userCredential.user;
-
-      const displayName = localStorage.getItem("userName") || 'New User';
-      const photoURL = localStorage.getItem("userPhotoDataUri") || '';
-
-      // 2. Update Firebase Auth Profile (for displayName)
-      await updateProfile(user, { displayName: displayName, photoURL: photoURL });
-
-      // 3. Gather all data from localStorage to save to Firestore
+      // 1. Gather all data from localStorage
       const userProfileData: { [key: string]: any } = {
-        uid: user.uid,
-        email: user.email,
-        displayName: displayName,
-        photoURL: photoURL,
+        uid: `user-${Date.now()}`,
+        email: userEmail,
+        password: data.password, // In a real app, this should be hashed. For this project, storing plain text.
+        displayName: localStorage.getItem("userName") || 'New User',
+        photoURL: localStorage.getItem("userPhotoDataUri") || '',
         createdAt: new Date().toISOString(),
         trustedContacts: [],
       };
@@ -108,7 +117,7 @@ export default function PasswordPage() {
         { key: 'userNickname', dbKey: 'nickname' },
         { key: 'userAltPhone', dbKey: 'altPhone' },
       ];
-
+      
       fieldsToGet.forEach(field => {
         const value = localStorage.getItem(field.key);
         if (value) {
@@ -116,12 +125,14 @@ export default function PasswordPage() {
         }
       });
       
-      // 4. Save the complete user profile to Firestore
-      await setDoc(doc(db, "users", user.uid), userProfileData);
+      // 2. Get existing accounts and add the new one
+      const existingAccounts = getFromStorage('femigo-accounts', []);
+      const updatedAccounts = [...existingAccounts, userProfileData];
+      saveToStorage('femigo-accounts', updatedAccounts);
 
-      localStorage.setItem('userName', displayName);
+      localStorage.setItem('userName', userProfileData.displayName);
 
-      // Clean up temporary local storage items
+      // 3. Clean up temporary local storage items
       const lsKeysToClean = ['userEmail', 'userCountry', 'userPhone', 'userAge', 'userAddress1', 'userAddress2', 'userAddress3', 'userState', 'userCity', 'userNickname', 'userAltPhone', 'userPhotoDataUri', 'userAadhaarDataUri'];
       lsKeysToClean.forEach(key => localStorage.removeItem(key));
 
@@ -130,14 +141,10 @@ export default function PasswordPage() {
 
     } catch (error: any) {
       console.error("Account creation failed:", error)
-      let description = "An unexpected error occurred. Please try again.";
-      if (error.code === 'auth/email-already-in-use') {
-        description = "This email address is already in use by another account.";
-      }
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: description,
+        description: "An unexpected error occurred. Please try again.",
       })
     } finally {
       setIsSubmitting(false)
