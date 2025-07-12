@@ -61,12 +61,14 @@ export default function PasswordPage() {
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
     setIsSubmitting(true)
     
-    const finalEmail = localStorage.getItem('userEmail');
-    if (!finalEmail) {
+    const email = localStorage.getItem('userEmail');
+    const displayName = localStorage.getItem('userName');
+
+    if (!email || !displayName) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Your email is missing. Please start the signup process over.",
+        description: "Your name or email is missing. Please start the signup process over.",
       })
       router.push("/signup")
       setIsSubmitting(false)
@@ -74,18 +76,21 @@ export default function PasswordPage() {
     }
 
     try {
-      // 1. Create the user with email and password
-      const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, data.password);
+      // Step 1: Create the user in Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(auth, email, data.password);
       const user = userCredential.user;
 
-      // 2. Gather all data from localStorage, ensuring we only include fields that have values.
-      // CRITICAL FIX: DO NOT save large data URIs (userPhotoDataUri, userAadhaarDataUri) to Firestore.
-      // This was causing the document size to exceed the 1MiB limit and fail the creation.
+      // Step 2: Update their Auth profile with their name
+      await updateProfile(user, {
+        displayName: displayName,
+      });
+
+      // Step 3: Create a data object for Firestore with all details from local storage
       const userDataToSave: { [key: string]: any } = {
         uid: user.uid,
         email: user.email,
         createdAt: new Date().toISOString(),
-        displayName: localStorage.getItem('userName') || "User",
+        displayName: displayName,
         country: localStorage.getItem('userCountry') || "unknown",
         phone: localStorage.getItem('userPhone') || "",
         age: Number(localStorage.getItem('userAge')) || null,
@@ -93,8 +98,8 @@ export default function PasswordPage() {
         state: localStorage.getItem('userState') || "",
         city: localStorage.getItem('userCity') || "",
       };
-
-      // Add optional fields only if they exist in localStorage
+      
+      // Add optional fields only if they exist
       const optionalFields = ['nickname', 'address2', 'address3', 'altPhone'];
       const lsKeys: { [key: string]: string } = {
           nickname: 'userNickname',
@@ -102,24 +107,18 @@ export default function PasswordPage() {
           address3: 'userAddress3',
           altPhone: 'userAltPhone'
       }
-
       optionalFields.forEach(field => {
-          const lsKey = lsKeys[field];
-          const value = localStorage.getItem(lsKey);
+          const value = localStorage.getItem(lsKeys[field]);
           if (value) {
               userDataToSave[field] = value;
           }
       });
       
-      // 3. Update the user's Auth profile (we can store a placeholder here if needed later)
-      await updateProfile(user, {
-        displayName: userDataToSave.displayName
-      });
-
-      // 4. Create the document in Firestore with the curated data
+      // Step 4: Save the complete user profile to the Firestore database
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, userDataToSave);
 
+      // Step 5: Success! Redirect to congratulations page.
       router.push("/congratulations")
 
     } catch (error: any) {
