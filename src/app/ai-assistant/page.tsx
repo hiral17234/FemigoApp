@@ -3,16 +3,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-
-const BOTPRESS_CHAT_URL = "https://cdn.botpress.cloud/webchat/v3.1/shareable.html?configUrl=https://files.bpcontent.cloud/2025/07/09/16/20250709163052-TWTVWK7V.json";
+import { ArrowLeft, Construction } from 'lucide-react';
 
 const translations = {
     en: {
-        title: "AI Assistant"
+        title: "AI Assistant",
+        wip: "Work in Progress",
+        description: "This feature is currently under construction. Please check back later."
     },
     hi: {
-        title: "एआई सहायक"
+        title: "एआई सहायक",
+        wip: "कार्य प्रगति पर है",
+        description: "यह सुविधा वर्तमान में निर्माणाधीन है। कृपया बाद में वापस देखें।"
     }
 }
 
@@ -35,11 +37,11 @@ export default function AiAssistantPage() {
           <h1 className="text-xl font-bold text-white">{t.title}</h1>
           <div className="w-6" /> {/* Spacer */}
       </header>
-      <iframe
-        src={BOTPRESS_CHAT_URL}
-        title="Femigo AI Assistant"
-        className="flex-1 w-full border-none"
-      />
+      <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
+        <Construction className="h-24 w-24 text-primary mb-6" />
+        <h2 className="text-3xl font-bold text-white mb-2">{t.wip}</h2>
+        <p className="text-muted-foreground max-w-sm">{t.description}</p>
+      </div>
     </div>
   );
 }
