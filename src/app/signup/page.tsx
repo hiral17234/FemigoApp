@@ -16,6 +16,7 @@ import { countries } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
+import { ToastAction } from "@/components/ui/toast"
 
 const signupSchema = z.object({
   fullName: z.string().min(3, { message: "Full name must be at least 3 characters." }),
@@ -26,7 +27,7 @@ type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
   const router = useRouter()
-  const { toast } = useToast()
+  const { toast, dismiss } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
 
@@ -42,6 +43,7 @@ export default function SignupPage() {
 
   const onSubmit = (data: SignupFormValues) => {
     setIsSubmitting(true)
+    dismiss(); // Dismiss any existing toasts
     
     // Save to localStorage for subsequent steps
     localStorage.setItem("userName", data.fullName)
@@ -51,10 +53,13 @@ export default function SignupPage() {
       title: `Welcome, ${data.fullName}!`,
       description: "Let's get you set up.",
       variant: 'default',
+      duration: Infinity, // Keep the toast until user action
+      action: (
+          <ToastAction altText="Next Step" onClick={() => router.push("/onboarding/live-photo")}>
+              Next Step
+          </ToastAction>
+      )
     })
-    
-    // Redirect to the next step in the onboarding flow
-    router.push("/onboarding/live-photo")
     
     setIsSubmitting(false)
   }

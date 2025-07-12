@@ -17,6 +17,7 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  duration?: number;
 }
 
 const actionTypes = {
@@ -165,10 +166,12 @@ function toast({ ...props }: Toast) {
     },
   })
   
-  // Automatically dismiss the toast after a delay
-  setTimeout(() => {
-    dismiss();
-  }, TOAST_REMOVE_DELAY);
+  // Automatically dismiss the toast after a delay, unless duration is Infinity
+  if (props.duration !== Infinity) {
+    setTimeout(() => {
+        dismiss();
+    }, props.duration || TOAST_REMOVE_DELAY);
+  }
 
 
   return {
