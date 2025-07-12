@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,7 +8,8 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2 } from "lucide-react"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, setDoc } from "firebase/firestore"
+import { onAuthStateChanged, type User } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,6 +44,7 @@ export default function DetailsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [user, setUser] = useState<User | null>(null);
   
   const [userCountry, setUserCountry] = useState<string | null>(null)
   const [selectedState, setSelectedState] = useState<string>("")
@@ -59,8 +62,17 @@ export default function DetailsPage() {
     }
   })
 
-  // Load user's country from localStorage
+  // Load user's country from localStorage and check auth state
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        if (!currentUser) {
+            toast({ variant: 'destructive', title: 'Error', description: 'Not authenticated. Please start over.' });
+            router.push('/signup');
+            return;
+        }
+        setUser(currentUser);
+    });
+
     const country = localStorage.getItem("userCountry")
     if (!country) {
         toast({ variant: 'destructive', title: 'Error', description: 'Country not found. Please start over.' });
@@ -68,13 +80,14 @@ export default function DetailsPage() {
         return;
     }
     setUserCountry(country)
+
+    return () => unsubscribe();
   }, [router, toast])
   
   const countryConfig = userCountry ? locationData[userCountry] : null
 
   const onSubmit: SubmitHandler<DetailsFormValues> = async (data) => {
     setIsSubmitting(true)
-    const user = auth.currentUser
 
     if (!user) {
         toast({ variant: 'destructive', title: 'Error', description: 'Not authenticated. Please start over.' });

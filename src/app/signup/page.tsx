@@ -30,7 +30,7 @@ type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
   const router = useRouter()
-  const { toast } = useToast()
+  const { toast, dismiss } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
 
@@ -47,11 +47,11 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true)
 
-    if (firebaseError || !auth || !db) {
+    if (firebaseError) {
         toast({
             variant: "destructive",
             title: "Configuration Error",
-            description: firebaseError || "Firebase is not configured correctly. Please check API keys.",
+            description: firebaseError,
         });
         setIsSubmitting(false);
         return;
@@ -76,11 +76,19 @@ export default function SignupPage() {
       localStorage.setItem("userName", data.fullName)
       localStorage.setItem("userCountry", data.country)
 
-      toast({
+      const welcomeToast = toast({
         title: `Welcome, ${data.fullName}!`,
         description: "Let's get you set up.",
+        action: (
+            <Button size="sm" onClick={() => {
+                dismiss(welcomeToast.id);
+                router.push("/onboarding/live-photo");
+            }}>
+                Next Step
+            </Button>
+        ),
+        duration: Infinity
       })
-      router.push("/onboarding/live-photo");
 
     } catch (error) {
       console.error("Anonymous sign-in or data save failed", error);

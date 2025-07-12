@@ -29,32 +29,36 @@ let db: Firestore;
 let storage: Storage;
 let firebaseError: string | null = null;
 
-try {
-    const missingOrInvalidKeys: string[] = [];
-    for (const [key, value] of Object.entries(firebaseConfig)) {
-        if (!value || typeof value !== 'string' || value.includes('YOUR_')) {
-            missingOrInvalidKeys.push(keyMapping[key as keyof typeof keyMapping]);
-        }
+const missingOrInvalidKeys: string[] = [];
+for (const [key, value] of Object.entries(firebaseConfig)) {
+    if (!value || typeof value !== 'string' || value.includes('YOUR_')) {
+        missingOrInvalidKeys.push(keyMapping[key as keyof typeof keyMapping]);
     }
+}
 
-    if (missingOrInvalidKeys.length > 0) {
-        throw new Error(missingOrInvalidKeys.join(", "));
-    }
-
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
-
-} catch (error: any) {
-    const errorIntro = "Firebase configuration failed. The following required variable(s) are missing or invalid in your .env file:";
-    firebaseError = `${errorIntro}\n\n- ${error.message}`;
+if (missingOrInvalidKeys.length > 0) {
+    const errorIntro = "Firebase configuration failed. The following required variable(s) are missing or invalid in your environment variables:";
+    firebaseError = `${errorIntro}\n- ${missingOrInvalidKeys.join("\n- ")}`;
     console.error(firebaseError);
     // Provide dummy objects to prevent the app from crashing where auth/db is used.
     app = {} as FirebaseApp;
     auth = {} as Auth;
     db = {} as Firestore;
     storage = {} as Storage;
+} else {
+    try {
+        app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        storage = getStorage(app);
+    } catch (e: any) {
+        firebaseError = `Firebase initialization failed: ${e.message}`;
+        console.error(firebaseError);
+        app = {} as FirebaseApp;
+        auth = {} as Auth;
+        db = {} as Firestore;
+        storage = {} as Storage;
+    }
 }
 
 export { app, auth, db, storage, firebaseError };

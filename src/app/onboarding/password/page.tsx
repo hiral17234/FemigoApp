@@ -8,8 +8,8 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react"
-import { EmailAuthProvider, linkWithCredential, getAuth, updateProfile } from "firebase/auth"
-import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore"
+import { EmailAuthProvider, linkWithCredential, updateProfile, createUserWithEmailAndPassword } from "firebase/auth"
+import { doc, setDoc, getDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,6 +43,15 @@ export default function PasswordPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [password, setPassword] = useState("")
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    // A quick check to see if email was stored from a previous step (magic link flow)
+    const storedEmail = localStorage.getItem('userEmail');
+    if (storedEmail) {
+        setUserEmail(storedEmail);
+    }
+  }, []);
 
   const checks = {
     length: password.length >= 8,
@@ -69,19 +78,14 @@ export default function PasswordPage() {
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
     setIsSubmitting(true)
     
-    // Retrieve all data from localStorage
-    const email = localStorage.getItem('userEmail')
-    const detailsJSON = localStorage.getItem('onboarding-details')
-    const details = detailsJSON ? JSON.parse(detailsJSON) : {}
-    const photoURL = localStorage.getItem('userPhotoDataUri')
-
     const user = auth.currentUser;
+    const emailToUse = user?.email || userEmail;
 
-    if (!email || !user) {
+    if (!user || !emailToUse) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Some required information is missing or you're not logged in. Please start over.",
+        description: "Your session has expired. Please start the signup process over.",
       })
       router.push("/signup")
       setIsSubmitting(false)
@@ -90,55 +94,53 @@ export default function PasswordPage() {
 
     try {
       // 1. Create the credential for the new email/password account.
-      const credential = EmailAuthProvider.credential(email, data.password);
+      const credential = EmailAuthProvider.credential(emailToUse, data.password);
       
       // 2. Link the anonymous account with the new email/password credentials.
       // This "upgrades" the anonymous user to a permanent one.
       await linkWithCredential(user, credential);
       
-      // 3. Update Firestore document with final details and remove anonymous flag.
+      // 3. Get all user data from the Firestore doc we've been building.
       const userDocRef = doc(db, "users", user.uid);
       const userDocSnap = await getDoc(userDocRef);
-      const existingData = userDocSnap.data() || {};
+      const finalUserData = userDocSnap.data() || {};
       
-      const userProfileData = {
-        ...existingData,
-        ...details,
-        email: user.email,
-        photoURL: photoURL || existingData.photoURL || '',
-        isAnonymous: false, // Mark account as permanent
-      };
-      
-      await setDoc(userDocRef, userProfileData, { merge: true });
+      // 4. Update the final Firestore document with a non-anonymous status
+      await setDoc(userDocRef, { 
+        ...finalUserData,
+        email: user.email, // Use the now-permanent email from the auth object
+        isAnonymous: false,
+      }, { merge: true });
 
-      // 4. Update the user's Auth profile (e.g., displayName)
+      // 5. Update the user's Auth profile (e.g., displayName, photoURL)
       await updateProfile(user, {
-        displayName: existingData.displayName,
-        photoURL: userProfileData.photoURL
+        displayName: finalUserData.displayName,
+        photoURL: finalUserData.photoURL || ''
       });
 
-      toast({
-        title: "Account Created!",
-        description: "Your Femigo account has been successfully created.",
-      })
-      
       router.push("/congratulations")
 
     } catch (error: any) {
-      console.error("Account creation failed:", error)
+      console.error("Account creation/linking failed:", error)
       let errorMessage = "An unexpected error occurred. Please try again."
       if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email is already in use. Please log in or use a different email."
+        errorMessage = "This email is already registered. Please log in or use a different email."
       } else if (error.code === 'auth/weak-password') {
         errorMessage = "The password is too weak. Please choose a stronger password."
       } else if (error.code === 'auth/credential-already-in-use') {
          errorMessage = "This account is already linked to another user. Please log in or use a different email.";
+      }
+       else if (error.code === 'auth/requires-recent-login') {
+         errorMessage = "Your session has expired for security reasons. Please start the signup process again.";
       }
       toast({
         variant: "destructive",
         title: "Signup Failed",
         description: errorMessage,
       })
+      if (error.code === 'auth/requires-recent-login') {
+          router.push('/signup');
+      }
     } finally {
       setIsSubmitting(false)
     }

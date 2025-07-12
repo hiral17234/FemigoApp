@@ -6,10 +6,12 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Confetti from "react-confetti"
-import { getAuth } from "firebase/auth"
+import { getAuth, onAuthStateChanged } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
+import { auth as firebaseAuth } from "@/lib/firebase"
+
 
 export default function CongratulationsPage() {
   const router = useRouter()
@@ -18,21 +20,21 @@ export default function CongratulationsPage() {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
-    // Check for user data in localStorage
+    // Check for user data in localStorage as a fallback, but prioritize auth state
     const auth = getAuth();
-    const currentUser = auth.currentUser;
-    let name = "User";
-    if (currentUser) {
-        name = currentUser.displayName || localStorage.getItem('userName') || "User";
-    } else {
-        name = localStorage.getItem('userName') || "User";
-    }
-    setUserName(name);
-
-    if (!name || name === "User") {
-        // If no name, maybe redirect to start of signup or login
-        router.push('/login');
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+            setUserName(user.displayName || "User");
+        } else {
+            const storedName = localStorage.getItem('userName');
+            if (storedName) {
+                setUserName(storedName);
+            } else {
+                // If no name found anywhere, redirect to signup.
+                router.push('/signup');
+            }
+        }
+    });
     
     // Cleanup localStorage after displaying the page
     const cleanupTimeout = setTimeout(() => {
@@ -44,8 +46,6 @@ export default function CongratulationsPage() {
             localStorage.removeItem('userPhone')
             localStorage.removeItem('userPhotoDataUri')
             localStorage.removeItem('userAadhaarDataUri')
-            localStorage.removeItem('onboarding-details')
-            localStorage.removeItem('passwordResetFlow');
         }
     }, 500); // Small delay to ensure state is set before cleanup
 
@@ -66,6 +66,7 @@ export default function CongratulationsPage() {
     return () => {
         window.removeEventListener('resize', handleResize)
         clearTimeout(cleanupTimeout)
+        unsubscribe();
     }
   }, [router, toast])
 
