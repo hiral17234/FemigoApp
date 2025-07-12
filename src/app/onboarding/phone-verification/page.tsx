@@ -125,7 +125,6 @@ export default function PhoneVerificationPage() {
     setTimeout(() => {
         setIsSubmitting(false);
         setStep('otp');
-        // Immediately dismiss the "OTP Sent" toast before the page fully renders the next step
         if (sentToast?.id) {
             dismiss(sentToast.id);
         }
@@ -201,7 +200,7 @@ export default function PhoneVerificationPage() {
                     <CheckCircle2 className="h-16 w-16" />
                     <h2 className="text-2xl font-bold">Verified!</h2>
                     <p className="text-sm text-muted-foreground">Your phone number is confirmed.</p>
-                    <Button onClick={() => router.push('/onboarding/details')} className="w-full bg-primary mt-4">
+                    <Button onClick={() => router.push('/onboarding/email-verification')} className="w-full bg-primary mt-4">
                         Move to next step
                     </Button>
                 </div>

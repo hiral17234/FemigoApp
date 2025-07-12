@@ -168,7 +168,7 @@ export default function EmailVerificationPage() {
                     <CheckCircle2 className="h-16 w-16" />
                     <h2 className="text-2xl font-bold">Verified!</h2>
                     <p className="text-sm text-muted-foreground">Your email is confirmed.</p>
-                    <Button onClick={() => router.push('/onboarding/password')} className="w-full bg-primary mt-4">
+                    <Button onClick={() => router.push('/onboarding/details')} className="w-full bg-primary mt-4">
                         Move to next step
                     </Button>
                 </div>
