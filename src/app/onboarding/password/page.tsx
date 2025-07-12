@@ -93,34 +93,27 @@ export default function PasswordPage() {
         displayName: displayName,
       };
       
-      // Add other details from local storage only if they exist
       const fieldsToSave = [
-        'userCountry', 'userPhone', 'userAge', 'userAddress1', 
-        'userAddress2', 'userAddress3', 'userState', 'userCity', 
-        'userNickname', 'userAltPhone'
+        { key: 'userCountry', dbKey: 'country' },
+        { key: 'userPhone', dbKey: 'phone' },
+        { key: 'userAge', dbKey: 'age' },
+        { key: 'userAddress1', dbKey: 'address1' },
+        { key: 'userAddress2', dbKey: 'address2' },
+        { key: 'userAddress3', dbKey: 'address3' },
+        { key: 'userState', dbKey: 'state' },
+        { key: 'userCity', dbKey: 'city' },
+        { key: 'userNickname', dbKey: 'nickname' },
+        { key: 'userAltPhone', dbKey: 'altPhone' },
       ];
       
-      const keyMap = {
-        userCountry: 'country',
-        userPhone: 'phone',
-        userAge: 'age',
-        userAddress1: 'address1',
-        userAddress2: 'address2',
-        userAddress3: 'address3',
-        userState: 'state',
-        userCity: 'city',
-        userNickname: 'nickname',
-        userAltPhone: 'altPhone',
-      } as const;
-
-      fieldsToSave.forEach(key => {
-        const value = localStorage.getItem(key);
+      fieldsToSave.forEach(field => {
+        const value = localStorage.getItem(field.key);
         if (value) {
-            const dbKey = keyMap[key as keyof typeof keyMap];
-            if (dbKey === 'age') {
-                userDataToSave[dbKey] = Number(value);
+            // CRITICAL FIX: Convert age to a number before saving
+            if (field.dbKey === 'age') {
+                userDataToSave[field.dbKey] = Number(value);
             } else {
-                userDataToSave[dbKey] = value;
+                userDataToSave[field.dbKey] = value;
             }
         }
       });
@@ -130,10 +123,13 @@ export default function PasswordPage() {
       await setDoc(userDocRef, userDataToSave);
       
       // Step 5: Clean up local storage AFTER all operations are successful
-      fieldsToSave.forEach(key => localStorage.removeItem(key));
-      // Also remove fields that are no longer being saved to DB
-      localStorage.removeItem('userPhotoDataUri');
-      localStorage.removeItem('userAadhaarDataUri');
+      const lsKeysToClean = [
+        'userName', 'userCountry', 'userPhone', 'userEmail', 'userAge', 
+        'userAddress1', 'userAddress2', 'userAddress3', 'userState', 
+        'userCity', 'userNickname', 'userAltPhone',
+        'userPhotoDataUri', 'userAadhaarDataUri' // Clean up image data as well
+      ];
+      lsKeysToClean.forEach(key => localStorage.removeItem(key));
 
 
       // Step 6: Success! Redirect to congratulations page.
