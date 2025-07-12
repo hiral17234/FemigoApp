@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState } from "react"
@@ -9,8 +8,6 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import Link from "next/link"
 import { ArrowLeft, User, Globe, ChevronsUpDown, Check, Loader2 } from "lucide-react"
-import { signInAnonymously } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,7 +16,7 @@ import { countries } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
-import { auth, db, firebaseError } from "@/lib/firebase"
+import { firebaseError } from "@/lib/firebase"
 
 const signupSchema = z.object({
   fullName: z.string().min(3, { message: "Full name must be at least 3 characters." }),
@@ -30,7 +27,7 @@ type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
   const router = useRouter()
-  const { toast, dismiss } = useToast()
+  const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
 
@@ -57,41 +54,21 @@ export default function SignupPage() {
         return;
     }
     
+    // This is the simplified flow: just save to localStorage and move on.
+    // No Firebase calls on this page.
     try {
-      // 1. Sign in anonymously to get a UID
-      const userCredential = await signInAnonymously(auth);
-      const user = userCredential.user;
-
-      // 2. Save initial data to Firestore
-      const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
-        uid: user.uid,
-        displayName: data.fullName,
-        country: data.country,
-        createdAt: new Date().toISOString(),
-        isAnonymous: true, // Flag to indicate this is a temporary anonymous user
-      });
-      
-      // 3. Save name and country to localStorage for non-DB dependent steps
       localStorage.setItem("userName", data.fullName)
       localStorage.setItem("userCountry", data.country)
-
-      const welcomeToast = toast({
+      
+      toast({
         title: `Welcome, ${data.fullName}!`,
         description: "Let's get you set up.",
-        action: (
-            <Button size="sm" onClick={() => {
-                dismiss(welcomeToast.id);
-                router.push("/onboarding/live-photo");
-            }}>
-                Next Step
-            </Button>
-        ),
-        duration: Infinity
       })
 
+      router.push("/onboarding/live-photo")
+
     } catch (error) {
-      console.error("Anonymous sign-in or data save failed", error);
+      console.error("Signup process failed", error);
       toast({
         variant: "destructive",
         title: "Something went wrong",
