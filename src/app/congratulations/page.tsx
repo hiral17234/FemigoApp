@@ -1,10 +1,12 @@
 
+
 "use client"
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Confetti from "react-confetti"
+import { getAuth } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
@@ -17,12 +19,19 @@ export default function CongratulationsPage() {
 
   useEffect(() => {
     // Check for user data in localStorage
-    const name = localStorage.getItem('userName')
-    if (name) {
-      setUserName(name)
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    let name = "User";
+    if (currentUser) {
+        name = currentUser.displayName || localStorage.getItem('userName') || "User";
     } else {
-      // If no name, maybe redirect to start of signup or login
-      router.push('/login')
+        name = localStorage.getItem('userName') || "User";
+    }
+    setUserName(name);
+
+    if (!name || name === "User") {
+        // If no name, maybe redirect to start of signup or login
+        router.push('/login');
     }
     
     // Cleanup localStorage after displaying the page

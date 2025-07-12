@@ -1,9 +1,11 @@
 
+
 "use client"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check, Copy, ClipboardPaste } from "lucide-react"
+import { doc, updateDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,8 +14,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { useToast, toast as globalToast } from "@/hooks/use-toast"
-import { firebaseError } from "@/lib/firebase"
+import { useToast } from "@/hooks/use-toast"
+import { auth, db, firebaseError } from "@/lib/firebase"
 import { countries, type Country } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -47,7 +49,7 @@ function CustomOtpNotification({ otp, visible }: { otp: string, visible: boolean
 
 export default function PhoneVerificationPage() {
   const router = useRouter()
-  const { toast } = useToast()
+  const { toast, dismiss } = useToast()
   
   const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState("")
@@ -125,8 +127,8 @@ export default function PhoneVerificationPage() {
         setIsSubmitting(false);
         setStep('otp');
         // Immediately dismiss the "OTP Sent" toast before the page fully renders the next step
-        if (sentToast?.dismiss) {
-            sentToast.dismiss();
+        if (sentToast?.id) {
+            dismiss(sentToast.id);
         }
     }, 1500);
   }
@@ -135,13 +137,29 @@ export default function PhoneVerificationPage() {
     if (value.length < 6) return;
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    const user = auth.currentUser;
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Error', description: 'You are not logged in. Please start over.' });
+        setIsSubmitting(false);
+        router.push('/signup');
+        return;
+    }
+
+    setTimeout(async () => {
         if (value === demoOtp) {
-            setIsVerified(true);
             if(selectedCountry) {
-                localStorage.setItem("userPhone", `+${selectedCountry.phone}${phone}`);
+                const fullPhoneNumber = `+${selectedCountry.phone}${phone}`;
+                try {
+                    const userDocRef = doc(db, "users", user.uid);
+                    await updateDoc(userDocRef, { phone: fullPhoneNumber });
+                    localStorage.setItem("userPhone", fullPhoneNumber); // still useful for immediate UI needs
+                    setIsVerified(true);
+                    toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
+                } catch (error) {
+                    console.error("Failed to save phone number:", error);
+                    toast({variant: 'destructive', title: 'Save Failed', description: "Could not save your phone number. Please try again."});
+                }
             }
-            toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
         } else {
             toast({variant: 'destructive', title: 'Verification Failed', description: "The OTP you entered is incorrect."});
             setOtp(""); // Clear the input on failure
@@ -152,7 +170,7 @@ export default function PhoneVerificationPage() {
   
   const handleOtpChange = (newOtp: string) => {
     setOtp(newOtp);
-    if (newOtp.length === 6) {
+    if (newOtp.length === 6 && !isSubmitting) {
         onVerifyOtp(newOtp);
     }
   }

@@ -1,8 +1,9 @@
 
+
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getStorage, type Storage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -25,6 +26,7 @@ const keyMapping = {
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
+let storage: Storage;
 let firebaseError: string | null = null;
 
 try {
@@ -42,6 +44,7 @@ try {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
     auth = getAuth(app);
     db = getFirestore(app);
+    storage = getStorage(app);
 
 } catch (error: any) {
     const errorIntro = "Firebase configuration failed. The following required variable(s) are missing or invalid in your .env file:";
@@ -51,6 +54,7 @@ try {
     app = {} as FirebaseApp;
     auth = {} as Auth;
     db = {} as Firestore;
+    storage = {} as Storage;
 }
 
-export { app, auth, db, firebaseError };
+export { app, auth, db, storage, firebaseError };

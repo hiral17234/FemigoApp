@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,8 +8,8 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react"
-import { createUserWithEmailAndPassword } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
+import { EmailAuthProvider, linkWithCredential, getAuth, updateProfile } from "firebase/auth"
+import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -70,18 +71,17 @@ export default function PasswordPage() {
     
     // Retrieve all data from localStorage
     const email = localStorage.getItem('userEmail')
-    const displayName = localStorage.getItem('userName')
-    const country = localStorage.getItem('userCountry')
-    const phone = localStorage.getItem('userPhone')
     const detailsJSON = localStorage.getItem('onboarding-details')
     const details = detailsJSON ? JSON.parse(detailsJSON) : {}
     const photoURL = localStorage.getItem('userPhotoDataUri')
 
-    if (!email || !displayName || !country) {
+    const user = auth.currentUser;
+
+    if (!email || !user) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Some required information is missing. Please start over.",
+        description: "Some required information is missing or you're not logged in. Please start over.",
       })
       router.push("/signup")
       setIsSubmitting(false)
@@ -89,24 +89,33 @@ export default function PasswordPage() {
     }
 
     try {
-      // 1. Create the user in Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, email, data.password)
-      const user = userCredential.user
-
-      // 2. Prepare the user data object
+      // 1. Create the credential for the new email/password account.
+      const credential = EmailAuthProvider.credential(email, data.password);
+      
+      // 2. Link the anonymous account with the new email/password credentials.
+      // This "upgrades" the anonymous user to a permanent one.
+      await linkWithCredential(user, credential);
+      
+      // 3. Update Firestore document with final details and remove anonymous flag.
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      const existingData = userDocSnap.data() || {};
+      
       const userProfileData = {
-        uid: user.uid,
-        email: user.email,
-        displayName,
-        country,
-        phone: phone || '',
-        photoURL: photoURL || '',
+        ...existingData,
         ...details,
-        createdAt: new Date().toISOString(),
-      }
+        email: user.email,
+        photoURL: photoURL || existingData.photoURL || '',
+        isAnonymous: false, // Mark account as permanent
+      };
+      
+      await setDoc(userDocRef, userProfileData, { merge: true });
 
-      // 3. Save the user's data to Firestore
-      await setDoc(doc(db, "users", user.uid), userProfileData)
+      // 4. Update the user's Auth profile (e.g., displayName)
+      await updateProfile(user, {
+        displayName: existingData.displayName,
+        photoURL: userProfileData.photoURL
+      });
 
       toast({
         title: "Account Created!",
@@ -122,6 +131,8 @@ export default function PasswordPage() {
         errorMessage = "This email is already in use. Please log in or use a different email."
       } else if (error.code === 'auth/weak-password') {
         errorMessage = "The password is too weak. Please choose a stronger password."
+      } else if (error.code === 'auth/credential-already-in-use') {
+         errorMessage = "This account is already linked to another user. Please log in or use a different email.";
       }
       toast({
         variant: "destructive",

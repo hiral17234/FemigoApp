@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState } from "react"
@@ -8,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import Link from "next/link"
 import { ArrowLeft, User, Globe, ChevronsUpDown, Check, Loader2 } from "lucide-react"
+import { signInAnonymously } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +19,7 @@ import { countries } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
-import { ToastAction } from "@/components/ui/toast"
+import { auth, db } from "@/lib/firebase"
 
 const signupSchema = z.object({
   fullName: z.string().min(3, { message: "Full name must be at least 3 characters." }),
@@ -27,7 +30,7 @@ type SignupFormValues = z.infer<typeof signupSchema>
 
 export default function SignupPage() {
   const router = useRouter()
-  const { toast, dismiss } = useToast()
+  const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
 
@@ -41,27 +44,44 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
   })
 
-  const onSubmit = (data: SignupFormValues) => {
+  const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true)
-    dismiss(); // Dismiss any existing toasts
     
-    // Save to localStorage for subsequent steps
-    localStorage.setItem("userName", data.fullName)
-    localStorage.setItem("userCountry", data.country)
+    try {
+      // 1. Sign in anonymously to get a UID
+      const userCredential = await signInAnonymously(auth);
+      const user = userCredential.user;
 
-    toast({
-      title: `Welcome, ${data.fullName}!`,
-      description: "Let's get you set up.",
-      variant: 'default',
-      duration: Infinity, // Keep the toast until user action
-      action: (
-          <ToastAction altText="Next Step" onClick={() => router.push("/onboarding/live-photo")}>
-              Next Step
-          </ToastAction>
-      )
-    })
-    
-    setIsSubmitting(false)
+      // 2. Save initial data to Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        displayName: data.fullName,
+        country: data.country,
+        createdAt: new Date().toISOString(),
+        isAnonymous: true, // Flag to indicate this is a temporary anonymous user
+      });
+      
+      // 3. Save name and country to localStorage for non-DB dependent steps
+      localStorage.setItem("userName", data.fullName)
+      localStorage.setItem("userCountry", data.country)
+
+      toast({
+        title: `Welcome, ${data.fullName}!`,
+        description: "Let's get you set up.",
+      })
+      router.push("/onboarding/live-photo");
+
+    } catch (error) {
+      console.error("Anonymous sign-in or data save failed", error);
+      toast({
+        variant: "destructive",
+        title: "Something went wrong",
+        description: "Could not start the signup process. Please try again."
+      });
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -123,7 +143,7 @@ export default function SignupPage() {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                    <PopoverContent className="w-72 p-0 country-list-popover">
                        <Command>
                           <CommandInput placeholder="Search country..." />
                           <CommandList>
