@@ -106,7 +106,7 @@ export default function DetailsPage() {
             title: "Details Saved!",
             description: "Proceeding to the next step.",
         })
-        router.push("/onboarding/email-verification")
+        router.push("/onboarding/password")
 
     } catch (error) {
         console.error("Failed to save details to localStorage:", error);
@@ -140,7 +140,7 @@ export default function DetailsPage() {
             Tell Us About Yourself
           </h1>
            <p className="text-muted-foreground mt-2 text-sm">This information helps us personalize your experience.</p>
-          <Progress value={(4 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
+          <Progress value={(5 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
         <div className="w-full rounded-2xl border border-white/30 p-8 shadow-[0_0_20px_theme(colors.white/0.3)]">
