@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { ArrowLeft, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
 import { doc, setDoc } from "firebase/firestore"
 
@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { auth, db } from "@/lib/firebase"
-import { cn } from "@/lib/utils"
+import { PasswordStrength } from "@/components/ui/password-strength"
 
 const passwordSchema = z
   .object({
@@ -42,15 +42,6 @@ export default function PasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [password, setPassword] = useState("")
-
-  const checks = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
-    number: /[0-9]/.test(password),
-    special: /[^A-Za-z0-9]/.test(password),
-  };
 
   const {
     register,
@@ -59,12 +50,13 @@ export default function PasswordPage() {
     formState: { errors },
   } = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
+    defaultValues: {
+        password: '',
+        confirmPassword: ''
+    }
   })
 
-  useEffect(() => {
-    const subscription = watch((value) => setPassword(value.password || ""));
-    return () => subscription.unsubscribe();
-  }, [watch]);
+  const watchedPassword = watch("password")
 
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
     setIsSubmitting(true)
@@ -137,8 +129,16 @@ export default function PasswordPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
-      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4 text-white">
+      <video
+        src="https://videos.pexels.com/video-files/26621651/11977308_2560_1440_30fps.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-50"
+      />
+      <div className="absolute inset-0 z-10 bg-black/30" />
 
       <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
         <div className="absolute top-0 left-0">
@@ -152,10 +152,10 @@ export default function PasswordPage() {
           <p className="text-muted-foreground mt-2 text-sm">
             This is the final step! Choose a strong, secure password.
           </p>
-          <Progress value={(6 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
+          <Progress value={(6 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <div className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full rounded-2xl border border-white/30 p-8 shadow-[0_0_20px_theme(colors.white/0.3)]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="password">Password</label>
@@ -178,25 +178,7 @@ export default function PasswordPage() {
               {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
 
-             <div className="space-y-2 pt-2">
-                <ul className="space-y-1.5 text-xs">
-                    <li className={cn("flex items-center gap-2 transition-colors", checks.length ? "text-green-400" : "text-muted-foreground")}>
-                        <CheckCircle2 className="h-4 w-4" /> At least 8 characters
-                    </li>
-                    <li className={cn("flex items-center gap-2 transition-colors", checks.uppercase ? "text-green-400" : "text-muted-foreground")}>
-                        <CheckCircle2 className="h-4 w-4" /> An uppercase letter (A-Z)
-                    </li>
-                     <li className={cn("flex items-center gap-2 transition-colors", checks.lowercase ? "text-green-400" : "text-muted-foreground")}>
-                        <CheckCircle2 className="h-4 w-4" /> A lowercase letter (a-z)
-                    </li>
-                    <li className={cn("flex items-center gap-2 transition-colors", checks.number ? "text-green-400" : "text-muted-foreground")}>
-                        <CheckCircle2 className="h-4 w-4" /> A number (0-9)
-                    </li>
-                    <li className={cn("flex items-center gap-2 transition-colors", checks.special ? "text-green-400" : "text-muted-foreground")}>
-                        <CheckCircle2 className="h-4 w-4" /> A special character (!@#$%)
-                    </li>
-                </ul>
-            </div>
+            <PasswordStrength password={watchedPassword} />
 
             <div className="space-y-2">
               <label htmlFor="confirmPassword">Confirm Password</label>
