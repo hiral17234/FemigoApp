@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Phone, UserPlus, Siren, ShieldCheck, Hospital, Flame, Loader2 } from 'lucide-react';
+import { doc, getDoc, setDoc } from "firebase/firestore";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -12,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { emergencyContacts, type EmergencyService } from '@/lib/emergency-contacts';
+import { auth, db } from '@/lib/firebase';
 
 type TrustedContact = {
   id: string;
@@ -86,22 +89,29 @@ export default function EmergencyPage() {
   const t = translations[language as keyof typeof translations];
 
   useEffect(() => {
-    setLoading(true);
-    const userProfileJson = localStorage.getItem('femigo-user-profile');
-    if (userProfileJson) {
-        const userProfile = JSON.parse(userProfileJson);
-        setTrustedContacts(userProfile.trustedContacts || []);
-        const countryCode = userProfile.country || 'default';
-        setEmergencyServices(emergencyContacts[countryCode] || emergencyContacts.default);
-    } else {
-        router.push('/login');
+    const fetchUserData = async () => {
+        setLoading(true);
+        const user = auth.currentUser;
+        if (user) {
+            const userDocRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                setTrustedContacts(userData.trustedContacts || []);
+                const countryCode = userData.country || 'default';
+                setEmergencyServices(emergencyContacts[countryCode] || emergencyContacts.default);
+            }
+        } else {
+            router.push('/login');
+        }
+        setLoading(false);
     }
-    setLoading(false);
+    fetchUserData();
   }, [router]);
 
   const handleSaveContact = async () => {
-    const userProfileJson = localStorage.getItem('femigo-user-profile');
-    if (!userProfileJson) {
+    const user = auth.currentUser;
+    if (!user) {
         toast({ variant: "destructive", title: t.notLoggedIn, description: t.notLoggedInDesc });
         return;
     }
@@ -122,15 +132,11 @@ export default function EmergencyPage() {
     };
     
     try {
-        const userProfile = JSON.parse(userProfileJson);
-        if (!userProfile.trustedContacts) {
-            userProfile.trustedContacts = [];
-        }
-        userProfile.trustedContacts.push(newContact);
-        
-        localStorage.setItem('femigo-user-profile', JSON.stringify(userProfile));
-        setTrustedContacts(userProfile.trustedContacts);
+        const updatedContacts = [...trustedContacts, newContact];
+        const userDocRef = doc(db, "users", user.uid);
+        await setDoc(userDocRef, { trustedContacts: updatedContacts }, { merge: true });
 
+        setTrustedContacts(updatedContacts);
         setNewContactName('');
         setNewContactPhone('');
         setIsDialogOpen(false);

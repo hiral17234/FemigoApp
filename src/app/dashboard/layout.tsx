@@ -1,11 +1,11 @@
 
-
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
+import { signOut } from "firebase/auth"
 import {
   Home,
   User,
@@ -39,6 +39,8 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useSidebar } from "@/components/ui/sidebar"
 import { useToast } from "@/hooks/use-toast"
+import { auth } from "@/lib/firebase"
+
 
 const translations = {
     en: {
@@ -174,11 +176,17 @@ export default function DashboardLayout({
   }, [router]);
 
   const handleLogout = async () => {
-    localStorage.removeItem('femigo-is-logged-in');
-    localStorage.removeItem('femigo-user-profile');
-    localStorage.removeItem('userName');
-    toast({ title: t.loggedOut, description: t.loggedOutDesc })
-    router.push('/login');
+    try {
+        await signOut(auth);
+        localStorage.removeItem('femigo-is-logged-in');
+        localStorage.removeItem('femigo-user-profile');
+        localStorage.removeItem('userName');
+        toast({ title: t.loggedOut, description: t.loggedOutDesc })
+        router.push('/login');
+    } catch(error) {
+        console.error("Logout failed:", error);
+        toast({ variant: 'destructive', title: t.logoutFailed, description: t.logoutFailedDesc });
+    }
   }
 
   const menuItems = [

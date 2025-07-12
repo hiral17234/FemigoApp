@@ -1,5 +1,4 @@
 
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -8,12 +7,15 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
+import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { PasswordStrength } from "@/components/ui/password-strength"
+import { auth, db } from "@/lib/firebase"
 
 const passwordSchema = z
   .object({
@@ -39,6 +41,17 @@ export default function PasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    const email = localStorage.getItem('userEmail');
+    if (!email) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Email not found. Please go back.'});
+        router.push('/onboarding/email-verification');
+    } else {
+        setUserEmail(email);
+    }
+  }, [router, toast]);
 
   const {
     register,
@@ -56,20 +69,34 @@ export default function PasswordPage() {
   const watchedPassword = watch("password")
 
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
+    if (!userEmail) {
+        toast({ variant: 'destructive', title: 'Error', description: 'User email is missing.'});
+        return;
+    }
     setIsSubmitting(true)
     
     try {
-      // Gather all data from localStorage
-      const userData: { [key: string]: any } = {
-        password: data.password, // Store the password (for demo purposes)
+      // 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, userEmail, data.password);
+      const user = userCredential.user;
+
+      const displayName = localStorage.getItem("userName") || 'New User';
+
+      // 2. Update Firebase Auth Profile (for displayName)
+      await updateProfile(user, { displayName: displayName });
+
+      // 3. Gather all data from localStorage to save to Firestore
+      const userProfileData: { [key: string]: any } = {
+        uid: user.uid,
+        email: user.email,
+        displayName: displayName,
         createdAt: new Date().toISOString(),
+        trustedContacts: [],
       };
 
       const fieldsToGet = [
-        { key: 'userName', dbKey: 'displayName' },
         { key: 'userCountry', dbKey: 'country' },
         { key: 'userPhone', dbKey: 'phone' },
-        { key: 'userEmail', dbKey: 'email' },
         { key: 'userAge', dbKey: 'age' },
         { key: 'userAddress1', dbKey: 'address1' },
         { key: 'userAddress2', dbKey: 'address2' },
@@ -83,37 +110,30 @@ export default function PasswordPage() {
       fieldsToGet.forEach(field => {
         const value = localStorage.getItem(field.key);
         if (value) {
-          if (field.dbKey === 'age') {
-            userData[field.dbKey] = Number(value);
-          } else {
-            userData[field.dbKey] = value;
-          }
+          userProfileData[field.dbKey] = field.dbKey === 'age' ? Number(value) : value;
         }
       });
       
-      // Save the complete user profile to localStorage
-      // In a real app, this is where you'd send to your backend, but we are bypassing Firebase.
-      const existingUsers = JSON.parse(localStorage.getItem('femigo-users') || '[]');
-      existingUsers.push(userData);
-      localStorage.setItem('femigo-users', JSON.stringify(existingUsers));
-      localStorage.setItem('femigo-user-profile', JSON.stringify(userData));
+      // 4. Save the complete user profile to Firestore
+      await setDoc(doc(db, "users", user.uid), userProfileData);
 
-
-      // Clean up individual temporary local storage items
-      const lsKeysToClean = fieldsToGet.map(f => f.key);
+      // Clean up temporary local storage items
+      const lsKeysToClean = ['userEmail', 'userName', ...fieldsToGet.map(f => f.key)];
       lsKeysToClean.forEach(key => localStorage.removeItem(key));
-      localStorage.removeItem('userPhotoDataUri');
-      localStorage.removeItem('userAadhaarDataUri');
 
       // Success! Redirect to congratulations page.
       router.push("/congratulations")
 
     } catch (error: any) {
       console.error("Account creation failed:", error)
+      let description = "An unexpected error occurred. Please try again.";
+      if (error.code === 'auth/email-already-in-use') {
+        description = "This email address is already in use by another account.";
+      }
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: description,
       })
     } finally {
       setIsSubmitting(false)

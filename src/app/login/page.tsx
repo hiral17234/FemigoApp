@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { signInWithEmailAndPassword } from "firebase/auth"
+import { doc, getDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -21,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { auth, db } from "@/lib/firebase"
+
 
 const formSchema = z.object({
   email: z.string().email({
@@ -48,44 +52,43 @@ export default function LoginPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     try {
-      // Find user in localStorage
-      const usersJSON = localStorage.getItem('femigo-users');
-      const users = usersJSON ? JSON.parse(usersJSON) : [];
-      
-      const user = users.find(
-        (u: any) => u.email === values.email
-      );
+      // Sign in with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
 
-      if (!user) {
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "Account not found. Please sign up to continue.",
-        })
-      } else if (user.password !== values.password) {
-         toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: "Invalid email or password. Please check your credentials and try again.",
-        })
+      // Fetch user profile from Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userProfile = userDoc.data();
+        localStorage.setItem('femigo-user-profile', JSON.stringify(userProfile));
+        localStorage.setItem('userName', userProfile.displayName);
       } else {
-        // Correct user and password. "Log in" the user.
-        localStorage.setItem('femigo-user-profile', JSON.stringify(user));
-        localStorage.setItem('femigo-is-logged-in', 'true');
-        localStorage.setItem('userName', user.displayName);
-
-        toast({
-          title: "Logged In!",
-          description: "Welcome back. Redirecting to your dashboard...",
-        })
-        router.push("/dashboard")
+        // Fallback if profile doesn't exist for some reason
+        localStorage.setItem('userName', user.displayName || 'User');
       }
+
+      localStorage.setItem('femigo-is-logged-in', 'true');
+
+      toast({
+        title: "Logged In!",
+        description: "Welcome back. Redirecting to your dashboard...",
+      })
+      router.push("/dashboard")
+
     } catch (error: any) {
       console.error("Login error:", error)
+      let description = "An unexpected error occurred. Please try again.";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        description = "Invalid email or password. Please check your credentials and try again.";
+      } else if (error.code === 'auth/too-many-requests') {
+        description = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.";
+      }
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: description,
       })
     } finally {
       setIsSubmitting(false)

@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, User, Bell, MapPin, ChevronRight, LogOut, Moon, Sun, Loader2, KeyRound, Check } from "lucide-react"
 import { useTheme } from "next-themes"
+import { signOut } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,6 +15,7 @@ import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { auth } from "@/lib/firebase"
 
 const languages = [
     { code: 'en', name: 'English (US)' },
@@ -91,9 +93,13 @@ export default function SettingsPage() {
     }
 
     useEffect(() => {
-        const storedProfile = localStorage.getItem('femigo-user-profile');
-        if (storedProfile) {
-            setUserData(JSON.parse(storedProfile));
+        const user = auth.currentUser;
+        if (user) {
+            setUserData({
+                displayName: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL,
+            });
         } else {
             router.push('/login');
         }
@@ -101,11 +107,17 @@ export default function SettingsPage() {
     }, [router]);
 
     const handleLogout = async () => {
-        localStorage.removeItem('femigo-is-logged-in');
-        localStorage.removeItem('femigo-user-profile');
-        localStorage.removeItem('userName');
-        toast({ title: t.loggedOut, description: t.loggedOutDesc });
-        router.push('/login');
+        try {
+            await signOut(auth);
+            localStorage.removeItem('femigo-is-logged-in');
+            localStorage.removeItem('femigo-user-profile');
+            localStorage.removeItem('userName');
+            toast({ title: t.loggedOut, description: t.loggedOutDesc });
+            router.push('/login');
+        } catch (error) {
+            console.error("Logout failed:", error);
+            toast({ variant: 'destructive', title: 'Logout Failed' });
+        }
     }
 
     const userInitial = userData?.displayName?.charAt(0).toUpperCase() || 'U';

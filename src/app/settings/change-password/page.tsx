@@ -8,6 +8,7 @@ import * as z from "zod"
 import { useState, useEffect } from "react"
 import { ArrowLeft, Loader2, Eye, EyeOff, KeyRound } from "lucide-react"
 import Link from "next/link"
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +23,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { PasswordStrength } from "@/components/ui/password-strength"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { auth } from "@/lib/firebase"
 
 
 const baseSchema = {
@@ -118,15 +120,15 @@ export default function ChangePasswordPage() {
   function handleForgotPassword() {
     toast({
         title: "Forgot Password",
-        description: "This feature is not yet implemented for local storage mode.",
+        description: "Password recovery instructions would be sent to your email.",
     });
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     
-    const userProfileJson = localStorage.getItem('femigo-user-profile');
-    if (!userProfileJson) {
+    const user = auth.currentUser;
+    if (!user || !user.email) {
       toast({ variant: "destructive", title: t.toastError, description: t.toastNotLoggedIn })
       setIsSubmitting(false)
       router.push('/login');
@@ -134,26 +136,12 @@ export default function ChangePasswordPage() {
     }
     
     try {
-        const userProfile = JSON.parse(userProfileJson);
-
-        if (userProfile.password !== values.currentPassword) {
-            toast({ variant: "destructive", title: t.toastUpdateFailed, description: t.toastErrorWrongPass });
-            return;
-        }
-
-        userProfile.password = values.newPassword;
-        localStorage.setItem('femigo-user-profile', JSON.stringify(userProfile));
+        const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
         
-        // Also update the master list if it exists
-        const allUsersJson = localStorage.getItem('femigo-users');
-        if (allUsersJson) {
-            const allUsers = JSON.parse(allUsersJson);
-            const userIndex = allUsers.findIndex((u: any) => u.email === userProfile.email);
-            if (userIndex > -1) {
-                allUsers[userIndex].password = values.newPassword;
-                localStorage.setItem('femigo-users', JSON.stringify(allUsers));
-            }
-        }
+        await reauthenticateWithCredential(user, credential);
+        
+        // If reauthentication is successful, update the password
+        await updatePassword(user, values.newPassword);
 
         toast({
             title: t.toastSuccessTitle,
@@ -163,10 +151,16 @@ export default function ChangePasswordPage() {
 
     } catch (error: any) {
         console.error("Password change failed:", error)
+        let description = t.toastErrorUnexpected;
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            description = t.toastErrorWrongPass;
+        } else if (error.code === 'auth/too-many-requests') {
+            description = t.toastErrorTooManyRequests;
+        }
         toast({
             variant: "destructive",
             title: t.toastUpdateFailed,
-            description: t.toastErrorUnexpected,
+            description: description,
         })
     } finally {
       setIsSubmitting(false)

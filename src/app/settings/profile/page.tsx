@@ -9,6 +9,8 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { ArrowLeft, User as UserIcon, Mail, Phone, Calendar, Home, Save, Loader2, Edit2, Camera } from "lucide-react";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { updateProfile } from "firebase/auth";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,8 +20,10 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { auth, db } from "@/lib/firebase";
 
 const profileSchema = z.object({
+  displayName: z.string().min(3, "Full name must be at least 3 characters."),
   email: z.string().email("Please enter a valid email address."),
   nickname: z.string().optional(),
   age: z.coerce.number().min(13, "You must be at least 13 years old.").optional(),
@@ -90,30 +94,42 @@ export default function EditProfilePage() {
     });
 
     useEffect(() => {
-        const storedProfile = localStorage.getItem('femigo-user-profile');
-        if (storedProfile) {
-            const data = JSON.parse(storedProfile) as UserData;
-            setUserData(data);
-            form.reset({
-                email: data.email || "",
-                nickname: data.nickname || "",
-                age: data.age || undefined,
-                address1: data.address1 || "",
-                address2: data.address2 || "",
-                address3: data.address3 || "",
-                city: data.city || "",
-                state: data.state || "",
-            });
-        } else {
-             toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profile.' });
-             router.push('/login');
-        }
-        setIsLoading(false);
+        const fetchUserData = async () => {
+            const user = auth.currentUser;
+            if (user) {
+                const userDocRef = doc(db, "users", user.uid);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    const data = userDoc.data() as UserData;
+                    setUserData(data);
+                    form.reset({
+                        displayName: data.displayName || "",
+                        email: data.email || "",
+                        nickname: data.nickname || "",
+                        age: data.age || undefined,
+                        address1: data.address1 || "",
+                        address2: data.address2 || "",
+                        address3: data.address3 || "",
+                        city: data.city || "",
+                        state: data.state || "",
+                    });
+                } else {
+                     toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profile in database.' });
+                     router.push('/login');
+                }
+            } else {
+                 toast({ variant: 'destructive', title: 'Error', description: 'You are not logged in.' });
+                 router.push('/login');
+            }
+            setIsLoading(false);
+        };
+        fetchUserData();
     }, [router, toast, form]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !userData) return;
+        const user = auth.currentUser;
+        if (!file || !userData || !user) return;
 
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -123,28 +139,42 @@ export default function EditProfilePage() {
             try {
                 toast({ title: 'Updating...', description: 'Your new profile picture is being saved.' });
                 
+                // Note: In a real app, you would upload the file to Firebase Storage
+                // and then update the user's profile with the new URL.
+                // For this project, we'll just use the Data URL directly for simplicity.
+                await updateProfile(user, { photoURL: photoURL });
+                
+                const userDocRef = doc(db, "users", user.uid);
+                await setDoc(userDocRef, { photoURL: photoURL }, { merge: true });
+
                 const updatedUserData = { ...userData, photoURL };
                 setUserData(updatedUserData);
-                localStorage.setItem('femigo-user-profile', JSON.stringify(updatedUserData));
                 
                 toast({ title: 'Success!', description: 'Profile picture updated.' });
             } catch (error) {
-                console.error("Error saving profile picture to localStorage:", error);
+                console.error("Error saving profile picture:", error);
                 toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update your profile picture.' });
             }
         };
     };
 
     const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
-        if (!userData) {
+        const user = auth.currentUser;
+        if (!user) {
             toast({ variant: 'destructive', title: 'Not Authenticated' });
             return;
         }
         setIsSubmitting(true);
         try {
-            const updatedUserData = { ...userData, ...data };
-            localStorage.setItem('femigo-user-profile', JSON.stringify(updatedUserData));
-            setUserData(updatedUserData);
+            const userDocRef = doc(db, "users", user.uid);
+            await setDoc(userDocRef, data, { merge: true });
+
+            if (data.displayName !== user.displayName) {
+                await updateProfile(user, { displayName: data.displayName });
+            }
+
+            setUserData(prevData => prevData ? { ...prevData, ...data } : null);
+            localStorage.setItem('userName', data.displayName);
             toast({ title: 'Profile Updated!', description: 'Your changes have been saved successfully.' });
         } catch (error) {
             console.error("Error updating profile: ", error);
@@ -161,6 +191,8 @@ export default function EditProfilePage() {
     if (!userData) {
          return <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">Could not load user data.</main>
     }
+    
+    const userPhoto = auth.currentUser?.photoURL || userData.photoURL;
 
     return (
         <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">
@@ -178,7 +210,7 @@ export default function EditProfilePage() {
 
                     <div className="absolute top-16 left-1/2 -translate-x-1/2 group">
                         <Avatar className="h-32 w-32 rounded-full border-4 border-background">
-                            <AvatarImage src={userData.photoURL} alt={userData.displayName} data-ai-hint="woman face" />
+                            <AvatarImage src={userPhoto} alt={userData.displayName} data-ai-hint="woman face" />
                             <AvatarFallback className="text-5xl bg-primary/20 text-primary">{userData.displayName?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
@@ -193,22 +225,20 @@ export default function EditProfilePage() {
                     
                     <Card className="mt-[-2rem] rounded-2xl border-none bg-background pt-20">
                         <CardContent className="flex flex-col items-center gap-6 p-6">
-                            <div className="text-center">
-                                <h1 className="text-3xl font-bold">{userData.displayName}</h1>
-                            </div>
-
+                           
                             <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
                                 <div className="space-y-1">
-                                    <Label htmlFor="displayName">Full Name (Non-editable)</Label>
-                                    <Input id="displayName" value={userData.displayName} readOnly disabled className="bg-muted/30" />
+                                    <Label htmlFor="displayName">Full Name</Label>
+                                    <Input id="displayName" {...form.register("displayName")} />
+                                    {form.formState.errors.displayName && <p className="text-xs text-destructive">{form.formState.errors.displayName.message}</p>}
                                 </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="phone">Phone (Non-editable)</Label>
                                     <Input id="phone" value={userData.phone} readOnly disabled className="bg-muted/30" />
                                 </div>
                                  <div className="space-y-1">
-                                    <Label htmlFor="email">Email Address</Label>
-                                    <Input id="email" {...form.register("email")} placeholder="your.email@example.com" />
+                                    <Label htmlFor="email">Email Address (Non-editable)</Label>
+                                    <Input id="email" {...form.register("email")} readOnly disabled className="bg-muted/30" />
                                     {form.formState.errors.email && <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>}
                                 </div>
 
