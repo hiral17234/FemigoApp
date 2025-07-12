@@ -150,6 +150,7 @@ export default function DashboardLayout({
 
   const [userName, setUserName] = React.useState<string | null>(null)
   const [userInitial, setUserInitial] = React.useState("")
+  const [userPhoto, setUserPhoto] = React.useState<string | undefined>(undefined);
   const [isLoadingUser, setIsLoadingUser] = React.useState(true)
   const [language, setLanguage] = React.useState('en');
 
@@ -172,6 +173,7 @@ export default function DashboardLayout({
                 const nameToDisplay = profile.displayName || 'User';
                 setUserName(nameToDisplay);
                 setUserInitial(nameToDisplay.charAt(0).toUpperCase());
+                setUserPhoto(profile.photoURL);
             } catch (e) {
                 // Malformed profile, clear and redirect
                 localStorage.removeItem('femigo-is-logged-in');
@@ -293,7 +295,7 @@ export default function DashboardLayout({
             <div className="relative">
                 <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-primary to-primary/50 opacity-75 blur"></div>
                 <Avatar className="relative h-10 w-10 border-2 border-background">
-                    <AvatarImage data-ai-hint="logo" src="https://i.ibb.co/W4PR2Pw2/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg" alt="Femigo Logo" />
+                    <AvatarImage data-ai-hint="person face" src={userPhoto || "https://i.ibb.co/W4PR2Pw2/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg"} alt="User Avatar" />
                     <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
                 </Avatar>
             </div>
