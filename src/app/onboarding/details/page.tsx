@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 const detailsSchema = z.object({
   age: z.coerce
     .number({ invalid_type_error: "Please enter a valid age." })
-    .min(13, { message: "You must be at least 13 years old to use this service." })
+    .min(3, { message: "You must be at least 3 years old to use this service." })
     .max(120, { message: "Please enter a valid age." }),
   nickname: z.string().optional(),
   address1: z.string().min(3, "Address line is too short."),
@@ -143,7 +143,7 @@ export default function DetailsPage() {
           <Progress value={(4 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <div className="w-full rounded-2xl border border-white/20 p-8 shadow-[0_0_20px_theme(colors.white/0.2)]">
+        <div className="w-full rounded-2xl border border-white/30 p-8 shadow-[0_0_20px_theme(colors.white/0.3)]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
@@ -295,5 +295,3 @@ export default function DetailsPage() {
     </main>
   )
 }
-
-    
