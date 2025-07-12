@@ -15,7 +15,6 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { useToast } from "@/hooks/use-toast"
-import { firebaseError } from "@/lib/firebase"
 import { cn } from "@/lib/utils"
 
 const emailSchema = z.string().email({ message: "Please enter a valid email address." });
@@ -158,12 +157,7 @@ export default function EmailVerificationPage() {
         <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
             <div className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
             
-            {firebaseError ? (
-                <div className="text-center text-red-500">
-                    <h3 className="font-bold">Configuration Error</h3>
-                    <p className="text-sm">{firebaseError}</p>
-                </div>
-            ) : isVerified ? (
+            {isVerified ? (
                 <div className="flex flex-col items-center justify-center gap-4 text-center text-green-400 min-h-[280px]">
                     <CheckCircle2 className="h-16 w-16" />
                     <h2 className="text-2xl font-bold">Verified!</h2>
