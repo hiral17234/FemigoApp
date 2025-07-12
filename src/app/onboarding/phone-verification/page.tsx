@@ -178,47 +178,6 @@ export default function PhoneVerificationPage() {
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Phone Number</label>
                         <div className="flex gap-2">
-                            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                variant="outline"
-                                role="combobox"
-                                className="w-36 justify-between"
-                                >
-                                {countryCode}
-                                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 country-list-popover">
-                                <Command>
-                                    <CommandInput placeholder="Search country..." />
-                                    <CommandList>
-                                    <CommandEmpty>No country found.</CommandEmpty>
-                                    <CommandGroup>
-                                        {countries.map((c) => (
-                                        <CommandItem
-                                            key={c.code}
-                                            value={`${c.label} (+${c.phone})`}
-                                            onSelect={() => {
-                                                setCountryCode(`+${c.phone}`);
-                                                setPopoverOpen(false);
-                                            }}
-                                        >
-                                            <Check className={cn("mr-2 h-4 w-4", `+${c.phone}` === countryCode ? "opacity-100" : "opacity-0")} />
-                                            <span className="mr-2">{c.emoji}</span>
-                                            <span className="mr-2">{c.label}</span>
-                                            <span className="text-muted-foreground">(+{c.phone})</span>
-                                        </CommandItem>
-                                        ))}
-                                    </CommandGroup>
-                                    </CommandList>
-                                    <div className="p-2 text-center border-t border-border">
-                                        <p className="text-xs font-bold text-red-500">Press enter to select.</p>
-                                    </div>
-                                </Command>
-                            </PopoverContent>
-                            </Popover>
-
                             <Input 
                                 type="tel" 
                                 placeholder="Phone number" 
