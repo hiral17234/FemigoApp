@@ -72,19 +72,16 @@ export default function PhoneVerificationPage() {
   // This effect runs when the component switches to the 'otp' step
   useEffect(() => {
     if (step === 'otp') {
-        // Generate a random 6-digit OTP
         const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
         setDemoOtp(newOtp);
 
-        // Show the custom notification after a short delay
         const showTimeout = setTimeout(() => {
             setShowOtpNotification(true);
         }, 500);
 
-        // Hide the notification after a few seconds
         const hideTimeout = setTimeout(() => {
             setShowOtpNotification(false);
-        }, 4500); // Display for 4 seconds
+        }, 4500);
 
         return () => {
             clearTimeout(showTimeout);
@@ -101,13 +98,11 @@ export default function PhoneVerificationPage() {
     }
     setIsSubmitting(true);
     
-    // Show the standard toast notification
     toast({
         title: "OTP Sent!",
         description: `We've sent a verification code to ${countryCode}${phone}`,
     });
 
-    // Move to next step after a delay
     setTimeout(() => {
         setIsSubmitting(false);
         setStep('otp');
@@ -121,11 +116,9 @@ export default function PhoneVerificationPage() {
     }
     setIsSubmitting(true);
 
-    // DEMO MODE: Verify against the generated demo OTP
     setTimeout(() => {
         if (otp === demoOtp) {
             setIsVerified(true);
-            // Save the verified phone number to localStorage
             localStorage.setItem("userPhone", countryCode + phone);
             toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
             setTimeout(() => router.push('/onboarding/details'), 2000);
@@ -177,7 +170,51 @@ export default function PhoneVerificationPage() {
                     </div>
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Phone Number</label>
-                        <div className="flex gap-2">
+                         <div className="flex gap-2">
+                            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    role="combobox"
+                                    className="w-36 justify-between"
+                                >
+                                    {countryCode}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                                <Command>
+                                    <CommandInput placeholder="Search country..." />
+                                    <CommandList>
+                                        <CommandEmpty>No country found.</CommandEmpty>
+                                        <CommandGroup>
+                                        {countries.map((country) => (
+                                            <CommandItem
+                                            key={country.value}
+                                            value={`${country.label} (+${country.phone})`}
+                                            onSelect={() => {
+                                                setCountryCode(`+${country.phone}`);
+                                                setPopoverOpen(false);
+                                            }}
+                                            >
+                                            <Check
+                                                className={cn(
+                                                "mr-2 h-4 w-4",
+                                                `+${country.phone}` === countryCode ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                            <span className="mr-2">{country.emoji}</span>
+                                            {country.label} (+{country.phone})
+                                            </CommandItem>
+                                        ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                                <div className="p-2 text-center border-t border-border">
+                                    <p className="text-xs font-bold text-red-500">Press enter to select.</p>
+                                </div>
+                                </PopoverContent>
+                            </Popover>
                             <Input 
                                 type="tel" 
                                 placeholder="Phone number" 
