@@ -164,15 +164,18 @@ export default function DashboardLayout({
 
   React.useEffect(() => {
     setIsLoadingUser(true);
-    const isLoggedIn = localStorage.getItem('femigo-is-logged-in') === 'true';
-    if (isLoggedIn) {
-        const nameToDisplay = localStorage.getItem('userName') || 'User';
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        const nameToDisplay = user.displayName || 'User';
         setUserName(nameToDisplay);
         setUserInitial(nameToDisplay.charAt(0).toUpperCase());
-    } else {
+      } else {
         router.push("/login");
-    }
-    setIsLoadingUser(false);
+      }
+      setIsLoadingUser(false);
+    });
+
+    return () => unsubscribe();
   }, [router]);
 
   const handleLogout = async () => {
@@ -191,7 +194,7 @@ export default function DashboardLayout({
 
   const menuItems = [
     { href: "/dashboard", icon: Home, label: t.home },
-    { href: "/dashboard", icon: User, label: t.myProfile },
+    { href: "/settings/profile", icon: User, label: t.myProfile },
     { href: "/emergency", icon: Siren, label: t.emergencyContacts },
     { href: "/location/fullscreen", icon: Map, label: t.liveMap },
     { href: "/diary", icon: BookHeart, label: t.myDiary },
@@ -281,7 +284,7 @@ export default function DashboardLayout({
             <div className="relative">
                 <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-primary to-primary/50 opacity-75 blur"></div>
                 <Avatar className="relative h-10 w-10 border-2 border-background">
-                    <AvatarImage data-ai-hint="logo" src={theme === 'light' ? 'https://i.ibb.co/hxw67qkn/Whats-App-Image-2025-07-01-at-15-37-58-9a9d376f.jpg' : 'https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg'} alt="Femigo Logo" />
+                    <AvatarImage data-ai-hint="logo" src={auth.currentUser?.photoURL || (theme === 'light' ? 'https://i.ibb.co/hxw67qkn/Whats-App-Image-2025-07-01-at-15-37-58-9a9d376f.jpg' : 'https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg')} alt="Femigo Logo" />
                     <AvatarFallback className="bg-card text-primary">{userInitial}</AvatarFallback>
                 </Avatar>
             </div>

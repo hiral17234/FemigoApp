@@ -81,15 +81,17 @@ export default function PasswordPage() {
       const user = userCredential.user;
 
       const displayName = localStorage.getItem("userName") || 'New User';
+      const photoURL = localStorage.getItem("userPhotoDataUri") || '';
 
       // 2. Update Firebase Auth Profile (for displayName)
-      await updateProfile(user, { displayName: displayName });
+      await updateProfile(user, { displayName: displayName, photoURL: photoURL });
 
       // 3. Gather all data from localStorage to save to Firestore
       const userProfileData: { [key: string]: any } = {
         uid: user.uid,
         email: user.email,
         displayName: displayName,
+        photoURL: photoURL,
         createdAt: new Date().toISOString(),
         trustedContacts: [],
       };
@@ -117,8 +119,10 @@ export default function PasswordPage() {
       // 4. Save the complete user profile to Firestore
       await setDoc(doc(db, "users", user.uid), userProfileData);
 
+      localStorage.setItem('userName', displayName);
+
       // Clean up temporary local storage items
-      const lsKeysToClean = ['userEmail', 'userName', ...fieldsToGet.map(f => f.key)];
+      const lsKeysToClean = ['userEmail', 'userCountry', 'userPhone', 'userAge', 'userAddress1', 'userAddress2', 'userAddress3', 'userState', 'userCity', 'userNickname', 'userAltPhone', 'userPhotoDataUri', 'userAadhaarDataUri'];
       lsKeysToClean.forEach(key => localStorage.removeItem(key));
 
       // Success! Redirect to congratulations page.
