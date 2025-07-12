@@ -4,10 +4,10 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useForm, type SubmitHandler } from "react-hook-form"
+import { useForm, type SubmitHandler, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, Loader2, ChevronsUpDown, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,9 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+
 import { useToast } from "@/hooks/use-toast"
 import { countries } from "@/lib/countries"
 import { locationData } from "@/lib/location-data"
+import { cn } from "@/lib/utils"
 
 const detailsSchema = z.object({
   age: z.coerce
@@ -32,10 +36,24 @@ const detailsSchema = z.object({
   address1: z.string().min(3, "Address line is too short."),
   address2: z.string().optional(),
   address3: z.string().optional(),
-  state: z.string().min(1, "Please select your state/ut."),
-  city: z.string().min(1, "Please select your city."),
+  state: z.string().min(1, "Please select or enter your state/ut."),
+  city: z.string().min(1, "Please select or enter your city."),
   altPhone: z.string().optional(),
-})
+  otherState: z.string().optional(),
+  otherCity: z.string().optional(),
+}).refine(data => {
+    if (data.state === 'Other' && !data.otherState) return false;
+    return true;
+}, {
+    message: "Please enter your state.",
+    path: ["otherState"],
+}).refine(data => {
+    if (data.city === 'Other' && !data.otherCity) return false;
+    return true;
+}, {
+    message: "Please enter your city.",
+    path: ["otherCity"],
+});
 
 type DetailsFormValues = z.infer<typeof detailsSchema>
 
@@ -45,13 +63,15 @@ export default function DetailsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const [userCountry, setUserCountry] = useState<string | null>(null)
-  const [selectedState, setSelectedState] = useState<string>("")
+  const [statePopoverOpen, setStatePopoverOpen] = useState(false)
+  const [cityPopoverOpen, setCityPopoverOpen] = useState(false)
   
   const {
     register,
     handleSubmit,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<DetailsFormValues>({
     resolver: zodResolver(detailsSchema),
@@ -71,17 +91,22 @@ export default function DetailsPage() {
   }, [router, toast])
   
   const countryConfig = userCountry ? locationData[userCountry] : null
+  const selectedState = watch("state");
+  const selectedCity = watch("city");
 
   const onSubmit: SubmitHandler<DetailsFormValues> = async (data) => {
     setIsSubmitting(true)
     
+    const finalState = data.state === 'Other' ? data.otherState : data.state;
+    const finalCity = data.city === 'Other' ? data.otherCity : data.city;
+
     try {
         localStorage.setItem("userAge", data.age.toString());
         localStorage.setItem("userAddress1", data.address1);
         if (data.address2) localStorage.setItem("userAddress2", data.address2);
         if (data.address3) localStorage.setItem("userAddress3", data.address3);
-        localStorage.setItem("userState", data.state);
-        localStorage.setItem("userCity", data.city);
+        if(finalState) localStorage.setItem("userState", finalState);
+        if(finalCity) localStorage.setItem("userCity", finalCity);
         if (data.nickname) localStorage.setItem("userNickname", data.nickname);
         if (data.altPhone) localStorage.setItem("userAltPhone", data.altPhone);
 
@@ -89,7 +114,7 @@ export default function DetailsPage() {
             title: "Details Saved!",
             description: "Proceeding to the next step.",
         })
-        router.push("/onboarding/password")
+        router.push("/onboarding/email-verification")
 
     } catch (error) {
         console.error("Failed to save details to localStorage:", error);
@@ -100,8 +125,16 @@ export default function DetailsPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
-      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4 text-white">
+      <video
+        src="https://videos.pexels.com/video-files/26621651/11977308_2560_1440_30fps.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-30"
+      />
+      <div className="absolute inset-0 z-10 bg-black/50" />
 
       <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
         <div className="absolute top-0 left-0">
@@ -115,7 +148,7 @@ export default function DetailsPage() {
             Tell Us About Yourself
           </h1>
            <p className="text-muted-foreground mt-2 text-sm">This information helps us personalize your experience.</p>
-          <Progress value={(5 / 7) * 100} className="mt-4 h-2 bg-gray-700" />
+          <Progress value={(4 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
         <div className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl">
@@ -166,36 +199,98 @@ export default function DetailsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">State / UT</label>
-                 <Select onValueChange={(value) => {
-                     setValue("state", value, { shouldValidate: true });
-                     setSelectedState(value);
-                     setValue("city", "", { shouldValidate: true }); // Reset city on state change
-                 }}>
-                    <SelectTrigger className={errors.state ? "border-destructive" : ""}>
-                        <SelectValue placeholder={`Select your ${countryConfig?.regionLabel || 'state / ut'}`} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {countryConfig?.regions?.map((region) => (
-                            <SelectItem key={region.name} value={region.name}>{region.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                 <Controller
+                    control={control}
+                    name="state"
+                    render={({ field }) => (
+                        <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.state && "border-destructive")}>
+                                    {field.value ? (field.value === 'Other' ? 'Other' : countryConfig?.regions?.find(r => r.name === field.value)?.name) : `Select ${countryConfig?.regionLabel || 'state'}`}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 country-list-popover">
+                                <Command>
+                                    <CommandInput placeholder={`Search ${countryConfig?.regionLabel || 'state'}...`} />
+                                    <CommandList>
+                                        <CommandEmpty>No region found.</CommandEmpty>
+                                        <CommandGroup>
+                                            {countryConfig?.regions?.map((region) => (
+                                                <CommandItem key={region.name} value={region.name} onSelect={() => { setValue("state", region.name, { shouldValidate: true }); setValue("city", "", { shouldValidate: true }); setStatePopoverOpen(false); }}>
+                                                    <Check className={cn("mr-2 h-4 w-4", field.value === region.name ? "opacity-100" : "opacity-0")} />
+                                                    {region.name}
+                                                </CommandItem>
+                                            ))}
+                                            <CommandItem key="Other" value="Other" onSelect={() => { setValue("state", "Other", { shouldValidate: true }); setStatePopoverOpen(false); }}>
+                                                 <Check className={cn("mr-2 h-4 w-4", field.value === "Other" ? "opacity-100" : "opacity-0")} />
+                                                 Other
+                                            </CommandItem>
+                                        </CommandGroup>
+                                    </CommandList>
+                                    <div className="p-2 text-center border-t border-border">
+                                        <p className="text-xs font-bold text-red-500">Please press enter to select.</p>
+                                    </div>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                 />
                  {errors.state && <p className="text-xs text-destructive">{errors.state.message}</p>}
+                 {selectedState === 'Other' && (
+                    <div className="mt-2">
+                        <Input placeholder="Please enter your state" {...register("otherState")} className={errors.otherState ? "border-destructive" : ""} />
+                        {errors.otherState && <p className="text-xs text-destructive">{errors.otherState.message}</p>}
+                    </div>
+                 )}
               </div>
 
                <div className="space-y-2">
                 <label className="text-sm font-medium">City</label>
-                 <Select onValueChange={(value) => setValue("city", value, { shouldValidate: true })} value={watch("city")}>
-                    <SelectTrigger className={errors.city ? "border-destructive" : ""} disabled={!selectedState}>
-                        <SelectValue placeholder="Select your city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {countryConfig?.regions?.find(r => r.name === selectedState)?.cities.map((city) => (
-                            <SelectItem key={city} value={city}>{city}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                 <Controller
+                    control={control}
+                    name="city"
+                    render={({ field }) => (
+                        <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.city && "border-destructive")} disabled={!selectedState || selectedState === 'Other'}>
+                                    {field.value ? field.value : "Select city"}
+                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-[--radix-popover-trigger-width] p-0 country-list-popover">
+                                <Command>
+                                    <CommandInput placeholder="Search city..." />
+                                    <CommandList>
+                                        <CommandEmpty>No city found.</CommandEmpty>
+                                        <CommandGroup>
+                                            {countryConfig?.regions?.find(r => r.name === selectedState)?.cities.map((city) => (
+                                                <CommandItem key={city} value={city} onSelect={() => { setValue("city", city, { shouldValidate: true }); setCityPopoverOpen(false); }}>
+                                                    <Check className={cn("mr-2 h-4 w-4", field.value === city ? "opacity-100" : "opacity-0")} />
+                                                    {city}
+                                                </CommandItem>
+                                            ))}
+                                            <CommandItem key="Other" value="Other" onSelect={() => { setValue("city", "Other", { shouldValidate: true }); setCityPopoverOpen(false); }}>
+                                                 <Check className={cn("mr-2 h-4 w-4", field.value === "Other" ? "opacity-100" : "opacity-0")} />
+                                                 Other
+                                            </CommandItem>
+                                        </CommandGroup>
+                                    </CommandList>
+                                    <div className="p-2 text-center border-t border-border">
+                                        <p className="text-xs font-bold text-red-500">Please press enter to select.</p>
+                                    </div>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                />
                 {errors.city && <p className="text-xs text-destructive">{errors.city.message}</p>}
+                {selectedCity === 'Other' && (
+                    <div className="mt-2">
+                        <Input placeholder="Please enter your city" {...register("otherCity")} className={errors.otherCity ? "border-destructive" : ""} />
+                        {errors.otherCity && <p className="text-xs text-destructive">{errors.otherCity.message}</p>}
+                    </div>
+                )}
               </div>
             </div>
 
