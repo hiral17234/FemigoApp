@@ -132,7 +132,7 @@ export default function PhoneVerificationPage() {
   }
 
   const onVerifyOtp = async (value: string) => {
-    if (value.length !== 6) return;
+    if (value.length < 6) return;
     setIsSubmitting(true);
 
     setTimeout(() => {
@@ -142,12 +142,11 @@ export default function PhoneVerificationPage() {
                 localStorage.setItem("userPhone", `+${selectedCountry.phone}${phone}`);
             }
             toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
-            setTimeout(() => router.push('/onboarding/details'), 2000);
         } else {
             toast({variant: 'destructive', title: 'Verification Failed', description: "The OTP you entered is incorrect."});
-            setIsSubmitting(false);
             setOtp(""); // Clear the input on failure
         }
+        setIsSubmitting(false);
     }, 500);
   }
   
@@ -197,7 +196,10 @@ export default function PhoneVerificationPage() {
                 <div className="flex flex-col items-center justify-center gap-4 text-center text-green-400 min-h-[280px]">
                     <CheckCircle2 className="h-16 w-16" />
                     <h2 className="text-2xl font-bold">Verified!</h2>
-                    <p className="text-sm text-muted-foreground">Redirecting...</p>
+                    <p className="text-sm text-muted-foreground">Your phone number is confirmed.</p>
+                    <Button onClick={() => router.push('/onboarding/details')} className="w-full bg-primary mt-4">
+                        Move to next step
+                    </Button>
                 </div>
             ) : step === "phone" ? (
                 <div className="space-y-8">
