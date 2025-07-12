@@ -12,18 +12,10 @@ import { ArrowLeft, Loader2, ChevronsUpDown, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 
 import { useToast } from "@/hooks/use-toast"
-import { countries } from "@/lib/countries"
 import { locationData } from "@/lib/location-data"
 import { cn } from "@/lib/utils"
 
@@ -114,7 +106,7 @@ export default function DetailsPage() {
             title: "Details Saved!",
             description: "Proceeding to the next step.",
         })
-        router.push("/onboarding/email-verification")
+        router.push("/onboarding/password")
 
     } catch (error) {
         console.error("Failed to save details to localStorage:", error);
@@ -132,9 +124,9 @@ export default function DetailsPage() {
         muted
         loop
         playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-30"
+        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-50"
       />
-      <div className="absolute inset-0 z-10 bg-black/50" />
+      <div className="absolute inset-0 z-10 bg-black/30" />
 
       <div className="relative z-20 w-full max-w-md animate-in fade-in-0 zoom-in-95 duration-500">
         <div className="absolute top-0 left-0">
@@ -148,7 +140,7 @@ export default function DetailsPage() {
             Tell Us About Yourself
           </h1>
            <p className="text-muted-foreground mt-2 text-sm">This information helps us personalize your experience.</p>
-          <Progress value={(4 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
+          <Progress value={(5 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
         <div className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl">
@@ -293,23 +285,7 @@ export default function DetailsPage() {
                 )}
               </div>
             </div>
-
-             <div className="space-y-2">
-                <label htmlFor="altPhone" className="text-sm font-medium">Alternate Phone Number (Optional)</label>
-                 <div className="flex gap-2">
-                    <Select defaultValue={countries.find(c => c.value === userCountry)?.phone || '91'}>
-                        <SelectTrigger className="w-28">
-                            <SelectValue placeholder="Code" />
-                        </SelectTrigger>
-                        <SelectContent>
-                             {countries.map(c => <SelectItem key={c.code} value={c.phone}>+{c.phone}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Input id="altPhone" type="tel" placeholder="Phone number" {...register("altPhone")} />
-                 </div>
-            </div>
-
-
+            
             <Button type="submit" className="w-full bg-gradient-to-r from-primary to-secondary text-primary-foreground py-3 text-lg" disabled={isSubmitting}>
               {isSubmitting ? <Loader2 className="animate-spin" /> : "Next Step"}
             </Button>

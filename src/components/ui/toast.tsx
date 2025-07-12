@@ -30,9 +30,9 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-transparent text-white",
-        destructive: "border-transparent bg-transparent text-red-500",
-        success: "border-transparent bg-transparent text-green-500",
+        default: "bg-transparent border-transparent text-white",
+        destructive: "bg-transparent border-transparent text-red-500",
+        success: "bg-transparent border-transparent text-green-500",
       },
     },
     defaultVariants: {
