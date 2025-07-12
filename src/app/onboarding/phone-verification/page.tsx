@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check, Copy } from "lucide-react"
+import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check, Copy, ClipboardPaste } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -84,7 +84,7 @@ export default function PhoneVerificationPage() {
         // Hide notification after 6 seconds
         const hideTimeout = setTimeout(() => {
             setShowOtpNotification(false);
-        }, 6500); // 500ms delay + 6000ms visibility
+        }, 6500);
 
         return () => {
             clearTimeout(showTimeout);
@@ -116,13 +116,11 @@ export default function PhoneVerificationPage() {
 
     setIsSubmitting(true);
     
-    // Show toast for 3 seconds before navigating
     toast({
         title: "OTP Sent!",
         description: `We've sent a verification code to +${selectedCountry.phone}${phone}`,
     });
 
-    // Navigate to OTP screen after a short delay
     setTimeout(() => {
         setIsSubmitting(false);
         setStep('otp');
@@ -157,6 +155,21 @@ export default function PhoneVerificationPage() {
         onVerifyOtp();
     }
   }
+
+  const handlePaste = async () => {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (text && /^\d{6}$/.test(text)) {
+            handleOtpChange(text);
+        } else {
+            toast({ variant: 'destructive', title: 'Invalid Paste', description: 'Clipboard does not contain a valid 6-digit OTP.' });
+        }
+    } catch (err) {
+        console.error('Failed to read clipboard contents: ', err);
+        toast({ variant: 'destructive', title: 'Paste Error', description: 'Could not access clipboard.' });
+    }
+  };
+
 
   return (
     <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
@@ -260,7 +273,7 @@ export default function PhoneVerificationPage() {
                     </div>
                     <div className="space-y-2 pt-4">
                         <label className="text-sm font-medium text-left w-full block">Verification Code</label>
-                         <div className="flex justify-center">
+                         <div className="flex justify-center relative group">
                             <InputOTP maxLength={6} value={otp} onChange={handleOtpChange}>
                                 <InputOTPGroup>
                                 <InputOTPSlot index={0} />
@@ -271,6 +284,12 @@ export default function PhoneVerificationPage() {
                                 <InputOTPSlot index={5} />
                                 </InputOTPGroup>
                             </InputOTP>
+                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-md">
+                                <Button variant="ghost" onClick={handlePaste}>
+                                    <ClipboardPaste className="mr-2 h-4 w-4" />
+                                    Paste OTP
+                                </Button>
+                            </div>
                         </div>
                     </div>
                     <Button onClick={onVerifyOtp} className="w-full bg-primary py-3 text-lg" disabled={isSubmitting}>
