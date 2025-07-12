@@ -1,3 +1,4 @@
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -7,7 +8,6 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { signInWithEmailAndPassword } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { auth, firebaseError } from "@/lib/firebase"
 import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
@@ -47,36 +46,40 @@ export default function LoginPage() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (firebaseError || !auth) {
-        toast({
-            variant: "destructive",
-            title: "Configuration Error",
-            description: firebaseError || "Firebase is not configured correctly. Please check API keys.",
-        });
-        return;
-    }
     setIsSubmitting(true)
     try {
-      await signInWithEmailAndPassword(auth, values.email, values.password)
-      toast({
-        title: "Logged In!",
-        description: "Welcome back. Redirecting to your dashboard...",
-      })
-      router.push("/dashboard")
-    } catch (error: any) {
-      console.error("Login error:", error.code, error.message)
-      
-      let errorMessage = "An unexpected error occurred. Please try again."
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found') {
-        errorMessage = "Invalid email or password. Please check your credentials and try again."
-      } else if (error.code === 'auth/too-many-requests') {
-          errorMessage = "Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later."
-      }
+      // Find user in localStorage
+      const users = JSON.parse(localStorage.getItem('femigo-users') || '[]');
+      const user = users.find(
+        (u: any) => u.email === values.email && u.password === values.password
+      );
 
+      if (user) {
+        // "Log in" the user by storing their profile and a logged-in flag
+        localStorage.setItem('femigo-user-profile', JSON.stringify(user));
+        localStorage.setItem('femigo-is-logged-in', 'true');
+        // We also need their name for the dashboard, which might have been cleared
+        localStorage.setItem('userName', user.displayName);
+
+
+        toast({
+          title: "Logged In!",
+          description: "Welcome back. Redirecting to your dashboard...",
+        })
+        router.push("/dashboard")
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Invalid email or password. Please check your credentials and try again.",
+        })
+      }
+    } catch (error: any) {
+      console.error("Login error:", error)
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: errorMessage,
+        description: "An unexpected error occurred. Please try again.",
       })
     } finally {
       setIsSubmitting(false)

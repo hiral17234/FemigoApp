@@ -6,8 +6,6 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, User, Bell, MapPin, ChevronRight, LogOut, Moon, Sun, Loader2, KeyRound, Check } from "lucide-react"
 import { useTheme } from "next-themes"
-import { signOut, onAuthStateChanged, type User as FirebaseUser } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -15,7 +13,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
-import { auth, db } from "@/lib/firebase"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 const languages = [
@@ -73,8 +70,7 @@ export default function SettingsPage() {
     const { toast } = useToast()
     const { theme, setTheme } = useTheme()
     
-    const [user, setUser] = useState<FirebaseUser | null>(null)
-    const [userData, setUserData] = useState<{ displayName?: string; email?: string } | null>(null)
+    const [userData, setUserData] = useState<{ displayName?: string; email?: string, photoURL?: string } | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [selectedLang, setSelectedLang] = useState('en');
 
@@ -94,40 +90,22 @@ export default function SettingsPage() {
         toast({ title: newT.languageUpdated, description: newT.languageUpdatedDesc(langName)})
     }
 
-
     useEffect(() => {
-        if (!auth || !db) {
-            setIsLoading(false);
-            return;
+        const storedProfile = localStorage.getItem('femigo-user-profile');
+        if (storedProfile) {
+            setUserData(JSON.parse(storedProfile));
+        } else {
+            router.push('/login');
         }
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                setUser(currentUser);
-                const userDocRef = doc(db, "users", currentUser.uid);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                    setUserData(userDoc.data());
-                } else {
-                    setUserData({ displayName: currentUser.displayName || 'User', email: currentUser.email || 'No email' });
-                }
-            } else {
-                router.push('/login');
-            }
-            setIsLoading(false);
-        });
-
-        return () => unsubscribe();
+        setIsLoading(false);
     }, [router]);
 
     const handleLogout = async () => {
-        if (!auth) return
-        try {
-            await signOut(auth)
-            toast({ title: t.loggedOut, description: t.loggedOutDesc })
-            router.push('/login')
-        } catch (error) {
-            toast({ variant: "destructive", title: t.logoutFailed })
-        }
+        localStorage.removeItem('femigo-is-logged-in');
+        localStorage.removeItem('femigo-user-profile');
+        localStorage.removeItem('userName');
+        toast({ title: t.loggedOut, description: t.loggedOutDesc });
+        router.push('/login');
     }
 
     const userInitial = userData?.displayName?.charAt(0).toUpperCase() || 'U';
@@ -158,7 +136,7 @@ export default function SettingsPage() {
             <CardContent className="p-0">
                 <div className="flex flex-col items-center gap-4 text-center">
                     <Avatar className="h-24 w-24 border-4 border-primary/50">
-                        <AvatarImage data-ai-hint="woman face" src="https://placehold.co/100x100.png" alt={userData?.displayName} />
+                        <AvatarImage data-ai-hint="woman face" src={userData?.photoURL} alt={userData?.displayName} />
                         <AvatarFallback className="text-4xl bg-primary/20 text-primary">{userInitial}</AvatarFallback>
                     </Avatar>
                     <div>

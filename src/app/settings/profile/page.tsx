@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect, useRef } from "react";
@@ -7,10 +8,6 @@ import Link from "next/link";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { getStorage, ref, uploadString, getDownloadURL } from "firebase/storage";
-import { auth, db, firebaseError } from "@/lib/firebase";
 import { ArrowLeft, User as UserIcon, Mail, Phone, Calendar, Home, Save, Loader2, Edit2, Camera } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -83,7 +80,6 @@ const ProfileSkeleton = () => (
 export default function EditProfilePage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [user, setUser] = useState<User | null>(null);
     const [userData, setUserData] = useState<UserData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,80 +90,61 @@ export default function EditProfilePage() {
     });
 
     useEffect(() => {
-        if (firebaseError || !auth || !db) {
-            setIsLoading(false);
-            return;
+        const storedProfile = localStorage.getItem('femigo-user-profile');
+        if (storedProfile) {
+            const data = JSON.parse(storedProfile) as UserData;
+            setUserData(data);
+            form.reset({
+                email: data.email || "",
+                nickname: data.nickname || "",
+                age: data.age || undefined,
+                address1: data.address1 || "",
+                address2: data.address2 || "",
+                address3: data.address3 || "",
+                city: data.city || "",
+                state: data.state || "",
+            });
+        } else {
+             toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profile.' });
+             router.push('/login');
         }
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-            if (currentUser) {
-                setUser(currentUser);
-                const userDocRef = doc(db, "users", currentUser.uid);
-                const docSnap = await getDoc(userDocRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data() as UserData;
-                    setUserData(data);
-                    // Populate form with existing data
-                    form.reset({
-                        email: data.email || "",
-                        nickname: data.nickname || "",
-                        age: data.age || undefined,
-                        address1: data.address1 || "",
-                        address2: data.address2 || "",
-                        address3: data.address3 || "",
-                        city: data.city || "",
-                        state: data.state || "",
-                    });
-                } else {
-                     toast({ variant: 'destructive', title: 'Error', description: 'Could not find user profile.' });
-                }
-            } else {
-                router.push('/login');
-            }
-            setIsLoading(false);
-        });
-
-        return () => unsubscribe();
+        setIsLoading(false);
     }, [router, toast, form]);
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !user || !db) return;
+        if (!file || !userData) return;
 
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = async () => {
-            const dataUrl = reader.result as string;
-            const storage = getStorage();
-            const storageRef = ref(storage, `profilePictures/${user.uid}`);
+            const photoURL = reader.result as string;
             
             try {
-                toast({ title: 'Uploading...', description: 'Your new profile picture is being uploaded.' });
-                await uploadString(storageRef, dataUrl, 'data_url');
-                const photoURL = await getDownloadURL(storageRef);
-
-                // Update Firestore
-                const userDocRef = doc(db, "users", user.uid);
-                await updateDoc(userDocRef, { photoURL });
+                toast({ title: 'Updating...', description: 'Your new profile picture is being saved.' });
                 
-                setUserData(prev => prev ? { ...prev, photoURL } : null);
+                const updatedUserData = { ...userData, photoURL };
+                setUserData(updatedUserData);
+                localStorage.setItem('femigo-user-profile', JSON.stringify(updatedUserData));
+                
                 toast({ title: 'Success!', description: 'Profile picture updated.' });
             } catch (error) {
-                console.error("Error uploading profile picture:", error);
-                toast({ variant: 'destructive', title: 'Upload Failed', description: 'Could not update your profile picture.' });
+                console.error("Error saving profile picture to localStorage:", error);
+                toast({ variant: 'destructive', title: 'Update Failed', description: 'Could not update your profile picture.' });
             }
         };
     };
 
     const onSubmit: SubmitHandler<ProfileFormValues> = async (data) => {
-        if (!user || !db) {
+        if (!userData) {
             toast({ variant: 'destructive', title: 'Not Authenticated' });
             return;
         }
         setIsSubmitting(true);
         try {
-            const userDocRef = doc(db, "users", user.uid);
-            await updateDoc(userDocRef, data);
+            const updatedUserData = { ...userData, ...data };
+            localStorage.setItem('femigo-user-profile', JSON.stringify(updatedUserData));
+            setUserData(updatedUserData);
             toast({ title: 'Profile Updated!', description: 'Your changes have been saved successfully.' });
         } catch (error) {
             console.error("Error updating profile: ", error);

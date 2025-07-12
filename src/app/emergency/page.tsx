@@ -11,9 +11,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { auth, db, firebaseError } from '@/lib/firebase';
 import { emergencyContacts, type EmergencyService } from '@/lib/emergency-contacts';
 
 type TrustedContact = {
@@ -72,7 +69,6 @@ const translations = {
 export default function EmergencyPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [emergencyServices, setEmergencyServices] = useState<EmergencyService[]>([]);
@@ -90,49 +86,22 @@ export default function EmergencyPage() {
   const t = translations[language as keyof typeof translations];
 
   useEffect(() => {
-    if (firebaseError || !auth || !db) {
-        setLoading(false);
-        return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        try {
-          const userDocRef = doc(db, "users", currentUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          let countryCode = 'default';
-
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setTrustedContacts(userData.trustedContacts || []);
-            // Get country from the user's Firestore document
-            countryCode = userData.country || 'default';
-          } else {
-            setTrustedContacts([]);
-          }
-
-          // Set the country-specific emergency services
-          setEmergencyServices(emergencyContacts[countryCode] || emergencyContacts.default);
-
-        } catch (error) {
-          console.error("Failed to fetch user data:", error);
-          toast({ variant: "destructive", title: t.error, description: t.couldNotLoadContacts });
-          // Fallback to default on error
-          setEmergencyServices(emergencyContacts.default);
-        }
-      } else {
+    setLoading(true);
+    const userProfileJson = localStorage.getItem('femigo-user-profile');
+    if (userProfileJson) {
+        const userProfile = JSON.parse(userProfileJson);
+        setTrustedContacts(userProfile.trustedContacts || []);
+        const countryCode = userProfile.country || 'default';
+        setEmergencyServices(emergencyContacts[countryCode] || emergencyContacts.default);
+    } else {
         router.push('/login');
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [router, toast, t]);
+    }
+    setLoading(false);
+  }, [router]);
 
   const handleSaveContact = async () => {
-    if (!user || !db) {
+    const userProfileJson = localStorage.getItem('femigo-user-profile');
+    if (!userProfileJson) {
         toast({ variant: "destructive", title: t.notLoggedIn, description: t.notLoggedInDesc });
         return;
     }
@@ -152,14 +121,16 @@ export default function EmergencyPage() {
       phone: newContactPhone.trim(),
     };
     
-    const userDocRef = doc(db, "users", user.uid);
-
     try {
-        await updateDoc(userDocRef, {
-            trustedContacts: arrayUnion(newContact)
-        });
+        const userProfile = JSON.parse(userProfileJson);
+        if (!userProfile.trustedContacts) {
+            userProfile.trustedContacts = [];
+        }
+        userProfile.trustedContacts.push(newContact);
+        
+        localStorage.setItem('femigo-user-profile', JSON.stringify(userProfile));
+        setTrustedContacts(userProfile.trustedContacts);
 
-        setTrustedContacts(prevContacts => [...prevContacts, newContact]);
         setNewContactName('');
         setNewContactPhone('');
         setIsDialogOpen(false);
@@ -172,17 +143,6 @@ export default function EmergencyPage() {
         toast({ variant: "destructive", title: t.saveFailed, description: t.saveFailedDesc });
     }
   };
-
-  if (firebaseError) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
-          <div className="rounded-lg bg-card p-8 text-card-foreground">
-              <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
-              <p className="mt-2 text-muted-foreground">{firebaseError}</p>
-          </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (

@@ -8,14 +8,11 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react"
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"
-import { doc, setDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
-import { auth, db } from "@/lib/firebase"
 import { PasswordStrength } from "@/components/ui/password-strength"
 
 const passwordSchema = z
@@ -61,41 +58,18 @@ export default function PasswordPage() {
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
     setIsSubmitting(true)
     
-    const email = localStorage.getItem('userEmail');
-    const displayName = localStorage.getItem('userName');
-
-    if (!email || !displayName) {
-      toast({
-        variant: "destructive",
-        title: "Missing Information",
-        description: "Your name or email is missing. Please start the signup process over.",
-      })
-      router.push("/signup")
-      setIsSubmitting(false)
-      return
-    }
-
     try {
-      // Step 1: Create the user in Firebase Authentication
-      const userCredential = await createUserWithEmailAndPassword(auth, email, data.password);
-      const user = userCredential.user;
-
-      // Step 2: Update their Auth profile with their name
-      await updateProfile(user, {
-        displayName: displayName,
-      });
-
-      // Step 3: Create a clean data object for Firestore
-      const userDataToSave: { [key: string]: any } = {
-        uid: user.uid,
-        email: user.email,
+      // Gather all data from localStorage
+      const userData: { [key: string]: any } = {
+        password: data.password, // Store the password (for demo purposes)
         createdAt: new Date().toISOString(),
-        displayName: displayName,
       };
-      
-      const fieldsToSave = [
+
+      const fieldsToGet = [
+        { key: 'userName', dbKey: 'displayName' },
         { key: 'userCountry', dbKey: 'country' },
         { key: 'userPhone', dbKey: 'phone' },
+        { key: 'userEmail', dbKey: 'email' },
         { key: 'userAge', dbKey: 'age' },
         { key: 'userAddress1', dbKey: 'address1' },
         { key: 'userAddress2', dbKey: 'address2' },
@@ -105,48 +79,41 @@ export default function PasswordPage() {
         { key: 'userNickname', dbKey: 'nickname' },
         { key: 'userAltPhone', dbKey: 'altPhone' },
       ];
-      
-      fieldsToSave.forEach(field => {
+
+      fieldsToGet.forEach(field => {
         const value = localStorage.getItem(field.key);
         if (value) {
-            // CRITICAL FIX: Convert age to a number before saving
-            if (field.dbKey === 'age') {
-                userDataToSave[field.dbKey] = Number(value);
-            } else {
-                userDataToSave[field.dbKey] = value;
-            }
+          if (field.dbKey === 'age') {
+            userData[field.dbKey] = Number(value);
+          } else {
+            userData[field.dbKey] = value;
+          }
         }
       });
       
-      // Step 4: Save the complete user profile to the Firestore database
-      const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, userDataToSave);
-      
-      // Step 5: Clean up local storage AFTER all operations are successful
-      const lsKeysToClean = [
-        'userName', 'userCountry', 'userPhone', 'userEmail', 'userAge', 
-        'userAddress1', 'userAddress2', 'userAddress3', 'userState', 
-        'userCity', 'userNickname', 'userAltPhone',
-        'userPhotoDataUri', 'userAadhaarDataUri' // Clean up image data as well
-      ];
+      // Save the complete user profile to localStorage
+      // In a real app, this is where you'd send to your backend, but we are bypassing Firebase.
+      const existingUsers = JSON.parse(localStorage.getItem('femigo-users') || '[]');
+      existingUsers.push(userData);
+      localStorage.setItem('femigo-users', JSON.stringify(existingUsers));
+      localStorage.setItem('femigo-user-profile', JSON.stringify(userData));
+
+
+      // Clean up individual temporary local storage items
+      const lsKeysToClean = fieldsToGet.map(f => f.key);
       lsKeysToClean.forEach(key => localStorage.removeItem(key));
+      localStorage.removeItem('userPhotoDataUri');
+      localStorage.removeItem('userAadhaarDataUri');
 
-
-      // Step 6: Success! Redirect to congratulations page.
+      // Success! Redirect to congratulations page.
       router.push("/congratulations")
 
     } catch (error: any) {
       console.error("Account creation failed:", error)
-      let errorMessage = "An unexpected error occurred. Please try again."
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = "This email is already registered. Please log in or use a different email."
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = "The password is too weak. Please choose a stronger password."
-      }
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: errorMessage,
+        description: "An unexpected error occurred. Please try again.",
       })
     } finally {
       setIsSubmitting(false)

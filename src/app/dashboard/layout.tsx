@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import * as React from "react"
@@ -22,9 +23,6 @@ import {
   PanelLeftClose
 } from "lucide-react"
 
-import { onAuthStateChanged, signOut, type User as FirebaseUser } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
-import { auth, db } from "@/lib/firebase"
 import {
   Sidebar,
   SidebarProvider,
@@ -150,7 +148,6 @@ export default function DashboardLayout({
   const { toast } = useToast()
   const { theme } = useTheme();
 
-  const [user, setUser] = React.useState<FirebaseUser | null>(null);
   const [userName, setUserName] = React.useState<string | null>(null)
   const [userInitial, setUserInitial] = React.useState("")
   const [isLoadingUser, setIsLoadingUser] = React.useState(true)
@@ -164,59 +161,24 @@ export default function DashboardLayout({
   const t = translations[language as keyof typeof translations];
 
   React.useEffect(() => {
-    if (!auth || !db) {
-      setIsLoadingUser(false)
-      return;
-    };
-
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setIsLoadingUser(true);
-      if (currentUser) {
-        setUser(currentUser);
-        try {
-          const userDocRef = doc(db, "users", currentUser.uid);
-          const userDoc = await getDoc(userDocRef);
-
-          let nameToDisplay = "User";
-          if (userDoc.exists()) {
-            nameToDisplay = userDoc.data().displayName || "User";
-          } else {
-            nameToDisplay = currentUser.displayName || "User";
-          }
-          setUserName(nameToDisplay);
-          setUserInitial(nameToDisplay.charAt(0).toUpperCase());
-        } catch (error) {
-            console.error("Failed to fetch user data:", error);
-            setUserName(currentUser.displayName || "User");
-            setUserInitial((currentUser.displayName || "U").charAt(0).toUpperCase());
-        } finally {
-            setIsLoadingUser(false);
-        }
-      } else {
-        // User is logged out
-        setUser(null);
-        setUserName(null);
-        setIsLoadingUser(false);
+    setIsLoadingUser(true);
+    const isLoggedIn = localStorage.getItem('femigo-is-logged-in') === 'true';
+    if (isLoggedIn) {
+        const nameToDisplay = localStorage.getItem('userName') || 'User';
+        setUserName(nameToDisplay);
+        setUserInitial(nameToDisplay.charAt(0).toUpperCase());
+    } else {
         router.push("/login");
-      }
-    });
-
-    return () => unsubscribe();
+    }
+    setIsLoadingUser(false);
   }, [router]);
 
   const handleLogout = async () => {
-    if (!auth) return;
-    try {
-      await signOut(auth)
-      // The onAuthStateChanged listener will handle the redirect.
-      toast({ title: t.loggedOut, description: t.loggedOutDesc })
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: t.logoutFailed,
-        description: t.logoutFailedDesc,
-      })
-    }
+    localStorage.removeItem('femigo-is-logged-in');
+    localStorage.removeItem('femigo-user-profile');
+    localStorage.removeItem('userName');
+    toast({ title: t.loggedOut, description: t.loggedOutDesc })
+    router.push('/login');
   }
 
   const menuItems = [

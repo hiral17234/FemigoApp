@@ -6,11 +6,9 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Confetti from "react-confetti"
-import { getAuth, onAuthStateChanged } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/hooks/use-toast"
-import { auth as firebaseAuth } from "@/lib/firebase"
 
 
 export default function CongratulationsPage() {
@@ -20,17 +18,14 @@ export default function CongratulationsPage() {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
-    // Check auth state to get the newly created user's name
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-            setUserName(user.displayName || "User");
-        } else {
-            // If user is not logged in somehow, redirect to login page.
-            // This can happen if they refresh the congratulations page after a while.
-            router.push('/login');
-        }
-    });
+    // Get the newly created user's name from localStorage
+    const name = localStorage.getItem('userName');
+    if (name) {
+        setUserName(name);
+    } else {
+        // If the name is somehow missing, redirect to login as a fallback
+        router.push('/login');
+    }
     
     // Confetti effect setup
     const handleResize = () => {
@@ -48,7 +43,6 @@ export default function CongratulationsPage() {
 
     return () => {
         window.removeEventListener('resize', handleResize)
-        unsubscribe();
     }
   }, [router, toast])
 

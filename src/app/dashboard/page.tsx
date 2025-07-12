@@ -15,11 +15,8 @@ import {
   CalendarDays,
   Quote
 } from "lucide-react"
-import { onAuthStateChanged, type User } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore"
 import { format } from "date-fns"
 
-import { auth, db, firebaseError } from "@/lib/firebase"
 
 const dailyQuotes = [
   { quote: "A strong woman looks a challenge in the eye and gives it a wink.", author: "Gina Carey" },
@@ -129,57 +126,14 @@ export default function DashboardPage() {
 
 
   useEffect(() => {
-    if (!auth) {
-        setIsLoadingUser(false);
-        return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-        if (currentUser) {
-            try {
-                if (!db) {
-                    setUserName(currentUser.displayName || "User");
-                    return;
-                }
-                const userDocRef = doc(db, "users", currentUser.uid);
-                const userDoc = await getDoc(userDocRef);
-
-                let nameToDisplay = "User";
-                if (userDoc.exists()) {
-                    nameToDisplay = userDoc.data().displayName || "User";
-                } else {
-                    nameToDisplay = currentUser.displayName || "User";
-                }
-                setUserName(nameToDisplay);
-            } catch (error) {
-                console.error("Failed to fetch user data:", error);
-                setUserName(currentUser.displayName || "User");
-            } finally {
-                setIsLoadingUser(false);
-            }
-        } else {
-            // The layout is responsible for redirecting.
-            // If we reach here, it might be during the initial logout phase before redirect.
-            // Setting loading to false and letting the component render a loader is fine, as layout will redirect.
-            setIsLoadingUser(false);
-        }
-    });
-
-    return () => unsubscribe();
+    // Logic is handled in the layout, this page just gets the name.
+    const nameToDisplay = localStorage.getItem('userName') || 'User';
+    setUserName(nameToDisplay);
+    setIsLoadingUser(false);
   }, []);
   
   const t = translations[language];
 
-  if (firebaseError) {
-    return (
-      <main className="flex flex-1 items-center justify-center p-4 text-center">
-          <div className="rounded-lg bg-card p-8 text-card-foreground">
-              <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
-              <p className="mt-2 text-muted-foreground">{firebaseError}</p>
-          </div>
-      </main>
-    );
-  }
 
   if (isLoadingUser) {
     return (
