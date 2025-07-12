@@ -30,12 +30,11 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-transparent border-white/30 text-white shadow-[0_0_15px_hsl(0_0%_100%_/_0.2)]",
+        default: "bg-background text-foreground",
         destructive:
-          "destructive group bg-transparent border-red-500/50 text-white shadow-[0_0_15px_hsl(0_100%_50%_/_0.3)]",
+          "destructive group border-destructive bg-destructive text-destructive-foreground",
         success:
-          "success group bg-transparent border-green-500/50 text-white shadow-[0_0_15px_hsl(120_100%_50%_/_0.3)]",
+          "success group border-green-600 bg-green-600 text-white",
       },
     },
     defaultVariants: {
@@ -67,9 +66,8 @@ const ToastAction = React.forwardRef<
     ref={ref}
     className={cn(
       "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium ring-offset-background transition-colors hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-       "group-[.destructive]:border-red-500/50 group-[.destructive]:hover:bg-red-500/20 group-[.destructive]:hover:text-white",
-       "group-[.success]:border-green-500/50 group-[.success]:hover:bg-green-500/20 group-[.success]:hover:text-white",
-      "group-[.default]:border-white/30 group-[.default]:hover:bg-white/20",
+       "group-[.destructive]:border-muted group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+       "group-[.success]:border-muted group-[.success]:hover:border-green-500/30 group-[.success]:hover:bg-green-500 group-[.success]:hover:text-white group-[.success]:focus:ring-green-500",
       className
     )}
     {...props}
@@ -85,6 +83,8 @@ const ToastClose = React.forwardRef<
     ref={ref}
     className={cn(
       "absolute right-2 top-2 rounded-md p-1 text-inherit/70 opacity-0 transition-opacity hover:text-inherit focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100",
+      "group-[.destructive]:text-red-300 group-[.destructive]:hover:text-red-50 group-[.destructive]:focus:ring-red-400 group-[.destructive]:focus:ring-offset-red-600",
+      "group-[.success]:text-green-300 group-[.success]:hover:text-green-50 group-[.success]:focus:ring-green-400 group-[.success]:focus:ring-offset-green-600",
       className
     )}
     toast-close=""
