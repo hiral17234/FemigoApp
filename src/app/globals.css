@@ -100,18 +100,10 @@
 @layer components {
     /* Custom scrollbar for Country List in Popover */
     .country-list-popover [cmdk-list] {
-        scrollbar-width: auto; /* For Firefox */
-        scrollbar-color: hsl(var(--muted)) hsl(var(--popover)); /* For Firefox */
+        scrollbar-width: none; /* For Firefox */
+        -ms-overflow-style: none; /* For Internet Explorer and Edge */
     }
     .country-list-popover [cmdk-list]::-webkit-scrollbar {
-        width: 12px;
-    }
-    .country-list-popover [cmdk-list]::-webkit-scrollbar-track {
-        background-color: hsl(var(--popover));
-    }
-    .country-list-popover [cmdk-list]::-webkit-scrollbar-thumb {
-        background-color: hsl(var(--muted));
-        border-radius: 6px;
-        border: 3px solid hsl(var(--popover));
+        display: none; /* For Chrome, Safari, and Opera */
     }
 }
