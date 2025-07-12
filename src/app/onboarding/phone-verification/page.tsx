@@ -12,7 +12,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { useToast } from "@/hooks/use-toast"
+import { useToast, toast as globalToast } from "@/hooks/use-toast"
 import { firebaseError } from "@/lib/firebase"
 import { countries, type Country } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -81,10 +81,10 @@ export default function PhoneVerificationPage() {
             setShowOtpNotification(true);
         }, 500);
 
-        // Hide notification after 6 seconds
+        // Hide notification after 15 seconds
         const hideTimeout = setTimeout(() => {
             setShowOtpNotification(false);
-        }, 6500);
+        }, 15000);
 
         return () => {
             clearTimeout(showTimeout);
@@ -116,7 +116,7 @@ export default function PhoneVerificationPage() {
 
     setIsSubmitting(true);
     
-    toast({
+    const sentToast = toast({
         title: "OTP Sent!",
         description: `We've sent a verification code to +${selectedCountry.phone}${phone}`,
     });
@@ -124,18 +124,19 @@ export default function PhoneVerificationPage() {
     setTimeout(() => {
         setIsSubmitting(false);
         setStep('otp');
+        // Immediately dismiss the "OTP Sent" toast before the page fully renders the next step
+        if (sentToast?.dismiss) {
+            sentToast.dismiss();
+        }
     }, 1500);
   }
 
-  const onVerifyOtp = async () => {
-     if (otp.length !== 6) {
-        toast({variant: 'destructive', title: 'Invalid OTP', description: 'Please enter the 6-digit OTP.'});
-        return;
-    }
+  const onVerifyOtp = async (value: string) => {
+    if (value.length !== 6) return;
     setIsSubmitting(true);
 
     setTimeout(() => {
-        if (otp === demoOtp) {
+        if (value === demoOtp) {
             setIsVerified(true);
             if(selectedCountry) {
                 localStorage.setItem("userPhone", `+${selectedCountry.phone}${phone}`);
@@ -145,14 +146,15 @@ export default function PhoneVerificationPage() {
         } else {
             toast({variant: 'destructive', title: 'Verification Failed', description: "The OTP you entered is incorrect."});
             setIsSubmitting(false);
+            setOtp(""); // Clear the input on failure
         }
-    }, 1000);
+    }, 500);
   }
   
   const handleOtpChange = (newOtp: string) => {
     setOtp(newOtp);
     if (newOtp.length === 6) {
-        onVerifyOtp();
+        onVerifyOtp(newOtp);
     }
   }
 
@@ -292,7 +294,7 @@ export default function PhoneVerificationPage() {
                             </div>
                         </div>
                     </div>
-                    <Button onClick={onVerifyOtp} className="w-full bg-primary py-3 text-lg" disabled={isSubmitting}>
+                    <Button onClick={() => onVerifyOtp(otp)} className="w-full bg-primary py-3 text-lg" disabled={isSubmitting || otp.length < 6}>
                         {isSubmitting ? <Loader2 className="animate-spin" /> : "Verify & Continue"}
                     </Button>
                      <div className="text-center text-sm">

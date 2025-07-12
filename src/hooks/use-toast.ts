@@ -95,14 +95,12 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
+      // If a toastId is provided, remove it from the removal queue.
       if (toastId) {
-        addToRemoveQueue(toastId)
-      } else {
-        state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
-        })
+        const timeout = toastTimeouts.get(toastId);
+        if (timeout) {
+          clearTimeout(timeout);
+        }
       }
 
       return {
