@@ -85,39 +85,58 @@ export default function PasswordPage() {
         displayName: displayName,
       });
 
-      // Step 3: Create a data object for Firestore with all details from local storage
+      // Step 3: Create a clean data object for Firestore
       const userDataToSave: { [key: string]: any } = {
         uid: user.uid,
         email: user.email,
         createdAt: new Date().toISOString(),
         displayName: displayName,
-        country: localStorage.getItem('userCountry') || "unknown",
-        phone: localStorage.getItem('userPhone') || "",
-        age: Number(localStorage.getItem('userAge')) || null,
-        address1: localStorage.getItem('userAddress1') || "",
-        state: localStorage.getItem('userState') || "",
-        city: localStorage.getItem('userCity') || "",
       };
       
-      // Add optional fields only if they exist in localStorage
-      const optionalFields = {
-          nickname: localStorage.getItem('userNickname'),
-          address2: localStorage.getItem('userAddress2'),
-          address3: localStorage.getItem('userAddress3'),
-          altPhone: localStorage.getItem('userAltPhone')
-      }
+      // Add other details from local storage only if they exist
+      const fieldsToSave = [
+        'userCountry', 'userPhone', 'userAge', 'userAddress1', 
+        'userAddress2', 'userAddress3', 'userState', 'userCity', 
+        'userNickname', 'userAltPhone'
+      ];
+      
+      const keyMap = {
+        userCountry: 'country',
+        userPhone: 'phone',
+        userAge: 'age',
+        userAddress1: 'address1',
+        userAddress2: 'address2',
+        userAddress3: 'address3',
+        userState: 'state',
+        userCity: 'city',
+        userNickname: 'nickname',
+        userAltPhone: 'altPhone',
+      } as const;
 
-      for (const [key, value] of Object.entries(optionalFields)) {
-          if (value) {
-              userDataToSave[key] = value;
-          }
-      }
+      fieldsToSave.forEach(key => {
+        const value = localStorage.getItem(key);
+        if (value) {
+            const dbKey = keyMap[key as keyof typeof keyMap];
+            if (dbKey === 'age') {
+                userDataToSave[dbKey] = Number(value);
+            } else {
+                userDataToSave[dbKey] = value;
+            }
+        }
+      });
       
       // Step 4: Save the complete user profile to the Firestore database
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(userDocRef, userDataToSave);
+      
+      // Step 5: Clean up local storage AFTER all operations are successful
+      fieldsToSave.forEach(key => localStorage.removeItem(key));
+      // Also remove fields that are no longer being saved to DB
+      localStorage.removeItem('userPhotoDataUri');
+      localStorage.removeItem('userAadhaarDataUri');
 
-      // Step 5: Success! Redirect to congratulations page.
+
+      // Step 6: Success! Redirect to congratulations page.
       router.push("/congratulations")
 
     } catch (error: any) {

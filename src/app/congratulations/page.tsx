@@ -20,35 +20,18 @@ export default function CongratulationsPage() {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
 
   useEffect(() => {
-    // Check for user data in localStorage as a fallback, but prioritize auth state
+    // Check auth state to get the newly created user's name
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
         if (user) {
             setUserName(user.displayName || "User");
         } else {
-            const storedName = localStorage.getItem('userName');
-            if (storedName) {
-                setUserName(storedName);
-            } else {
-                // If no name found anywhere, redirect to signup.
-                router.push('/signup');
-            }
+            // If user is not logged in somehow, redirect to login page.
+            // This can happen if they refresh the congratulations page after a while.
+            router.push('/login');
         }
     });
     
-    // Cleanup localStorage after displaying the page
-    const cleanupTimeout = setTimeout(() => {
-        if (typeof window !== "undefined") {
-            // Be specific about what you're removing
-            localStorage.removeItem('userName')
-            localStorage.removeItem('userCountry')
-            localStorage.removeItem('userEmail')
-            localStorage.removeItem('userPhone')
-            localStorage.removeItem('userPhotoDataUri')
-            localStorage.removeItem('userAadhaarDataUri')
-        }
-    }, 500); // Small delay to ensure state is set before cleanup
-
     // Confetti effect setup
     const handleResize = () => {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight })
@@ -65,7 +48,6 @@ export default function CongratulationsPage() {
 
     return () => {
         window.removeEventListener('resize', handleResize)
-        clearTimeout(cleanupTimeout)
         unsubscribe();
     }
   }, [router, toast])
