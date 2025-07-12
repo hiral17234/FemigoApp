@@ -150,7 +150,7 @@ export default function SettingsPage() {
             <CardContent className="p-0">
                 <div className="flex flex-col items-center gap-4 text-center">
                     <Avatar className="h-24 w-24 border-4 border-primary/50">
-                        <AvatarImage data-ai-hint="woman face" src={userData?.photoURL} alt={userData?.displayName} />
+                        <AvatarImage data-ai-hint="logo" src={userData?.photoURL || "https://i.ibb.co/W4PR2Pw2/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg"} alt={userData?.displayName} />
                         <AvatarFallback className="text-4xl bg-primary/20 text-primary">{userInitial}</AvatarFallback>
                     </Avatar>
                     <div>

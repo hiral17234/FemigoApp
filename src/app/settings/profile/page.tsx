@@ -144,7 +144,7 @@ export default function EditProfilePage() {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = async () => {
-            const photoURL = reader.result as string;
+            const photoURL = "https://i.ibb.co/W4PR2Pw2/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg";
             
             try {
                 toast({ title: 'Updating...', description: 'Your new profile picture is being saved.' });
@@ -210,7 +210,7 @@ export default function EditProfilePage() {
          return <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">Could not load user data.</main>
     }
     
-    const userPhoto = userData.photoURL;
+    const userPhoto = userData.photoURL || "https://i.ibb.co/W4PR2Pw2/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg";
 
     return (
         <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">
@@ -228,7 +228,7 @@ export default function EditProfilePage() {
 
                     <div className="absolute top-16 left-1/2 -translate-x-1/2 group">
                         <Avatar className="h-32 w-32 rounded-full border-4 border-background">
-                            <AvatarImage src={userPhoto} alt={userData.displayName} data-ai-hint="woman face" />
+                            <AvatarImage src={userPhoto} alt={userData.displayName} data-ai-hint="logo" />
                             <AvatarFallback className="text-5xl bg-primary/20 text-primary">{userData.displayName?.charAt(0)}</AvatarFallback>
                         </Avatar>
                         <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />

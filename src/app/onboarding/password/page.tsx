@@ -100,7 +100,7 @@ export default function PasswordPage() {
         email: userEmail,
         password: data.password, // In a real app, this should be hashed. For this project, storing plain text.
         displayName: localStorage.getItem("userName") || 'New User',
-        photoURL: localStorage.getItem("userPhotoDataUri") || '',
+        photoURL: "https://i.ibb.co/W4PR2Pw2/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg",
         createdAt: new Date().toISOString(),
         trustedContacts: [],
       };
