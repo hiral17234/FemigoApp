@@ -30,6 +30,8 @@ const detailsSchema = z.object({
     .max(120, { message: "Please enter a valid age." }),
   nickname: z.string().optional(),
   address1: z.string().min(3, "Address line is too short."),
+  address2: z.string().optional(),
+  address3: z.string().optional(),
   state: z.string().min(1, "Please select your state/ut."),
   city: z.string().min(1, "Please select your city."),
   altPhone: z.string().optional(),
@@ -74,9 +76,10 @@ export default function DetailsPage() {
     setIsSubmitting(true)
     
     try {
-        // Save details to localStorage
         localStorage.setItem("userAge", data.age.toString());
         localStorage.setItem("userAddress1", data.address1);
+        if (data.address2) localStorage.setItem("userAddress2", data.address2);
+        if (data.address3) localStorage.setItem("userAddress3", data.address3);
         localStorage.setItem("userState", data.state);
         localStorage.setItem("userCity", data.city);
         if (data.nickname) localStorage.setItem("userNickname", data.nickname);
@@ -143,9 +146,19 @@ export default function DetailsPage() {
               <label htmlFor="address1" className="text-sm font-medium">Address</label>
               <Input
                 id="address1"
-                placeholder="House No, Building, Street, Area"
+                placeholder="Address Line 1"
                 {...register("address1")}
                 className={errors.address1 ? "border-destructive" : ""}
+              />
+              <Input
+                id="address2"
+                placeholder="Address Line 2 (Optional)"
+                {...register("address2")}
+              />
+              <Input
+                id="address3"
+                placeholder="Address Line 3 (Optional)"
+                {...register("address3")}
               />
                {errors.address1 && <p className="text-xs text-destructive">{errors.address1.message}</p>}
             </div>

@@ -44,8 +44,6 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true)
     
-    // This is the simplified flow: just save to localStorage and move on.
-    // No Firebase calls on this page.
     try {
       localStorage.setItem("userName", data.fullName)
       localStorage.setItem("userCountry", data.country)
@@ -155,6 +153,25 @@ export default function SignupPage() {
                                   {country.label}
                                 </CommandItem>
                               ))}
+                                <CommandItem
+                                  key="other"
+                                  value="Other"
+                                  onSelect={() => {
+                                    setValue("country", 'default')
+                                    setPopoverOpen(false)
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      field.value === 'default'
+                                        ? "opacity-100"
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                   <span className="mr-2">🌐</span>
+                                  Other
+                                </CommandItem>
                             </CommandGroup>
                           </CommandList>
                         </Command>
