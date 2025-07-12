@@ -163,22 +163,30 @@ export default function DashboardLayout({
   React.useEffect(() => {
     setIsLoadingUser(true);
     const isLoggedIn = localStorage.getItem('femigo-is-logged-in');
-    const profileJson = localStorage.getItem('femigo-user-profile');
     
-    if (isLoggedIn === 'true' && profileJson) {
-      try {
-        const profile = JSON.parse(profileJson);
-        const nameToDisplay = profile.displayName || 'User';
-        setUserName(nameToDisplay);
-        setUserInitial(nameToDisplay.charAt(0).toUpperCase());
-      } catch (e) {
-         router.push("/login");
-      }
+    if (isLoggedIn === 'true') {
+        const profileJson = localStorage.getItem('femigo-user-profile');
+        if (profileJson) {
+            try {
+                const profile = JSON.parse(profileJson);
+                const nameToDisplay = profile.displayName || 'User';
+                setUserName(nameToDisplay);
+                setUserInitial(nameToDisplay.charAt(0).toUpperCase());
+            } catch (e) {
+                // Malformed profile, clear and redirect
+                localStorage.removeItem('femigo-is-logged-in');
+                localStorage.removeItem('femigo-user-profile');
+                router.push("/login");
+            }
+        } else {
+             // Logged in flag is true but no profile, redirect
+             router.push("/login");
+        }
     } else {
       router.push("/login");
     }
     setIsLoadingUser(false);
-  }, [router]);
+  }, [router, pathname]); // Depend on pathname to re-check on navigation
 
   const handleLogout = async () => {
     try {
@@ -208,7 +216,7 @@ export default function DashboardLayout({
     { href: "/settings", icon: Settings, label: t.settings },
   ]
 
-  if (isLoadingUser) {
+  if (isLoadingUser || !userName) {
     return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
