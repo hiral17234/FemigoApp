@@ -106,7 +106,7 @@ export default function DetailsPage() {
             title: "Details Saved!",
             description: "Proceeding to the next step.",
         })
-        router.push("/onboarding/password")
+        router.push("/onboarding/email-verification")
 
     } catch (error) {
         console.error("Failed to save details to localStorage:", error);
@@ -143,7 +143,7 @@ export default function DetailsPage() {
           <Progress value={(4 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <div className="w-full rounded-2xl p-8">
+        <div className="w-full rounded-2xl border border-white/20 p-8 shadow-[0_0_20px_theme(colors.white/0.2)]">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
