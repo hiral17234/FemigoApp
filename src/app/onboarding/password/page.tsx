@@ -78,35 +78,48 @@ export default function PasswordPage() {
       const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, data.password);
       const user = userCredential.user;
 
-      // 2. Gather all data from localStorage
-      const userDataFromStorage = {
-        displayName: localStorage.getItem('userName') || "User",
-        country: localStorage.getItem('userCountry') || "unknown",
-        phone: localStorage.getItem('userPhone') || "",
-        photoURL: localStorage.getItem('userPhotoDataUri') || "",
-        aadhaarPhotoURL: localStorage.getItem('userAadhaarDataUri') || "",
-        age: Number(localStorage.getItem('userAge')) || null,
-        address1: localStorage.getItem('userAddress1') || "",
-        nickname: localStorage.getItem('userNickname') || "",
-        state: localStorage.getItem('userState') || "",
-        city: localStorage.getItem('userCity') || "",
-        altPhone: localStorage.getItem('userAltPhone') || "",
-      };
-
-      // 3. Update the user's Auth profile
-      await updateProfile(user, {
-        displayName: userDataFromStorage.displayName,
-        photoURL: userDataFromStorage.photoURL
-      });
-
-      // 4. Create the document in Firestore with all collected data
-      const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
+      // 2. Gather all data from localStorage, ensuring we only include fields that have values.
+      const userDataToSave: { [key: string]: any } = {
         uid: user.uid,
         email: user.email,
         createdAt: new Date().toISOString(),
-        ...userDataFromStorage
+        displayName: localStorage.getItem('userName') || "User",
+        country: localStorage.getItem('userCountry') || "unknown",
+        phone: localStorage.getItem('userPhone') || "",
+        age: Number(localStorage.getItem('userAge')) || null,
+        address1: localStorage.getItem('userAddress1') || "",
+        state: localStorage.getItem('userState') || "",
+        city: localStorage.getItem('userCity') || "",
+      };
+
+      // Add optional fields only if they exist in localStorage
+      const optionalFields = ['photoURL', 'aadhaarPhotoURL', 'nickname', 'address2', 'address3', 'altPhone'];
+      const lsKeys: { [key: string]: string } = {
+          photoURL: 'userPhotoDataUri',
+          aadhaarPhotoURL: 'userAadhaarDataUri',
+          nickname: 'userNickname',
+          address2: 'userAddress2',
+          address3: 'userAddress3',
+          altPhone: 'userAltPhone'
+      }
+
+      optionalFields.forEach(field => {
+          const lsKey = lsKeys[field];
+          const value = localStorage.getItem(lsKey);
+          if (value) {
+              userDataToSave[field] = value;
+          }
       });
+      
+      // 3. Update the user's Auth profile (only displayName and photoURL can be set here)
+      await updateProfile(user, {
+        displayName: userDataToSave.displayName,
+        photoURL: userDataToSave.photoURL || ""
+      });
+
+      // 4. Create the document in Firestore with the curated data
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, userDataToSave);
 
       router.push("/congratulations")
 
@@ -175,7 +188,6 @@ export default function PasswordPage() {
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
 
             <PasswordStrength password={watchedPassword} />
