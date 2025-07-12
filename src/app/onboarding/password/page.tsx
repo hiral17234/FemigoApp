@@ -99,20 +99,19 @@ export default function PasswordPage() {
         city: localStorage.getItem('userCity') || "",
       };
       
-      // Add optional fields only if they exist
-      const optionalFields = ['nickname', 'address2', 'address3', 'altPhone'];
-      const lsKeys: { [key: string]: string } = {
-          nickname: 'userNickname',
-          address2: 'userAddress2',
-          address3: 'userAddress3',
-          altPhone: 'userAltPhone'
+      // Add optional fields only if they exist in localStorage
+      const optionalFields = {
+          nickname: localStorage.getItem('userNickname'),
+          address2: localStorage.getItem('userAddress2'),
+          address3: localStorage.getItem('userAddress3'),
+          altPhone: localStorage.getItem('userAltPhone')
       }
-      optionalFields.forEach(field => {
-          const value = localStorage.getItem(lsKeys[field]);
+
+      for (const [key, value] of Object.entries(optionalFields)) {
           if (value) {
-              userDataToSave[field] = value;
+              userDataToSave[key] = value;
           }
-      });
+      }
       
       // Step 4: Save the complete user profile to the Firestore database
       const userDocRef = doc(db, "users", user.uid);
