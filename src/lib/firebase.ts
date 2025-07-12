@@ -1,5 +1,4 @@
 
-
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
@@ -14,14 +13,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const keyMapping = {
-    apiKey: "NEXT_PUBLIC_FIREBASE_API_KEY",
-    authDomain: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN",
-    projectId: "NEXT_PUBLIC_FIREBASE_PROJECT_ID",
-    storageBucket: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET",
-    messagingSenderId: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-    appId: "NEXT_PUBLIC_FIREBASE_APP_ID"
-};
+// This is a check to ensure that all required environment variables are present.
+// If any are missing, we can provide a clear error message.
+const requiredKeys = Object.values(firebaseConfig);
+const missingKey = requiredKeys.some(value => !value || (typeof value === 'string' && value.includes('YOUR_')));
 
 let app: FirebaseApp;
 let auth: Auth;
@@ -29,36 +24,21 @@ let db: Firestore;
 let storage: Storage;
 let firebaseError: string | null = null;
 
-const missingOrInvalidKeys: string[] = [];
-for (const [key, value] of Object.entries(firebaseConfig)) {
-    if (!value || typeof value !== 'string' || value.includes('YOUR_')) {
-        missingOrInvalidKeys.push(keyMapping[key as keyof typeof keyMapping]);
-    }
-}
 
-if (missingOrInvalidKeys.length > 0) {
-    const errorIntro = "Firebase configuration failed. The following required variable(s) are missing or invalid in your environment variables:";
-    firebaseError = `${errorIntro}\n- ${missingOrInvalidKeys.join("\n- ")}`;
+if (missingKey) {
+    firebaseError = "One or more Firebase environment variables are missing. Please check your .env file.";
     console.error(firebaseError);
-    // Provide dummy objects to prevent the app from crashing where auth/db is used.
+    // Assign empty objects to prevent crashes, but functionality will be disabled.
     app = {} as FirebaseApp;
     auth = {} as Auth;
     db = {} as Firestore;
     storage = {} as Storage;
 } else {
-    try {
-        app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        storage = getStorage(app);
-    } catch (e: any) {
-        firebaseError = `Firebase initialization failed: ${e.message}`;
-        console.error(firebaseError);
-        app = {} as FirebaseApp;
-        auth = {} as Auth;
-        db = {} as Firestore;
-        storage = {} as Storage;
-    }
+    // Initialize Firebase only if the app hasn't been initialized yet.
+    app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+    db = getFirestore(app);
+    storage = getStorage(app);
 }
 
 export { app, auth, db, storage, firebaseError };
