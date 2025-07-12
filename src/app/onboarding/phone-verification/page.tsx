@@ -5,7 +5,6 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Loader2, CheckCircle2, ChevronRight, ChevronsUpDown, Check, Copy, ClipboardPaste } from "lucide-react"
-import { doc, updateDoc } from "firebase/firestore"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,7 +14,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { useToast } from "@/hooks/use-toast"
-import { auth, db, firebaseError } from "@/lib/firebase"
+import { firebaseError } from "@/lib/firebase"
 import { countries, type Country } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
@@ -134,31 +133,18 @@ export default function PhoneVerificationPage() {
   }
 
   const onVerifyOtp = async (value: string) => {
+    // This check prevents the function from running on every keystroke in the OTP input.
     if (value.length < 6) return;
+    
     setIsSubmitting(true);
-
-    const user = auth.currentUser;
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Error', description: 'You are not logged in. Please start over.' });
-        setIsSubmitting(false);
-        router.push('/signup');
-        return;
-    }
 
     setTimeout(async () => {
         if (value === demoOtp) {
             if(selectedCountry) {
                 const fullPhoneNumber = `+${selectedCountry.phone}${phone}`;
-                try {
-                    const userDocRef = doc(db, "users", user.uid);
-                    await updateDoc(userDocRef, { phone: fullPhoneNumber });
-                    localStorage.setItem("userPhone", fullPhoneNumber); // still useful for immediate UI needs
-                    setIsVerified(true);
-                    toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
-                } catch (error) {
-                    console.error("Failed to save phone number:", error);
-                    toast({variant: 'destructive', title: 'Save Failed', description: "Could not save your phone number. Please try again."});
-                }
+                localStorage.setItem("userPhone", fullPhoneNumber); // Save to local storage
+                setIsVerified(true);
+                toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
             }
         } else {
             toast({variant: 'destructive', title: 'Verification Failed', description: "The OTP you entered is incorrect."});

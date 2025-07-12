@@ -45,20 +45,25 @@ export default function PasswordPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    // A quick check to see if email was stored from a previous step (magic link flow)
-    const storedEmail = localStorage.getItem('userEmail');
-    if (storedEmail) {
-        setUserEmail(storedEmail);
+    // For the simplified flow, we'll get email from the congratulations/final step.
+    // For now, let's create a placeholder email and get the real one later.
+    const tempEmail = localStorage.getItem('userEmail');
+    if (tempEmail) {
+        setUserEmail(tempEmail);
     } else {
-        // Fallback for direct navigation or if email step was skipped
-        toast({
-            title: "Email Required",
-            description: "We need your email to create an account. Redirecting...",
-            variant: "destructive"
+        // This is a fallback in case the email step was skipped.
+        // A more robust solution might force them back to the email step.
+        const randomId = Math.random().toString(36).substring(2, 10);
+        const generatedEmail = `user-${randomId}@femigo.app`;
+        setUserEmail(generatedEmail);
+        localStorage.setItem('userEmail', generatedEmail); // Save for this session
+         toast({
+            title: "Email Missing",
+            description: "A temporary email has been generated. You can change it later in settings.",
+            variant: "default"
         })
-        router.push('/onboarding/email-verification');
     }
-  }, [router, toast]);
+  }, [toast]);
 
   const checks = {
     length: password.length >= 8,
@@ -85,7 +90,8 @@ export default function PasswordPage() {
   const onSubmit: SubmitHandler<PasswordFormValues> = async (data) => {
     setIsSubmitting(true)
     
-    if (!userEmail) {
+    const finalEmail = userEmail; // Use the email from state
+    if (!finalEmail) {
       toast({
         variant: "destructive",
         title: "Missing Information",
@@ -98,7 +104,7 @@ export default function PasswordPage() {
 
     try {
       // 1. Create the user with email and password
-      const userCredential = await createUserWithEmailAndPassword(auth, userEmail, data.password);
+      const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, data.password);
       const user = userCredential.user;
 
       // 2. Gather all data from localStorage
@@ -108,12 +114,12 @@ export default function PasswordPage() {
         phone: localStorage.getItem('userPhone') || "",
         photoURL: localStorage.getItem('userPhotoDataUri') || "",
         aadhaarPhotoURL: localStorage.getItem('userAadhaarDataUri') || "",
-        // Add other details fields here if they were stored in localStorage
         age: Number(localStorage.getItem('userAge')) || null,
         address1: localStorage.getItem('userAddress1') || "",
+        nickname: localStorage.getItem('userNickname') || "",
         state: localStorage.getItem('userState') || "",
         city: localStorage.getItem('userCity') || "",
-        nickname: localStorage.getItem('userNickname') || "",
+        altPhone: localStorage.getItem('userAltPhone') || "",
       };
 
       // 3. Update the user's Auth profile

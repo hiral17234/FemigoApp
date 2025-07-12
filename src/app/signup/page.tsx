@@ -43,16 +43,6 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true)
-
-    if (firebaseError) {
-        toast({
-            variant: "destructive",
-            title: "Configuration Error",
-            description: firebaseError,
-        });
-        setIsSubmitting(false);
-        return;
-    }
     
     // This is the simplified flow: just save to localStorage and move on.
     // No Firebase calls on this page.

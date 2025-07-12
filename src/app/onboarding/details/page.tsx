@@ -8,8 +8,6 @@ import { useForm, type SubmitHandler } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { ArrowLeft, Loader2 } from "lucide-react"
-import { doc, setDoc } from "firebase/firestore"
-import { onAuthStateChanged, type User } from "firebase/auth"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,7 +22,6 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { countries } from "@/lib/countries"
 import { locationData } from "@/lib/location-data"
-import { auth, db } from "@/lib/firebase"
 
 const detailsSchema = z.object({
   age: z.coerce
@@ -44,7 +41,6 @@ export default function DetailsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [user, setUser] = useState<User | null>(null);
   
   const [userCountry, setUserCountry] = useState<string | null>(null)
   const [selectedState, setSelectedState] = useState<string>("")
@@ -62,17 +58,7 @@ export default function DetailsPage() {
     }
   })
 
-  // Load user's country from localStorage and check auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        if (!currentUser) {
-            toast({ variant: 'destructive', title: 'Error', description: 'Not authenticated. Please start over.' });
-            router.push('/signup');
-            return;
-        }
-        setUser(currentUser);
-    });
-
     const country = localStorage.getItem("userCountry")
     if (!country) {
         toast({ variant: 'destructive', title: 'Error', description: 'Country not found. Please start over.' });
@@ -80,35 +66,30 @@ export default function DetailsPage() {
         return;
     }
     setUserCountry(country)
-
-    return () => unsubscribe();
   }, [router, toast])
   
   const countryConfig = userCountry ? locationData[userCountry] : null
 
   const onSubmit: SubmitHandler<DetailsFormValues> = async (data) => {
     setIsSubmitting(true)
-
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Not authenticated. Please start over.' });
-        router.push('/signup');
-        setIsSubmitting(false);
-        return;
-    }
     
     try {
-        const userDocRef = doc(db, "users", user.uid);
-        // Using set with merge:true will create or update the document
-        await setDoc(userDocRef, data, { merge: true });
+        // Save details to localStorage
+        localStorage.setItem("userAge", data.age.toString());
+        localStorage.setItem("userAddress1", data.address1);
+        localStorage.setItem("userState", data.state);
+        localStorage.setItem("userCity", data.city);
+        if (data.nickname) localStorage.setItem("userNickname", data.nickname);
+        if (data.altPhone) localStorage.setItem("userAltPhone", data.altPhone);
 
         toast({
             title: "Details Saved!",
-            description: "Proceeding to the next step.",
+            description: "Proceeding to the final step.",
         })
         router.push("/onboarding/password")
 
     } catch (error) {
-        console.error("Failed to save details to Firestore:", error);
+        console.error("Failed to save details to localStorage:", error);
         toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save your details. Please try again.' });
     } finally {
         setIsSubmitting(false)
