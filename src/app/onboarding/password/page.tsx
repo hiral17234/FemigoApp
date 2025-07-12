@@ -79,6 +79,8 @@ export default function PasswordPage() {
       const user = userCredential.user;
 
       // 2. Gather all data from localStorage, ensuring we only include fields that have values.
+      // CRITICAL FIX: DO NOT save large data URIs (userPhotoDataUri, userAadhaarDataUri) to Firestore.
+      // This was causing the document size to exceed the 1MiB limit and fail the creation.
       const userDataToSave: { [key: string]: any } = {
         uid: user.uid,
         email: user.email,
@@ -93,10 +95,8 @@ export default function PasswordPage() {
       };
 
       // Add optional fields only if they exist in localStorage
-      const optionalFields = ['photoURL', 'aadhaarPhotoURL', 'nickname', 'address2', 'address3', 'altPhone'];
+      const optionalFields = ['nickname', 'address2', 'address3', 'altPhone'];
       const lsKeys: { [key: string]: string } = {
-          photoURL: 'userPhotoDataUri',
-          aadhaarPhotoURL: 'userAadhaarDataUri',
           nickname: 'userNickname',
           address2: 'userAddress2',
           address3: 'userAddress3',
@@ -111,10 +111,9 @@ export default function PasswordPage() {
           }
       });
       
-      // 3. Update the user's Auth profile (only displayName and photoURL can be set here)
+      // 3. Update the user's Auth profile (we can store a placeholder here if needed later)
       await updateProfile(user, {
-        displayName: userDataToSave.displayName,
-        photoURL: userDataToSave.photoURL || ""
+        displayName: userDataToSave.displayName
       });
 
       // 4. Create the document in Firestore with the curated data
