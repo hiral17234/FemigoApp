@@ -81,9 +81,10 @@ export default function PhoneVerificationPage() {
             setShowOtpNotification(true);
         }, 500);
 
+        // Hide notification after 6 seconds
         const hideTimeout = setTimeout(() => {
             setShowOtpNotification(false);
-        }, 4500);
+        }, 6500); // 500ms delay + 6000ms visibility
 
         return () => {
             clearTimeout(showTimeout);
@@ -115,11 +116,13 @@ export default function PhoneVerificationPage() {
 
     setIsSubmitting(true);
     
+    // Show toast for 3 seconds before navigating
     toast({
         title: "OTP Sent!",
         description: `We've sent a verification code to +${selectedCountry.phone}${phone}`,
     });
 
+    // Navigate to OTP screen after a short delay
     setTimeout(() => {
         setIsSubmitting(false);
         setStep('otp');
