@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/input-otp"
 import { useToast } from "@/hooks/use-toast"
 import { firebaseError } from "@/lib/firebase"
-import { countries } from "@/lib/countries"
+import { countries, type Country } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
@@ -51,7 +51,7 @@ export default function PhoneVerificationPage() {
   
   const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState("")
-  const [countryCode, setCountryCode] = useState("+91")
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
   const [step, setStep] = useState<"phone" | "otp">("phone")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isVerified, setIsVerified] = useState(false)
@@ -65,7 +65,9 @@ export default function PhoneVerificationPage() {
     const userCountryValue = localStorage.getItem("userCountry") || 'india';
     const country = countries.find(c => c.value === userCountryValue);
     if (country) {
-      setCountryCode(`+${country.phone}`);
+      setSelectedCountry(country);
+    } else {
+      setSelectedCountry(countries.find(c => c.value === 'india')!); // Fallback to India
     }
   }, []);
   
@@ -92,15 +94,30 @@ export default function PhoneVerificationPage() {
 
 
   const onSendOtp = async () => {
-    if (phone.length < 8) {
+    if (!selectedCountry) {
+        toast({variant: 'destructive', title: 'Country Not Selected', description: 'Please select a country code.'});
+        return;
+    }
+
+    if (selectedCountry.phoneLength && phone.length !== selectedCountry.phoneLength) {
+        toast({
+            variant: 'destructive', 
+            title: 'Invalid Phone Number', 
+            description: `Phone number for ${selectedCountry.label} must be ${selectedCountry.phoneLength} digits.`
+        });
+        return;
+    }
+
+    if (phone.length < 5) { // Generic fallback validation
         toast({variant: 'destructive', title: 'Invalid Phone Number', description: 'Please enter a valid phone number.'});
         return;
     }
+
     setIsSubmitting(true);
     
     toast({
         title: "OTP Sent!",
-        description: `We've sent a verification code to ${countryCode}${phone}`,
+        description: `We've sent a verification code to +${selectedCountry.phone}${phone}`,
     });
 
     setTimeout(() => {
@@ -119,7 +136,9 @@ export default function PhoneVerificationPage() {
     setTimeout(() => {
         if (otp === demoOtp) {
             setIsVerified(true);
-            localStorage.setItem("userPhone", countryCode + phone);
+            if(selectedCountry) {
+                localStorage.setItem("userPhone", `+${selectedCountry.phone}${phone}`);
+            }
             toast({title: 'Phone Verified!', description: 'Your phone number has been successfully verified.', variant: 'success'});
             setTimeout(() => router.push('/onboarding/details'), 2000);
         } else {
@@ -178,7 +197,7 @@ export default function PhoneVerificationPage() {
                                     role="combobox"
                                     className="w-36 justify-between"
                                 >
-                                    {countryCode}
+                                    {selectedCountry ? `+${selectedCountry.phone}` : 'Code'}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                                 </PopoverTrigger>
@@ -193,14 +212,14 @@ export default function PhoneVerificationPage() {
                                             key={country.value}
                                             value={`${country.label} (+${country.phone})`}
                                             onSelect={() => {
-                                                setCountryCode(`+${country.phone}`);
+                                                setSelectedCountry(country);
                                                 setPopoverOpen(false);
                                             }}
                                             >
                                             <Check
                                                 className={cn(
                                                 "mr-2 h-4 w-4",
-                                                `+${country.phone}` === countryCode ? "opacity-100" : "opacity-0"
+                                                selectedCountry?.value === country.value ? "opacity-100" : "opacity-0"
                                                 )}
                                             />
                                             <span className="mr-2">{country.emoji}</span>
@@ -210,9 +229,6 @@ export default function PhoneVerificationPage() {
                                         </CommandGroup>
                                     </CommandList>
                                 </Command>
-                                <div className="p-2 text-center border-t border-border">
-                                    <p className="text-xs font-bold text-red-500">Press enter to select.</p>
-                                </div>
                                 </PopoverContent>
                             </Popover>
                             <Input 
