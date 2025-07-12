@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Phone, UserPlus, Siren, ShieldCheck, Hospital, Flame, Loader2 } from 'lucide-react';
-import { doc, getDoc, setDoc } from "firebase/firestore";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { emergencyContacts, type EmergencyService } from '@/lib/emergency-contacts';
-import { auth, db } from '@/lib/firebase';
 
 type TrustedContact = {
   id: string;
@@ -69,6 +67,26 @@ const translations = {
     }
 }
 
+const getFromStorage = <T,>(key: string, fallback: T): T => {
+    if (typeof window === 'undefined') return fallback;
+    try {
+        const item = window.localStorage.getItem(key);
+        return item ? JSON.parse(item) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+};
+
+const saveToStorage = <T,>(key: string, value: T) => {
+    if (typeof window === 'undefined') return;
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+        console.error(`Error writing to localStorage key “${key}”:`, error);
+    }
+};
+
+
 export default function EmergencyPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -89,29 +107,22 @@ export default function EmergencyPage() {
   const t = translations[language as keyof typeof translations];
 
   useEffect(() => {
-    const fetchUserData = async () => {
-        setLoading(true);
-        const user = auth.currentUser;
-        if (user) {
-            const userDocRef = doc(db, "users", user.uid);
-            const userDoc = await getDoc(userDocRef);
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                setTrustedContacts(userData.trustedContacts || []);
-                const countryCode = userData.country || 'default';
-                setEmergencyServices(emergencyContacts[countryCode] || emergencyContacts.default);
-            }
-        } else {
-            router.push('/login');
-        }
-        setLoading(false);
+    setLoading(true);
+    const profile = getFromStorage<any>('femigo-user-profile', null);
+    
+    if (profile) {
+        setTrustedContacts(profile.trustedContacts || []);
+        const countryCode = profile.country || 'default';
+        setEmergencyServices(emergencyContacts[countryCode] || emergencyContacts.default);
+    } else {
+        router.push('/login');
     }
-    fetchUserData();
+    setLoading(false);
   }, [router]);
 
   const handleSaveContact = async () => {
-    const user = auth.currentUser;
-    if (!user) {
+    const profile = getFromStorage<any>('femigo-user-profile', null);
+    if (!profile) {
         toast({ variant: "destructive", title: t.notLoggedIn, description: t.notLoggedInDesc });
         return;
     }
@@ -133,8 +144,18 @@ export default function EmergencyPage() {
     
     try {
         const updatedContacts = [...trustedContacts, newContact];
-        const userDocRef = doc(db, "users", user.uid);
-        await setDoc(userDocRef, { trustedContacts: updatedContacts }, { merge: true });
+        const updatedProfile = { ...profile, trustedContacts: updatedContacts };
+
+        // Update the master list of accounts
+        const allAccounts = getFromStorage<any[]>('femigo-accounts', []);
+        const accountIndex = allAccounts.findIndex(acc => acc.email === profile.email);
+        if (accountIndex > -1) {
+            allAccounts[accountIndex] = updatedProfile;
+            saveToStorage('femigo-accounts', allAccounts);
+        }
+
+        // Update the currently logged-in user profile
+        saveToStorage('femigo-user-profile', updatedProfile);
 
         setTrustedContacts(updatedContacts);
         setNewContactName('');
