@@ -2,7 +2,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useForm, type SubmitHandler, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -58,6 +58,9 @@ export default function DetailsPage() {
   const [statePopoverOpen, setStatePopoverOpen] = useState(false)
   const [cityPopoverOpen, setCityPopoverOpen] = useState(false)
   
+  const stateTriggerRef = useRef<HTMLButtonElement>(null);
+  const cityTriggerRef = useRef<HTMLButtonElement>(null);
+
   const {
     register,
     handleSubmit,
@@ -197,7 +200,7 @@ export default function DetailsPage() {
                     render={({ field }) => (
                         <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.state && "border-destructive")}>
+                                <Button ref={stateTriggerRef} variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.state && "border-destructive")}>
                                     {field.value ? (field.value === 'Other' ? 'Other' : countryConfig?.regions?.find(r => r.name === field.value)?.name) : `Select ${countryConfig?.regionLabel || 'state'}`}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -209,12 +212,12 @@ export default function DetailsPage() {
                                         <CommandEmpty>No region found.</CommandEmpty>
                                         <CommandGroup>
                                             {countryConfig?.regions?.map((region) => (
-                                                <CommandItem key={region.name} value={region.name} onSelect={() => { setValue("state", region.name, { shouldValidate: true }); setValue("city", "", { shouldValidate: true }); setStatePopoverOpen(false); }}>
+                                                <CommandItem key={region.name} value={region.name} onSelect={() => { setValue("state", region.name, { shouldValidate: true }); setValue("city", "", { shouldValidate: true }); setStatePopoverOpen(false); stateTriggerRef.current?.blur(); }}>
                                                     <Check className={cn("mr-2 h-4 w-4", field.value === region.name ? "opacity-100" : "opacity-0")} />
                                                     {region.name}
                                                 </CommandItem>
                                             ))}
-                                            <CommandItem key="Other" value="Other" onSelect={() => { setValue("state", "Other", { shouldValidate: true }); setStatePopoverOpen(false); }}>
+                                            <CommandItem key="Other" value="Other" onSelect={() => { setValue("state", "Other", { shouldValidate: true }); setStatePopoverOpen(false); stateTriggerRef.current?.blur(); }}>
                                                  <Check className={cn("mr-2 h-4 w-4", field.value === "Other" ? "opacity-100" : "opacity-0")} />
                                                  Other
                                             </CommandItem>
@@ -245,7 +248,7 @@ export default function DetailsPage() {
                     render={({ field }) => (
                         <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
                             <PopoverTrigger asChild>
-                                <Button variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.city && "border-destructive")} disabled={!selectedState || selectedState === 'Other'}>
+                                <Button ref={cityTriggerRef} variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.city && "border-destructive")} disabled={!selectedState || selectedState === 'Other'}>
                                     {field.value ? field.value : "Select city"}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -257,12 +260,12 @@ export default function DetailsPage() {
                                         <CommandEmpty>No city found.</CommandEmpty>
                                         <CommandGroup>
                                             {countryConfig?.regions?.find(r => r.name === selectedState)?.cities.map((city) => (
-                                                <CommandItem key={city} value={city} onSelect={() => { setValue("city", city, { shouldValidate: true }); setCityPopoverOpen(false); }}>
+                                                <CommandItem key={city} value={city} onSelect={() => { setValue("city", city, { shouldValidate: true }); setCityPopoverOpen(false); cityTriggerRef.current?.blur(); }}>
                                                     <Check className={cn("mr-2 h-4 w-4", field.value === city ? "opacity-100" : "opacity-0")} />
                                                     {city}
                                                 </CommandItem>
                                             ))}
-                                            <CommandItem key="Other" value="Other" onSelect={() => { setValue("city", "Other", { shouldValidate: true }); setCityPopoverOpen(false); }}>
+                                            <CommandItem key="Other" value="Other" onSelect={() => { setValue("city", "Other", { shouldValidate: true }); setCityPopoverOpen(false); cityTriggerRef.current?.blur(); }}>
                                                  <Check className={cn("mr-2 h-4 w-4", field.value === "Other" ? "opacity-100" : "opacity-0")} />
                                                  Other
                                             </CommandItem>

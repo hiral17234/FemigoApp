@@ -409,20 +409,32 @@ function LocationPlanner() {
                 setMapCenter(bounds.getCenter().toJSON());
             }
 
-            // Initialize routeDetails with basic info and isGenerated: false
-            const initialDetails = response.routes.map(() => ({
-                roadQuality: 'Moderate',
-                incidents: 'N/A',
-                reviewsCount: 0,
-                lighting: 'Partially-lit',
-                crowdedness: 'Medium',
-                safetySummary: 'Click "More Info" to generate safety details.',
-                crimeSummary: 'Click "More Info" to generate safety details.',
-                policeInfo: 'Click "More Info" to generate safety details.',
-                weatherInfo: 'Click "More Info" to generate safety details.',
-                isGenerated: false,
-            }));
-            setRouteDetails(initialDetails);
+            // Generate safety details for all routes
+            try {
+                const detailsPromises = response.routes.map(route => getRouteSafetyDetails({
+                    summary: route.summary,
+                    distance: route.legs[0].distance?.text || 'N/A',
+                    duration: route.legs[0].duration?.text || 'N/A',
+                }));
+                const allDetails = await Promise.all(detailsPromises);
+                const generatedDetails = allDetails.map(d => ({ ...d, isGenerated: true }));
+                setRouteDetails(generatedDetails);
+
+                // Now get the recommendation
+                if (generatedDetails.length > 0) {
+                    const rec = await recommendSafestRoute(generatedDetails);
+                    setRecommendation({ index: rec.recommendedRouteIndex, reason: rec.reason });
+                    setSelectedRouteIndex(rec.recommendedRouteIndex);
+                }
+            } catch (e) {
+                console.error("AI safety details or recommendation failed:", e);
+                // Fallback to basic info if AI fails
+                const fallbackDetails = response.routes.map(() => ({
+                    roadQuality: 'Moderate', incidents: 'N/A', reviewsCount: 0, lighting: 'Partially-lit', crowdedness: 'Medium',
+                    safetySummary: 'Could not load AI safety details.', crimeSummary: '', policeInfo: '', weatherInfo: '', isGenerated: false,
+                }));
+                setRouteDetails(fallbackDetails);
+            }
         }
         setIsCalculating(false);
         setTimeout(() => { isRecalculatingRef.current = false; }, 2000);

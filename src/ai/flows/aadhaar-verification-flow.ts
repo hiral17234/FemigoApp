@@ -7,52 +7,97 @@
  */
 
 import {ai} from '@/ai/genkit';
+import { z } from 'zod';
 import { AadhaarVerificationInputSchema, AadhaarVerificationOutputSchema, type AadhaarVerificationInput, type AadhaarVerificationOutput } from '@/ai/types';
 
+// Define a new, simpler schema for what the AI should extract.
+const ExtractedAadhaarDataSchema = z.object({
+    name: z.string().optional().describe("The full name extracted from the card."),
+    gender: z.string().optional().describe("The gender extracted from the card (e.g., 'Male', 'Female')."),
+    aadhaarNumber: z.string().optional().describe("The 12-digit Aadhaar number extracted from the card."),
+});
 
-const aadhaarVerificationPrompt = ai.definePrompt({
-    name: 'aadhaarVerificationPrompt',
-    input: { schema: AadhaarVerificationInputSchema },
-    output: { schema: AadhaarVerificationOutputSchema },
+// This is the prompt that ONLY asks the AI to extract data.
+const dataExtractionPrompt = ai.definePrompt({
+    name: 'aadhaarDataExtractionPrompt',
     model: 'googleai/gemini-1.5-flash',
-    prompt: `You are an expert Aadhaar verification agent for a women's safety app.
-    Your task is to analyze an image of an Aadhaar card and verify it against the user's provided name.
+    input: { schema: z.object({ aadhaarPhotoDataUri: z.string() }) },
+    output: { schema: ExtractedAadhaarDataSchema },
+    prompt: `You are an expert data extraction agent.
+    Your task is to analyze an image of an Aadhaar card and extract the following details:
+    - The full name of the person.
+    - The gender of the person.
+    - The 12-digit Aadhaar number.
 
-    Here is the user's name from their profile: "{{userName}}"
-
-    Perform the following verification steps on the provided photo:
-    1.  **Name Verification:** Extract the full name from the Aadhaar card. Compare it to the user's profile name ("{{userName}}"). The name must match EXACTLY.
-    2.  **Gender Verification:** Extract the gender from the card. The gender MUST be 'Female' or 'FEMALE'.
-    3.  **Number Verification:** Extract the 12-digit Aadhaar number. Ensure it is a valid 12-digit number.
-
-    Based on your analysis, provide a structured JSON response.
-
-    - If all checks pass, set 'verificationPassed' to true and the 'reason' to "Aadhaar verification successful."
-    - If the name does not match, set 'verificationPassed' to false and the 'reason' to "The name on the card does not match the profile name."
-    - If the gender is not 'Female', set 'verificationPassed' to false and the 'reason' to "Verification is for female users only."
-    - If the Aadhaar number is invalid or unreadable, set 'verificationPassed' to false and the 'reason' to "The Aadhaar number is invalid. Please provide a clear image."
-    - If any other detail is unreadable, set 'verificationPassed' to false and the 'reason' to "Could not read all required details from the card. Please provide a clearer image."
-
-    Also return the extracted details for 'extractedName', 'extractedGender', and 'extractedAadhaarNumber' in the final JSON output.
+    If any detail is unclear or unreadable, do not return a value for that field.
 
     Photo: {{media url=aadhaarPhotoDataUri}}
     `,
 });
 
+// This is the main flow that now contains the verification LOGIC.
 const aadhaarVerificationFlow = ai.defineFlow(
     {
       name: 'aadhaarVerificationFlow',
       inputSchema: AadhaarVerificationInputSchema,
       outputSchema: AadhaarVerificationOutputSchema,
     },
-    async (input) => {
+    async (input): Promise<AadhaarVerificationOutput> => {
         try {
-            const { output } = await aadhaarVerificationPrompt(input);
-            if (!output) {
-                // This case handles if the AI returns a completely empty or non-JSON response.
-                throw new Error("The AI model did not return a valid structured response.");
+            // Step 1: Call the AI to extract data.
+            const { output: extractedData } = await dataExtractionPrompt({ aadhaarPhotoDataUri: input.aadhaarPhotoDataUri });
+
+            if (!extractedData) {
+                return {
+                    verificationPassed: false,
+                    reason: "Could not read any details from the card. Please provide a clearer image.",
+                };
             }
-            return output;
+            
+            const extractedName = extractedData.name;
+            const extractedGender = extractedData.gender;
+            const extractedAadhaarNumber = extractedData.aadhaarNumber?.replace(/\s+/g, ''); // Remove spaces from Aadhaar number
+
+            // Step 2: Perform verification logic in TypeScript.
+            if (!extractedName) {
+                return { verificationPassed: false, reason: "Could not read the name from the card." };
+            }
+            if (extractedName.toLowerCase() !== input.userName.toLowerCase()) {
+                return { 
+                    verificationPassed: false, 
+                    reason: `Name does not match. Profile name is "${input.userName}", but card says "${extractedName}".`,
+                    extractedName,
+                };
+            }
+            if (!extractedGender) {
+                return { verificationPassed: false, reason: "Could not read the gender from the card.", extractedName };
+            }
+            if (extractedGender.toLowerCase() !== 'female') {
+                return {
+                    verificationPassed: false,
+                    reason: `Verification is for female users only. Gender on card is '${extractedGender}'.`,
+                    extractedName,
+                    extractedGender,
+                };
+            }
+            if (!extractedAadhaarNumber || !/^\d{12}$/.test(extractedAadhaarNumber)) {
+                 return {
+                    verificationPassed: false,
+                    reason: `The Aadhaar number is invalid or unreadable. Expected 12 digits.`,
+                    extractedName,
+                    extractedGender,
+                    extractedAadhaarNumber: extractedData.aadhaarNumber,
+                };
+            }
+            
+            // Step 3: If all checks pass, return success.
+            return {
+                verificationPassed: true,
+                reason: "Aadhaar verification successful.",
+                extractedName,
+                extractedGender,
+                extractedAadhaarNumber,
+            };
 
         } catch(e) {
             console.error("Aadhaar verification flow failed", e);
