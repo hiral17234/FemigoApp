@@ -100,9 +100,9 @@ export default function LoginPage() {
         muted
         loop
         playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40"
+        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-70"
       />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
+      <div className="absolute inset-0 z-10 bg-black/30" />
       
       <div className="absolute top-8 left-8 z-20">
           <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
