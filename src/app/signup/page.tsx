@@ -19,7 +19,7 @@ import { countries } from "@/lib/countries"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
-import { auth, db } from "@/lib/firebase"
+import { auth, db, firebaseError } from "@/lib/firebase"
 
 const signupSchema = z.object({
   fullName: z.string().min(3, { message: "Full name must be at least 3 characters." }),
@@ -46,6 +46,16 @@ export default function SignupPage() {
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsSubmitting(true)
+
+    if (firebaseError || !auth || !db) {
+        toast({
+            variant: "destructive",
+            title: "Configuration Error",
+            description: firebaseError || "Firebase is not configured correctly. Please check API keys.",
+        });
+        setIsSubmitting(false);
+        return;
+    }
     
     try {
       // 1. Sign in anonymously to get a UID
