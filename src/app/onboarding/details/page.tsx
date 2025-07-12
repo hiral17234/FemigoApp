@@ -140,10 +140,10 @@ export default function DetailsPage() {
             Tell Us About Yourself
           </h1>
            <p className="text-muted-foreground mt-2 text-sm">This information helps us personalize your experience.</p>
-          <Progress value={(5 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
+          <Progress value={(4 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <div className="w-full rounded-2xl border-none bg-black/50 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="w-full rounded-2xl p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
@@ -295,3 +295,5 @@ export default function DetailsPage() {
     </main>
   )
 }
+
+    
