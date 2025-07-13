@@ -63,23 +63,34 @@ export default function NearbyHelpPage() {
 
     useEffect(() => {
         if (userLocation) {
-            const fetchPlaces = async () => {
-                try {
-                    setIsLoading(true);
-                    const places = await findNearbyPlaces({
-                        location: userLocation,
-                        placeType: 'police',
-                        radius: 5000, // 5km radius
-                    });
-                    setNearbyPolice(places);
-                } catch (error) {
-                    console.error('Failed to find nearby places:', error);
-                    toast({ variant: 'destructive', title: 'Could not fetch nearby places.' });
-                } finally {
-                    setIsLoading(false);
+            const fetchClosestPlaces = async () => {
+                setIsLoading(true);
+                const searchRadiuses = [1000, 2000, 5000]; // Search in 1km, 2km, then 5km
+                let foundPlaces: Place[] = [];
+
+                for (const radius of searchRadiuses) {
+                    try {
+                        const places = await findNearbyPlaces({
+                            location: userLocation,
+                            placeType: 'police',
+                            radius: radius,
+                        });
+
+                        if (places.length > 0) {
+                            foundPlaces = places;
+                            break; // Stop searching if we found places
+                        }
+                    } catch (error) {
+                         console.error(`Failed to find nearby places with radius ${radius}:`, error);
+                         toast({ variant: 'destructive', title: 'Could not fetch nearby places.' });
+                         break; // Stop on error
+                    }
                 }
+                
+                setNearbyPolice(foundPlaces);
+                setIsLoading(false);
             };
-            fetchPlaces();
+            fetchClosestPlaces();
         }
     }, [userLocation, toast]);
 
