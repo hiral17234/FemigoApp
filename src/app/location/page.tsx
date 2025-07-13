@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Users, MessageSquare, Mail, Copy } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
@@ -115,7 +115,7 @@ const RoutePolylines = ({ routes, selectedRouteIndex, onRouteClick }: { routes: 
             const polyline = new window.google.maps.Polyline({
                 path: route.overview_path,
                 geodesic: true,
-                strokeColor: isSelected ? '#FF0000' : '#808080', // Red for selected, Grey for others
+                strokeColor: isSelected ? 'hsl(var(--primary))' : '#808080',
                 strokeOpacity: isSelected ? 0.9 : 0.7,
                 strokeWeight: isSelected ? 8 : 6,
                 zIndex: isSelected ? 2 : 1,
@@ -184,6 +184,7 @@ const LiveTrackingPolyline = ({ path }: { path: Point[] }) => {
 
 function LocationPlanner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [userLocation, setUserLocation] = useState<Point | null>(null);
   const [mapCenter, setMapCenter] = useState<Point>({ lat: 20.5937, lng: 78.9629 });
@@ -219,48 +220,26 @@ function LocationPlanner() {
   const routesLibrary = useMapsLibrary('routes');
   const geometryLibrary = useMapsLibrary('geometry');
 
-  // Effect to save state to localStorage if the user is "logged in"
+  // Effect to get user's location once, and handle incoming route data from query params
   useEffect(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem('userName')) {
-      const stateToSave = {
-        startPoint,
-        destinationPoint,
-        startInputText,
-        destInputText,
-        travelMode,
-      };
-      localStorage.setItem('femigo-location-planner', JSON.stringify(stateToSave));
-    }
-  }, [startPoint, destinationPoint, startInputText, destInputText, travelMode]);
+    if (initialLocationSet) return;
 
-  // Effect to get user's location once, or load from storage.
-  useEffect(() => {
-    if (initialLocationSet) return; // Prevent re-running
-
-    // Try to load from localStorage first if user is "logged in"
-    if (typeof window !== 'undefined' && localStorage.getItem('userName')) {
-      try {
-        const savedStateJSON = localStorage.getItem('femigo-location-planner');
-        if (savedStateJSON) {
-          const savedState = JSON.parse(savedStateJSON);
-          if (savedState.startPoint?.location || savedState.destinationPoint?.location) {
-            if (savedState.startPoint) setStartPoint(savedState.startPoint);
-            if (savedState.destinationPoint) setDestinationPoint(savedState.destinationPoint);
-            if (savedState.startInputText) setStartInputText(savedState.startInputText);
-            if (savedState.destInputText) setDestInputText(savedState.destInputText);
-            if (savedState.travelMode) setTravelMode(savedState.travelMode);
-            setInitialLocationSet(true);
-            return; // Exit if we successfully loaded data
-          }
-        }
-      } catch (e) {
-        console.error("Could not parse saved location data", e);
-      }
+    const destName = searchParams.get('destinationName');
+    const destLat = searchParams.get('destinationLat');
+    const destLng = searchParams.get('destinationLng');
+    const destAddress = searchParams.get('destinationAddress');
+    
+    // This part handles pre-filling the destination from the nearby-help page
+    if (destName && destLat && destLng && destAddress) {
+        setDestInputText(destAddress);
+        setDestinationPoint({
+            address: destAddress,
+            location: { lat: parseFloat(destLat), lng: parseFloat(destLng) }
+        });
     }
 
-    // If no saved data, get current location
     if (!navigator.geolocation) {
-      setInitialLocationSet(true); // Prevent re-run
+      setInitialLocationSet(true);
       return;
     }
 
@@ -275,11 +254,11 @@ function LocationPlanner() {
         setInitialLocationSet(true);
       },
       () => {
-        setInitialLocationSet(true); // Prevent this from running again on error
+        setInitialLocationSet(true);
       },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
-  }, [initialLocationSet]);
+  }, [initialLocationSet, searchParams]);
   
   // Effect to handle coordinate input for start point
   useEffect(() => {
@@ -677,7 +656,7 @@ function LocationPlanner() {
                         onChange={(e) => setStartInputText(e.target.value)} 
                         onBlur={() => handleGeocodeInput('start')}
                         onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
-                        className="pl-9 bg-card" placeholder="Start location or coordinates" />
+                        className="pl-9 bg-muted/20 dark:bg-card" placeholder="Start location or coordinates" />
                   </div>
                   <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
@@ -686,7 +665,7 @@ function LocationPlanner() {
                           value={destInputText} 
                           onChange={(e) => setDestInputText(e.target.value)}
                           onBlur={() => handleGeocodeInput('destination')}
-                          className="pl-9 bg-card" placeholder="Destination or coordinates" />
+                          className="pl-9 bg-muted/20 dark:bg-card" placeholder="Destination or coordinates" />
                   </div>
                   <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
                       <ArrowRightLeft className="h-4 w-4"/>

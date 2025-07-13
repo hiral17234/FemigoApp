@@ -109,6 +109,7 @@ export default function SosPage() {
             if (timerRef.current) {
                 triggerSosAction();
                 setIsHolding(false); // Reset state after activation
+                timerRef.current = null;
             }
         }, 3000);
     };
@@ -195,7 +196,7 @@ export default function SosPage() {
                                     Press the SOS button, your live location will be shared.
                                 </p>
                            </div>
-                           <Link href="/location/fullscreen?find=police" className="flex flex-col items-center gap-1 cursor-pointer">
+                           <Link href="/nearby-help" className="flex flex-col items-center gap-1 cursor-pointer">
                                 <div className="relative flex items-center justify-center h-16 w-16 border-2 border-muted-foreground rounded-full">
                                     <Users className="h-8 w-8 text-muted-foreground" />
                                     <div className="absolute -top-1 -right-1 flex items-center justify-center h-6 w-6 bg-primary rounded-full text-primary-foreground font-bold text-sm">
