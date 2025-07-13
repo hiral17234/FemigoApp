@@ -617,15 +617,15 @@ function LocationPlanner() {
 
   return (
     <div className="w-full max-w-md mx-auto flex flex-col flex-1">
-      <Card className="w-full flex-1 flex flex-col rounded-none sm:rounded-2xl border-purple-900/50 bg-background shadow-2xl shadow-black/50 overflow-hidden my-0 sm:my-4">
-        <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4 border-b border-purple-900/50 shrink-0">
+      <Card className="w-full flex-1 flex flex-col rounded-none sm:rounded-2xl border-border bg-card shadow-2xl dark:shadow-black/50 overflow-hidden my-0 sm:my-4">
+        <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4 border-b border-border shrink-0">
           <div className='flex items-center gap-4'>
             <Link href="/dashboard">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-full">
+              <Button variant="ghost" size="icon" className="text-foreground hover:bg-accent rounded-full">
                   <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <div className="flex items-center gap-1 text-2xl font-bold text-white">
+            <div className="flex items-center gap-1 text-2xl font-bold text-foreground">
                 Femigo
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
                     <path d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" fill="currentColor"/>
@@ -644,7 +644,7 @@ function LocationPlanner() {
                         onChange={(e) => setStartInputText(e.target.value)} 
                         onBlur={() => handleGeocodeInput('start')}
                         onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
-                        className="pl-9 bg-gray-800 border-gray-700" placeholder="Start location or coordinates" />
+                        className="pl-9 bg-card" placeholder="Start location or coordinates" />
                   </div>
                   <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
@@ -653,19 +653,19 @@ function LocationPlanner() {
                           value={destInputText} 
                           onChange={(e) => setDestInputText(e.target.value)}
                           onBlur={() => handleGeocodeInput('destination')}
-                          className="pl-9 bg-gray-800 border-gray-700" placeholder="Destination or coordinates" />
+                          className="pl-9 bg-card" placeholder="Destination or coordinates" />
                   </div>
-                  <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full border-gray-600">
+                  <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
                       <ArrowRightLeft className="h-4 w-4"/>
                   </Button>
               </div>
               
-              <div className="flex items-center justify-around bg-gray-900/70 p-1 rounded-full">
+              <div className="flex items-center justify-around bg-muted p-1 rounded-full">
                   {travelModes.map((mode) => (
                       <Button 
                           key={mode.name}
                           variant="ghost" 
-                          className={cn("flex-1 rounded-full text-white/70 hover:text-white capitalize", travelMode === mode.name && "bg-primary/80 text-white hover:bg-primary/90")}
+                          className={cn("flex-1 rounded-full text-muted-foreground hover:text-foreground capitalize", travelMode === mode.name && "bg-primary/80 text-white hover:bg-primary/90 dark:text-primary-foreground")}
                           onClick={() => setTravelMode(mode.name as TravelMode)}
                       >
                         <mode.icon className="h-5 w-5" />
@@ -699,8 +699,8 @@ function LocationPlanner() {
             
             <div className="flex flex-col shrink-0 overflow-y-auto max-h-[45vh]">
               {directions && directions.routes.length > 0 && routeDetails.length > 0 && (
-                  <div className="flex flex-col gap-3 p-4 border-t border-purple-900/50">
-                      <h3 className="font-bold text-lg text-white">Select a Route</h3>
+                  <div className="flex flex-col gap-3 p-4 border-t border-border">
+                      <h3 className="font-bold text-lg text-foreground">Select a Route</h3>
                       {recommendation && (
                           <div className="p-3 rounded-lg bg-green-900/50 border border-green-500/50 text-sm">
                               <p className="font-bold text-green-300">AI Recommendation</p>
@@ -715,14 +715,14 @@ function LocationPlanner() {
                               return (
                                   <div key={index} onClick={() => onRouteClick(index)} className={cn(
                                       "p-4 rounded-xl cursor-pointer border-2 transition-all relative",
-                                      selectedRouteIndex === index ? "bg-primary/20 border-primary shadow-lg shadow-primary/20" : "border-gray-800 bg-gray-900/70 hover:bg-gray-800/90"
+                                      selectedRouteIndex === index ? "bg-primary/20 border-primary shadow-lg shadow-primary/20" : "border-border bg-card hover:bg-accent"
                                   )}>
                                       {isRecommended && (
                                           <Badge className="absolute -top-2 -right-2 bg-green-500 text-white border-none">Recommended</Badge>
                                       )}
                                       <div className="flex justify-between items-start gap-4">
                                         <div>
-                                          <p className="font-bold text-base text-white">{route.summary || `Route ${index + 1}`}</p>
+                                          <p className="font-bold text-base text-foreground">{route.summary || `Route ${index + 1}`}</p>
                                           <p className="text-sm text-muted-foreground">{route.legs[0].distance?.text} · {route.legs[0].duration?.text}</p>
                                         </div>
                                           <Button 
@@ -744,16 +744,16 @@ function LocationPlanner() {
                   </div>
               )}
 
-              <div className="flex flex-col gap-4 p-4 border-t border-purple-900/50">
+              <div className="flex flex-col gap-4 p-4 border-t border-border">
                   <Button onClick={handleStartTracking} className="w-full py-6 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 disabled:opacity-50" disabled={!directions || isCalculating}>
                       {isTracking ? "STOP" : "START"}
                   </Button>
-                  <div className="flex justify-around items-center bg-gray-900/50 p-2 rounded-2xl">
-                      <Button variant="ghost" className="text-white font-semibold disabled:opacity-50" disabled={isTracking}>
+                  <div className="flex justify-around items-center bg-muted p-2 rounded-2xl">
+                      <Button variant="ghost" className="text-foreground font-semibold disabled:opacity-50" disabled={isTracking}>
                           <Share2 className="mr-2 h-5 w-5 text-primary" />
                           Share Live Location
                       </Button>
-                      <Button variant="ghost" className="text-white font-semibold disabled:opacity-50" disabled={isTracking}>
+                      <Button variant="ghost" className="text-foreground font-semibold disabled:opacity-50" disabled={isTracking}>
                           <Footprints className="mr-2 h-5 w-5 text-primary" />
                           Track Me
                       </Button>
@@ -770,7 +770,7 @@ function LocationPlanner() {
 export default function LocationPage() {
   if (!GOOGLE_MAPS_API_KEY) {
     return (
-        <div className="flex h-screen w-full items-center justify-center bg-[#06010F] p-4 text-center">
+        <div className="flex h-screen w-full items-center justify-center bg-background p-4 text-center">
             <div className="rounded-lg bg-card p-8 text-card-foreground">
                 <h1 className="text-xl font-bold text-destructive">Configuration Error</h1>
                 <p className="mt-2 text-muted-foreground">Google Maps API Key is missing. Please add <code className="font-mono bg-muted px-1 py-0.5 rounded">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code> to your environment variables.</p>
@@ -780,7 +780,7 @@ export default function LocationPage() {
   }
 
   return (
-    <main className="h-screen w-full flex flex-col bg-[#06010F]">
+    <main className="h-screen w-full flex flex-col bg-background">
        <APIProvider apiKey={GOOGLE_MAPS_API_KEY as string} libraries={['marker', 'places', 'routes', 'geometry']}>
         <LocationPlanner />
       </APIProvider>
