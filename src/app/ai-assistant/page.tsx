@@ -3,18 +3,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Construction } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 const translations = {
     en: {
         title: "AI Assistant",
-        wip: "Work in Progress",
-        description: "This feature is currently under construction. Please check back later."
     },
     hi: {
         title: "एआई सहायक",
-        wip: "कार्य प्रगति पर है",
-        description: "यह सुविधा वर्तमान में निर्माणाधीन है। कृपया बाद में वापस देखें।"
     }
 }
 
@@ -30,17 +26,21 @@ export default function AiAssistantPage() {
 
   return (
     <div className="h-screen w-full flex flex-col bg-background">
-      <header className="flex items-center justify-between p-4 shrink-0 border-b border-purple-900/50 bg-background/80 backdrop-blur-sm">
-          <Link href="/dashboard" className="text-gray-400 hover:text-primary">
+      <header className="flex items-center justify-between p-4 shrink-0 border-b border-border bg-background/80 backdrop-blur-sm">
+          <Link href="/dashboard" className="text-muted-foreground hover:text-primary">
             <ArrowLeft size={24} />
           </Link>
-          <h1 className="text-xl font-bold text-white">{t.title}</h1>
+          <h1 className="text-xl font-bold text-foreground">{t.title}</h1>
           <div className="w-6" /> {/* Spacer */}
       </header>
-      <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-        <Construction className="h-24 w-24 text-primary mb-6" />
-        <h2 className="text-3xl font-bold text-white mb-2">{t.wip}</h2>
-        <p className="text-muted-foreground max-w-sm">{t.description}</p>
+      <div className="flex-1 w-full">
+        <iframe
+          src="https://cdn.botpress.cloud/webchat/v3.1/shareable.html?configUrl=https://files.bpcontent.cloud/2025/07/09/16/20250709163052-TWTVWK7V.json"
+          width="100%"
+          height="100%"
+          className="border-none"
+          title="Femigo AI Assistant"
+        ></iframe>
       </div>
     </div>
   );
