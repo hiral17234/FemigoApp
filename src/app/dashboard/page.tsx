@@ -41,7 +41,7 @@ const features: Feature[] = [
   { name: "Check Safe", icon: ShieldCheck, href: "/check-safe", translationKey: "checkSafe" },
   { name: "Track Me", icon: Compass, href: "#", translationKey: "trackMe" },
   { name: "Safety Score", icon: BarChartBig, href: "#", translationKey: "safetyScore" },
-  { name: "Safe Mode", icon: ShieldPlus, href: "#", translationKey: "safeMode" },
+  { name: "Safe Mode", icon: ShieldPlus, href: "/check-safe?activate=true", translationKey: "safeMode" },
 ]
 
 const translations: Record<string, Record<string, string>> = {

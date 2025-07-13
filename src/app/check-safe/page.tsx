@@ -1,10 +1,10 @@
 
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Flashlight, Moon, Phone, Mic, Heart, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -91,39 +91,18 @@ const ToolButton = ({ icon: Icon, label, onClick, isActive }: { icon: React.Elem
 );
 
 
-export default function CheckSafePage() {
+function CheckSafeContent() {
   const [language, setLanguage] = useState('en');
   const { theme, setTheme } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
 
-  useEffect(() => {
-    const storedLang = localStorage.getItem('femigo-language') || 'en';
-    setLanguage(storedLang);
-  }, []);
-
-  const t = translations[language as keyof typeof translations];
   const [isActivated, setIsActivated] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-
-  const handleToggleTheme = () => {
-    setTheme(theme === 'dark' ? 'light' : 'dark');
-  };
-  
-  const handleFlashlight = () => {
-    toast({
-        variant: 'destructive',
-        title: t.toastFlashlight.title,
-        description: t.toastFlashlight.description
-    });
-  }
-
-  const handleFakeCall = () => {
-    router.push('/fake-call');
-  }
   
   const handleRecordAudio = async () => {
     if (isRecording) {
@@ -175,6 +154,37 @@ export default function CheckSafePage() {
             description: t.toastAudioError.description,
         });
     }
+  }
+
+  const handleFakeCall = () => {
+    router.push('/fake-call');
+  }
+
+  useEffect(() => {
+    const storedLang = localStorage.getItem('femigo-language') || 'en';
+    setLanguage(storedLang);
+    
+    const activate = searchParams.get('activate');
+    if (activate === 'true') {
+        setIsActivated(true);
+        handleRecordAudio();
+        handleFakeCall();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const t = translations[language as keyof typeof translations];
+
+  const handleToggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+  
+  const handleFlashlight = () => {
+    toast({
+        variant: 'destructive',
+        title: t.toastFlashlight.title,
+        description: t.toastFlashlight.description
+    });
   }
 
   return (
@@ -246,4 +256,12 @@ export default function CheckSafePage() {
         </div>
     </div>
   );
+}
+
+export default function CheckSafePage() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <CheckSafeContent />
+        </Suspense>
+    )
 }
