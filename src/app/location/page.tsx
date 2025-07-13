@@ -654,8 +654,8 @@ function LocationPlanner() {
         </CardHeader>
         <CardContent className="p-0 flex-1 flex flex-col min-h-0">
             <div className="shrink-0 p-4 space-y-4">
-              <div className="relative flex flex-col gap-2">
-                  <div className="relative">
+              <div className="flex flex-col items-center gap-2">
+                  <div className="relative w-full">
                       <Circle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
                         ref={startInputRef} 
@@ -668,7 +668,12 @@ function LocationPlanner() {
                          <LocateFixed className="h-4 w-4 text-primary" />
                        </Button>
                   </div>
-                  <div className="relative">
+
+                  <Button variant="outline" size="icon" onClick={handleSwapLocations} className="h-8 w-8 rounded-full">
+                      <ArrowRightLeft className="h-4 w-4"/>
+                  </Button>
+
+                  <div className="relative w-full">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
                       <Input 
                           ref={destinationInputRef} 
@@ -677,9 +682,6 @@ function LocationPlanner() {
                           onBlur={() => handleGeocodeInput('destination')}
                           className="pl-9 bg-muted/20 dark:bg-card" placeholder="Destination or coordinates" />
                   </div>
-                  <Button variant="outline" size="icon" onClick={handleSwapLocations} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
-                      <ArrowRightLeft className="h-4 w-4"/>
-                  </Button>
               </div>
               
               <div className="flex items-center justify-around bg-muted p-1 rounded-full">
@@ -835,5 +837,3 @@ export default function LocationPage() {
     </main>
   );
 }
-
-    
