@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { reverseGeocode } from '@/app/actions/reverse-geocode';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { emergencyContacts } from '@/lib/emergency-contacts';
 
 type TrustedContact = { id: string; name: string; phone: string; };
 
@@ -79,17 +80,34 @@ export default function SosPage() {
 
     }, [toast]);
     
+    const triggerSosAction = () => {
+        const profile = getFromStorage<any>('femigo-user-profile', null);
+        const contacts: TrustedContact[] = profile?.trustedContacts || [];
+        const userCountry = profile?.country || 'default';
+        const womenHelpline = emergencyContacts[userCountry]?.find(s => s.name.toLowerCase().includes('women'))?.number || emergencyContacts.default[0].number;
+        
+        const shareUrl = `${window.location.origin}/location/fullscreen`;
+        const emergencyMessage = `SOS! This is an emergency alert from ${userData?.displayName || 'a Femigo user'}. I am in danger. My current location is approximately: ${locationAddress}. You can see my live location here: ${shareUrl}`;
+
+        // Get numbers of trusted contacts. Add the women's helpline number.
+        const phoneNumbers = [...contacts.map(c => c.phone), womenHelpline].join(',');
+        
+        // Use the sms: protocol to open the user's default messaging app.
+        window.location.href = `sms:${phoneNumbers}?body=${encodeURIComponent(emergencyMessage)}`;
+
+        toast({
+            variant: "destructive",
+            title: "SOS ACTIVATED",
+            description: "Opening messaging app to alert contacts and helpline.",
+            duration: 5000,
+        });
+    }
+    
     const handleSosPress = () => {
         setIsHolding(true);
         timerRef.current = setTimeout(() => {
-            if (timerRef.current) { // Check if timer is still active
-                toast({
-                    variant: "destructive",
-                    title: "SOS ACTIVATED",
-                    description: "Alerting emergency contacts and services.",
-                    duration: 5000,
-                });
-                // In a real app, you would dispatch the SOS action here.
+            if (timerRef.current) {
+                triggerSosAction();
                 setIsHolding(false); // Reset state after activation
             }
         }, 3000);
@@ -191,7 +209,7 @@ export default function SosPage() {
                         <div className="mt-6 flex justify-center items-center">
                             <div className="relative">
                                 <div 
-                                    className="absolute inset-0 rounded-full bg-primary/30 transition-transform duration-3000 ease-linear"
+                                    className="absolute inset-0 rounded-full bg-primary/30 transition-all duration-3000 ease-linear"
                                     style={{
                                         transform: isHolding ? 'scale(1.3)' : 'scale(1)',
                                         opacity: isHolding ? 1 : 0
