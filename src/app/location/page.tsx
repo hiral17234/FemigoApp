@@ -807,7 +807,7 @@ function LocationPlanner() {
                               </div>
                           </DialogContent>
                       </Dialog>
-                      <Button variant="ghost" className="text-foreground font-semibold disabled:opacity-50" disabled={isTracking}>
+                      <Button variant="ghost" className="text-foreground font-semibold disabled:opacity-50" disabled={isTracking} onClick={handleStartTracking}>
                           <Footprints className="mr-2 h-5 w-5 text-primary" />
                           Track Me
                       </Button>
