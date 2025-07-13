@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Users, MessageSquare, Mail, Copy } from 'lucide-react';
+import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Users, MessageSquare, Mail, Copy, LocateFixed } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -220,6 +220,29 @@ function LocationPlanner() {
   const routesLibrary = useMapsLibrary('routes');
   const geometryLibrary = useMapsLibrary('geometry');
 
+  const handleSetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ variant: 'destructive', title: 'Geolocation is not supported.' });
+      return;
+    }
+    toast({ title: 'Fetching your location...' });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
+        setUserLocation(newLocation);
+        setStartPoint({ address: "Your Location", location: newLocation });
+        setStartInputText("Your Location");
+        setMapCenter(newLocation);
+        setMapZoom(15);
+        toast.dismiss();
+      },
+      () => {
+        toast({ variant: 'destructive', title: 'Could not get your location.' });
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  };
+
   // Effect to get user's location once, and handle incoming route data from query params
   useEffect(() => {
     if (initialLocationSet) return;
@@ -238,26 +261,10 @@ function LocationPlanner() {
         });
     }
 
-    if (!navigator.geolocation) {
-      setInitialLocationSet(true);
-      return;
-    }
+    handleSetCurrentLocation();
+    setInitialLocationSet(true);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setUserLocation(newLocation);
-        setStartPoint({ address: "Your Location", location: newLocation });
-        setStartInputText("Your Location");
-        setMapCenter(newLocation);
-        setMapZoom(15);
-        setInitialLocationSet(true);
-      },
-      () => {
-        setInitialLocationSet(true);
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLocationSet, searchParams]);
   
   // Effect to handle coordinate input for start point
@@ -656,7 +663,10 @@ function LocationPlanner() {
                         onChange={(e) => setStartInputText(e.target.value)} 
                         onBlur={() => handleGeocodeInput('start')}
                         onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
-                        className="pl-9 bg-muted/20 dark:bg-card" placeholder="Start location or coordinates" />
+                        className="pl-9 pr-10 bg-muted/20 dark:bg-card" placeholder="Start location or coordinates" />
+                       <Button variant="ghost" size="icon" onClick={handleSetCurrentLocation} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
+                         <LocateFixed className="h-4 w-4 text-primary" />
+                       </Button>
                   </div>
                   <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
