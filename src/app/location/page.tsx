@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Route, AlertTriangle, MessageSquare, Lamp, Users } from 'lucide-react';
+import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Users, MessageSquare, Mail, Copy } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, useMapsLibrary, useMap } from '@vis.gl/react-google-maps';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { recommendSafestRoute } from '@/ai/flows/recommend-safest-route-flow';
 import { Badge } from '@/components/ui/badge';
 import { geocodeAddress } from '../actions/geocode-address';
 import { type RouteSafetyOutput } from '@/ai/types';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -26,6 +27,8 @@ type Point = { lat: number; lng: number };
 type Place = { address: string; location: Point | null };
 type TravelMode = 'DRIVING' | 'BICYCLING' | 'TRANSIT' | 'WALKING';
 type RouteDetail = RouteSafetyOutput & { isGenerated?: boolean };
+type TrustedContact = { id: string; name: string; phone: string; };
+
 
 // Helper function to parse DMS coordinates
 function parseDMSToLatLng(dmsStr: string): Point | null {
@@ -210,6 +213,8 @@ function LocationPlanner() {
   const startInputRef = useRef<HTMLInputElement>(null);
   const destinationInputRef = useRef<HTMLInputElement>(null);
   
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
   const placesLibrary = useMapsLibrary('places');
   const routesLibrary = useMapsLibrary('routes');
   const geometryLibrary = useMapsLibrary('geometry');
@@ -603,6 +608,34 @@ function LocationPlanner() {
     }
   };
 
+  const handleShare = (type: 'contacts' | 'whatsapp' | 'email' | 'copy') => {
+    if (!userLocation) {
+        toast({ variant: 'destructive', title: "Location unavailable", description: "Cannot share without your current location." });
+        return;
+    }
+    const shareUrl = `${window.location.origin}/location/fullscreen`;
+    const shareText = `I'm sharing my live location with you via Femigo. You can see me here: ${shareUrl}`;
+
+    if (type === 'copy') {
+        navigator.clipboard.writeText(shareUrl);
+        toast({ title: "Link Copied!", description: "The live location link is now on your clipboard." });
+    } else if (type === 'whatsapp') {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    } else if (type === 'email') {
+        window.location.href = `mailto:?subject=My Live Location&body=${encodeURIComponent(shareText)}`;
+    } else if (type === 'contacts') {
+        const profile = JSON.parse(localStorage.getItem('femigo-user-profile') || '{}');
+        const contacts: TrustedContact[] = profile.trustedContacts || [];
+        if (contacts.length === 0) {
+            toast({ variant: 'destructive', title: "No trusted contacts", description: "Please add trusted contacts in the Emergency section first." });
+            return;
+        }
+        const phoneNumbers = contacts.map(c => c.phone).join(',');
+        window.location.href = `sms:${phoneNumbers}?body=${encodeURIComponent(shareText)}`;
+    }
+    setIsShareOpen(false);
+  };
+
 
   const travelModes = [
       { name: 'DRIVING', icon: Car },
@@ -616,7 +649,7 @@ function LocationPlanner() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col flex-1">
+    <div className="w-full max-w-md mx-auto flex flex-col flex-1 bg-background">
       <Card className="w-full flex-1 flex flex-col rounded-none sm:rounded-2xl border-border bg-card shadow-2xl dark:shadow-black/50 overflow-hidden my-0 sm:my-4">
         <CardHeader className="flex-row items-center justify-between gap-4 space-y-0 p-4 border-b border-border shrink-0">
           <div className='flex items-center gap-4'>
@@ -749,10 +782,36 @@ function LocationPlanner() {
                       {isTracking ? "STOP" : "START"}
                   </Button>
                   <div className="flex justify-around items-center bg-muted p-2 rounded-2xl">
-                      <Button variant="ghost" className="text-foreground font-semibold disabled:opacity-50" disabled={isTracking}>
-                          <Share2 className="mr-2 h-5 w-5 text-primary" />
-                          Share Live Location
-                      </Button>
+                      <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
+                          <DialogTrigger asChild>
+                              <Button variant="ghost" className="text-foreground font-semibold disabled:opacity-50" disabled={isTracking}>
+                                <Share2 className="mr-2 h-5 w-5 text-primary" />
+                                Share Live Location
+                              </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                              <DialogHeader>
+                                  <DialogTitle>Share Your Location</DialogTitle>
+                                  <DialogDescription>
+                                      Choose how you want to share a link to your live location. Anyone with the link can see where you are.
+                                  </DialogDescription>
+                              </DialogHeader>
+                              <div className="grid grid-cols-2 gap-4 pt-4">
+                                  <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleShare('contacts')}>
+                                      <Users className="h-6 w-6" /> Trusted Contacts
+                                  </Button>
+                                  <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleShare('whatsapp')}>
+                                      <MessageSquare className="h-6 w-6" /> WhatsApp
+                                  </Button>
+                                  <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleShare('email')}>
+                                      <Mail className="h-6 w-6" /> Email
+                                  </Button>
+                                  <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handleShare('copy')}>
+                                      <Copy className="h-6 w-6" /> Copy Link
+                                  </Button>
+                              </div>
+                          </DialogContent>
+                      </Dialog>
                       <Button variant="ghost" className="text-foreground font-semibold disabled:opacity-50" disabled={isTracking}>
                           <Footprints className="mr-2 h-5 w-5 text-primary" />
                           Track Me
