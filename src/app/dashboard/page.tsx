@@ -37,7 +37,7 @@ type Feature = {
 
 const features: Feature[] = [
   { name: "Location", icon: MapPin, href: "/location", translationKey: "location" },
-  { name: "SOS", icon: RadioTower, href: "#", translationKey: "sos" },
+  { name: "SOS", icon: RadioTower, href: "/sos", translationKey: "sos" },
   { name: "Check Safe", icon: ShieldCheck, href: "#", translationKey: "checkSafe" },
   { name: "Track Me", icon: Compass, href: "#", translationKey: "trackMe" },
   { name: "Safety Score", icon: BarChartBig, href: "#", translationKey: "safetyScore" },
