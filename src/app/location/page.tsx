@@ -664,7 +664,7 @@ function LocationPlanner() {
                         onBlur={() => handleGeocodeInput('start')}
                         onFocus={() => startInputText === 'Your Location' && setStartInputText('')} 
                         className="pl-9 pr-10 bg-muted/20 dark:bg-card" placeholder="Start location or coordinates" />
-                       <Button variant="ghost" size="icon" onClick={handleSetCurrentLocation} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
+                       <Button type="button" variant="ghost" size="icon" onClick={handleSetCurrentLocation} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
                          <LocateFixed className="h-4 w-4 text-primary" />
                        </Button>
                   </div>
@@ -835,3 +835,5 @@ export default function LocationPage() {
     </main>
   );
 }
+
+    
