@@ -40,7 +40,7 @@ const features: Feature[] = [
   { name: "SOS", icon: RadioTower, href: "/sos", translationKey: "sos" },
   { name: "Check Safe", icon: ShieldCheck, href: "/check-safe", translationKey: "checkSafe" },
   { name: "Track Me", icon: Compass, href: "#", translationKey: "trackMe" },
-  { name: "Safety Score", icon: BarChartBig, href: "#", translationKey: "safetyScore" },
+  { name: "Safety Score", icon: BarChartBig, href: "/safety-score", translationKey: "safetyScore" },
   { name: "Safe Mode", icon: ShieldPlus, href: "/check-safe?activate=true", translationKey: "safeMode" },
 ]
 
