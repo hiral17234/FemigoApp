@@ -43,7 +43,7 @@ export default function SosPage() {
     
     const [userData, setUserData] = useState<{ displayName: string; photoURL: string } | null>(null);
     const [locationAddress, setLocationAddress] = useState<string | null>("Fetching location...");
-    const [progress, setProgress] = useState(0);
+    const [isHolding, setIsHolding] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const [isFollowMeActive, setIsFollowMeActive] = useState(false);
 
@@ -78,32 +78,31 @@ export default function SosPage() {
         }
 
     }, [toast]);
-
+    
     const handleSosPress = () => {
-        const startTime = Date.now();
-        timerRef.current = setInterval(() => {
-            const elapsedTime = Date.now() - startTime;
-            const currentProgress = Math.min((elapsedTime / 3000) * 100, 100);
-            setProgress(currentProgress);
-
-            if (currentProgress >= 100) {
-                clearInterval(timerRef.current!);
+        setIsHolding(true);
+        timerRef.current = setTimeout(() => {
+            if (timerRef.current) { // Check if timer is still active
                 toast({
                     variant: "destructive",
                     title: "SOS ACTIVATED",
                     description: "Alerting emergency contacts and services.",
+                    duration: 5000,
                 });
-                // Add actual SOS logic here in the future
+                // In a real app, you would dispatch the SOS action here.
+                setIsHolding(false); // Reset state after activation
             }
-        }, 50);
+        }, 3000);
     };
 
     const handleSosRelease = () => {
+        setIsHolding(false);
         if (timerRef.current) {
-            clearInterval(timerRef.current);
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
         }
-        setProgress(0);
     };
+
 
     const handleFollowMe = () => {
         const profile = getFromStorage<any>('femigo-user-profile', null);
@@ -192,11 +191,10 @@ export default function SosPage() {
                         <div className="mt-6 flex justify-center items-center">
                             <div className="relative">
                                 <div 
-                                    className="absolute inset-[-10px] rounded-full border-[6px] border-primary/20 transition-all duration-300"
+                                    className="absolute inset-0 rounded-full bg-primary/30 transition-transform duration-3000 ease-linear"
                                     style={{
-                                        borderTopColor: `hsl(var(--primary))`,
-                                        transform: `rotate(${progress * 3.6}deg)`,
-                                        opacity: progress > 0 ? 1 : 0
+                                        transform: isHolding ? 'scale(1.3)' : 'scale(1)',
+                                        opacity: isHolding ? 1 : 0
                                     }}
                                 />
                                 <button
@@ -204,7 +202,7 @@ export default function SosPage() {
                                     onMouseUp={handleSosRelease}
                                     onTouchStart={handleSosPress}
                                     onTouchEnd={handleSosRelease}
-                                    className="h-36 w-36 rounded-full bg-gradient-to-r from-primary to-secondary flex flex-col items-center justify-center text-primary-foreground active:scale-95 transition-transform border border-black"
+                                    className="h-36 w-36 rounded-full bg-gradient-to-r from-primary to-secondary flex flex-col items-center justify-center text-primary-foreground active:scale-95 transition-transform border border-black relative"
                                 >
                                     <span className="text-4xl font-bold">SOS</span>
                                     <span className="text-sm">Press 3 seconds</span>
