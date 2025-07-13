@@ -69,7 +69,7 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#06010F] p-4 text-white">
+    <main className="dark relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#06010F] p-4 text-white">
        <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
        <div className="absolute top-8 left-8 z-10">
