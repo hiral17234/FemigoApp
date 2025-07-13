@@ -11,6 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { reverseGeocode } from '@/app/actions/reverse-geocode';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+
+type TrustedContact = { id: string; name: string; phone: string; };
 
 const getFromStorage = <T,>(key: string, fallback: T): T => {
     if (typeof window === 'undefined') return fallback;
@@ -42,6 +45,7 @@ export default function SosPage() {
     const [locationAddress, setLocationAddress] = useState<string | null>("Fetching location...");
     const [progress, setProgress] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const [isFollowMeActive, setIsFollowMeActive] = useState(false);
 
     useEffect(() => {
         const profile = getFromStorage<{ displayName: string; photoURL: string }>('femigo-user-profile', { displayName: 'User', photoURL: '' });
@@ -99,6 +103,28 @@ export default function SosPage() {
             clearInterval(timerRef.current);
         }
         setProgress(0);
+    };
+
+    const handleFollowMe = () => {
+        const profile = getFromStorage<any>('femigo-user-profile', null);
+        const contacts: TrustedContact[] = profile?.trustedContacts || [];
+        
+        if (contacts.length === 0) {
+            toast({ variant: 'destructive', title: "No Trusted Contacts", description: "Please add at least one trusted contact in the Emergency section to use this feature." });
+            setIsFollowMeActive(false); // Reset switch
+            return;
+        }
+
+        const shareUrl = `${window.location.origin}/location/fullscreen`;
+        const shareText = `I'm using Femigo's 'Follow Me' feature. You can see my live location here: ${shareUrl}`;
+
+        // Get numbers of trusted contacts. Add the women's helpline number.
+        const phoneNumbers = [...contacts.map(c => c.phone), '1091'].join(',');
+        
+        // Use the sms: protocol to open the user's default messaging app.
+        window.location.href = `sms:${phoneNumbers}?body=${encodeURIComponent(shareText)}`;
+
+        toast({ title: 'Sharing Initiated', description: 'Your location is being shared with trusted contacts and the helpline.' });
     };
 
     const userInitial = userData?.displayName?.charAt(0).toUpperCase() || 'U';
@@ -187,13 +213,30 @@ export default function SosPage() {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl bg-card p-4 shadow-lg flex items-center justify-between">
-                        <div>
-                            <h3 className="font-bold text-foreground">Follow Me</h3>
-                            <p className="text-sm text-muted-foreground">(I'm Travelling)</p>
+                    <AlertDialog>
+                        <div className="rounded-2xl bg-card p-4 shadow-lg flex items-center justify-between">
+                            <div>
+                                <h3 className="font-bold text-foreground">Follow Me</h3>
+                                <p className="text-sm text-muted-foreground">(I'm Travelling)</p>
+                            </div>
+                            <AlertDialogTrigger asChild>
+                                <Switch checked={isFollowMeActive} onCheckedChange={setIsFollowMeActive} />
+                            </AlertDialogTrigger>
                         </div>
-                        <Switch />
-                    </div>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Confirm Location Sharing</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will share a live tracking link with all your trusted contacts and the women's helpline via SMS. Are you sure you want to proceed?
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => setIsFollowMeActive(false)}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleFollowMe}>Confirm & Share</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+
 
                     <div className="rounded-2xl bg-card p-4 shadow-lg">
                         <h3 className="font-bold text-foreground mb-4">Preventive Safety</h3>
