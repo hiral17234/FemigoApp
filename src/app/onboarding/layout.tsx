@@ -5,7 +5,7 @@ export default function OnboardingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen text-foreground">
+    <div className="min-h-screen text-foreground dark bg-background">
         {children}
     </div>
   )
