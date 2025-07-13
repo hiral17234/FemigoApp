@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Flashlight, Moon, Phone, Mic, Heart, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -39,21 +40,6 @@ const ToolButton = ({ icon: Icon, label, onClick }: { icon: React.ElementType, l
     </div>
 );
 
-const CustomShieldIcon = () => (
-    <svg width="100" height="120" viewBox="0 0 100 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 0L100 25V65C100 100 75 115 50 120C25 115 0 100 0 65V25L50 0Z" fill="url(#shield-gradient)"/>
-        <defs>
-            <linearGradient id="shield-gradient" x1="50" y1="0" x2="50" y2="120" gradientUnits="userSpaceOnUse">
-                <stop stopColor="hsl(var(--primary) / 0.7)"/>
-                <stop offset="1" stopColor="hsl(var(--primary) / 0.5)"/>
-            </linearGradient>
-        </defs>
-        <g transform="translate(25, 30) scale(0.6)">
-            <path d="M49.9999 58.3333C63.807 58.3333 75 47.1404 75 33.3333C75 19.5262 63.807 8.33331 49.9999 8.33331C36.1928 8.33331 25 19.5262 25 33.3333C25 47.1404 36.1928 58.3333 49.9999 58.3333Z" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M50 75C66.5685 75 80 61.5685 80 45H20C20 61.5685 33.4315 75 50 75Z" stroke="white" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round"/>
-        </g>
-    </svg>
-)
 
 export default function CheckSafePage() {
   const [language, setLanguage] = useState('en');
@@ -87,8 +73,17 @@ export default function CheckSafePage() {
             </div>
 
             <div className="relative flex items-center justify-center">
-                 <div className="absolute w-[300px] h-[300px] bg-primary/20 rounded-full blur-3xl" />
-                 <CustomShieldIcon />
+                 <div className="absolute animate-pulse w-[150px] h-[150px] bg-primary/20 rounded-full blur-3xl" />
+                 <div className="relative rounded-full p-2 bg-gradient-to-br from-primary/30 to-secondary/30">
+                    <Image
+                        src="https://i.ibb.co/RptYQ4Hm/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg"
+                        data-ai-hint="woman illustration"
+                        alt="Femigo Logo"
+                        width={120}
+                        height={120}
+                        className="rounded-full border-2 border-background/50"
+                    />
+                 </div>
             </div>
 
             <div className="w-full space-y-6">
