@@ -172,6 +172,12 @@ function CheckSafeContent() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+  
+  const handleActivate = () => {
+      if (!isActivated) {
+          setIsActivated(true);
+      }
+  };
 
   const t = translations[language as keyof typeof translations];
 
@@ -240,11 +246,12 @@ function CheckSafeContent() {
                 </div>
                 
                 <Button 
-                    onClick={() => setIsActivated(!isActivated)}
+                    onClick={handleActivate}
+                    disabled={isActivated}
                     className={cn(
                         "w-full h-14 text-lg font-bold rounded-full shadow-lg transition-all duration-300",
                         isActivated 
-                            ? "bg-gradient-to-r from-primary to-green-400 text-primary-foreground" 
+                            ? "bg-gradient-to-r from-primary to-green-400 text-primary-foreground cursor-not-allowed" 
                             : "bg-muted text-muted-foreground"
                     )}
                 >
