@@ -178,7 +178,7 @@ export default function SosPage() {
                                     onMouseUp={handleSosRelease}
                                     onTouchStart={handleSosPress}
                                     onTouchEnd={handleSosRelease}
-                                    className="h-36 w-36 rounded-full bg-primary/20 flex flex-col items-center justify-center text-primary active:scale-95 transition-transform"
+                                    className="h-36 w-36 rounded-full bg-gradient-to-r from-primary to-secondary flex flex-col items-center justify-center text-primary-foreground active:scale-95 transition-transform border border-black"
                                 >
                                     <span className="text-4xl font-bold">SOS</span>
                                     <span className="text-sm">Press 3 seconds</span>
