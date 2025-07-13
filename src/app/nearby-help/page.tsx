@@ -4,14 +4,16 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Siren, MapPin, Loader2, Navigation, Building } from 'lucide-react';
+import { ArrowLeft, Siren, MapPin, Loader2, Navigation, Building, Clock, Route } from 'lucide-react';
 import { findNearbyPlaces, type Place } from '@/app/actions/find-nearby-places';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getRouteInfo } from '@/app/actions/get-route-info';
 
 type Point = { lat: number; lng: number };
+type EnrichedPlace = Place & { distance?: string; duration?: string };
 
 function NearbyHelpSkeleton() {
     return (
@@ -36,8 +38,9 @@ export default function NearbyHelpPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [userLocation, setUserLocation] = useState<Point | null>(null);
-    const [nearbyPolice, setNearbyPolice] = useState<Place[]>([]);
+    const [nearbyPolice, setNearbyPolice] = useState<EnrichedPlace[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [statusMessage, setStatusMessage] = useState('Finding your location...');
 
     useEffect(() => {
         if (!navigator.geolocation) {
@@ -69,6 +72,7 @@ export default function NearbyHelpPage() {
                 let foundPlaces: Place[] = [];
 
                 for (const radius of searchRadiuses) {
+                    setStatusMessage(`Searching for help within ${radius/1000}km...`);
                     try {
                         const places = await findNearbyPlaces({
                             location: userLocation,
@@ -78,16 +82,25 @@ export default function NearbyHelpPage() {
 
                         if (places.length > 0) {
                             foundPlaces = places;
-                            break; // IMPORTANT: Stop searching if we found any places
+                            break; 
                         }
                     } catch (error) {
                          console.error(`Failed to find nearby places with radius ${radius}:`, error);
                          toast({ variant: 'destructive', title: 'Could not fetch nearby places.' });
-                         break; // Stop on any API error
+                         break;
                     }
                 }
                 
-                setNearbyPolice(foundPlaces);
+                if (foundPlaces.length > 0) {
+                    setStatusMessage('Fetching route information...');
+                    const enrichedPlacesPromises = foundPlaces.map(async (place) => {
+                        const routeInfo = await getRouteInfo({ origin: userLocation, destination: place.location });
+                        return { ...place, ...routeInfo };
+                    });
+                    const enrichedPlaces = await Promise.all(enrichedPlacesPromises);
+                    setNearbyPolice(enrichedPlaces);
+                }
+
                 setIsLoading(false);
             };
             fetchClosestPlaces();
@@ -109,7 +122,16 @@ export default function NearbyHelpPage() {
                     </div>
                 </header>
 
-                {isLoading && <NearbyHelpSkeleton />}
+                {isLoading && (
+                    <div className="space-y-4">
+                        <div className="flex justify-center items-center gap-2 p-4 text-muted-foreground">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>{statusMessage}</span>
+                        </div>
+                        <NearbyHelpSkeleton />
+                    </div>
+                )}
+
 
                 {!isLoading && nearbyPolice.length === 0 && (
                      <div className="text-center py-16 text-muted-foreground bg-card rounded-lg">
@@ -126,13 +148,19 @@ export default function NearbyHelpPage() {
                             
                             return (
                             <Card key={place.place_id} className="p-4 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 flex-1 overflow-hidden">
                                     <div className="p-3 bg-primary/10 rounded-lg">
                                         <Siren className="h-6 w-6 text-primary" />
                                     </div>
                                     <div className="flex-1 overflow-hidden">
                                         <h3 className="font-bold truncate">{place.name}</h3>
                                         <p className="text-sm text-muted-foreground truncate">{place.vicinity}</p>
+                                        {place.distance && place.duration && (
+                                            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
+                                                <span className="flex items-center gap-1"><Route className="h-3 w-3" /> {place.distance}</span>
+                                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {place.duration}</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <Link href={destinationUrl}>
