@@ -284,7 +284,7 @@ export default function DashboardLayout({
             <SidebarTrigger className="text-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-300" />
             <div>
               <h1 className="text-3xl font-bold text-foreground">Femigo</h1>
-              <p className="text-sm text-secondary">{t.headerSubtitle}</p>
+              <p className="text-sm text-secondary-foreground dark:text-secondary">{t.headerSubtitle}</p>
             </div>
           </div>
           {isLoadingUser ? (
@@ -299,7 +299,7 @@ export default function DashboardLayout({
             </div>
           )}
         </header>
-        <div className="flex-1 overflow-y-auto bg-[#030211] text-foreground">
+        <div className="flex-1 overflow-y-auto bg-[#f0f2f5] dark:bg-[#030211] text-foreground">
             {children}
         </div>
       </SidebarInset>

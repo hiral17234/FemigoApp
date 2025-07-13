@@ -96,14 +96,14 @@ function DailyThought() {
   
   return (
     <div className="w-full max-w-md mx-auto animate-in fade-in-0 slide-in-from-top-4 duration-700 space-y-6 text-center">
-        <div className="inline-block rounded-full bg-gradient-to-r from-primary/30 to-[#4b0e9c]/30 p-px shadow-lg shadow-primary/10">
-            <div className="rounded-full bg-[#4b0e9c]/30 px-4 py-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <div className="inline-block rounded-full bg-gradient-to-r from-primary/30 to-secondary/30 p-px shadow-lg dark:shadow-primary/10">
+            <div className="rounded-full bg-card/80 px-4 py-2 flex items-center justify-center gap-2 text-sm text-muted-foreground">
                 <CalendarDays className="h-4 w-4" />
                 <p>{format(currentDateTime, "eeee, MMMM d, yyyy 'at' hh:mm:ss a")}</p>
             </div>
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-[#4b0e9c]/10 p-8 shadow-inner-lg border border-border/10 relative">
+        <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-secondary/10 p-8 shadow-inner-lg border border-border/10 relative">
             <p className="text-lg italic text-foreground/90">"{dailyQuote.quote}"</p>
             <p className="text-right text-sm text-muted-foreground font-medium mt-4">- {dailyQuote.author}</p>
         </div>
@@ -157,7 +157,7 @@ export default function DashboardPage() {
     <div className="flex flex-1 flex-col p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight text-foreground">
-          {t.welcome}, <span className="bg-gradient-to-r from-primary to-[#4b0e9c] bg-clip-text text-transparent">{userName}!</span>
+          {t.welcome}, <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">{userName}!</span>
         </h1>
         <p className="text-muted-foreground">
           {t.priority}
@@ -167,8 +167,8 @@ export default function DashboardPage() {
       <DailyThought />
 
       <Link href="/emergency" className="w-full max-w-md mx-auto">
-        <div className="group rounded-3xl bg-gradient-to-r from-primary to-[#4b0e9c] p-1 shadow-xl shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/30 active:scale-100">
-          <div className="flex h-20 items-center justify-center gap-4 rounded-[22px] bg-black px-8">
+        <div className="group rounded-3xl bg-gradient-to-r from-primary to-secondary p-1 shadow-lg dark:shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-xl dark:hover:shadow-primary/30 active:scale-100">
+          <div className="flex h-20 items-center justify-center gap-4 rounded-[22px] bg-card dark:bg-black px-8">
             <Siren className="h-10 w-10 text-primary transition-transform duration-300 group-hover:scale-110" style={{filter: 'drop-shadow(0 0 8px hsl(var(--primary)))'}} />
             <span className="text-3xl font-bold text-foreground">
               {t.emergency}
@@ -185,9 +185,9 @@ export default function DashboardPage() {
               key={feature.name}
               className="group flex flex-col items-center justify-center gap-2 text-center transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="rounded-full bg-gradient-to-br from-primary/30 to-[#4b0e9c]/30 p-px transition-all duration-300 group-hover:from-primary/80 group-hover:to-[#4b0e9c]/80">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-black transition-colors duration-300">
-                    <feature.icon className="h-8 w-8 text-primary [filter:drop-shadow(0_0_4px_hsl(var(--primary)))]" />
+              <div className="rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 p-px transition-all duration-300 group-hover:from-primary/80 group-hover:to-secondary/80">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-background dark:bg-black transition-colors duration-300">
+                    <feature.icon className="h-8 w-8 text-primary dark:[filter:drop-shadow(0_0_4px_hsl(var(--primary)))]" />
                   </div>
               </div>
               <span className="text-sm font-medium text-foreground">
