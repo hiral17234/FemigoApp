@@ -120,7 +120,7 @@ export default function DetailsPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4 text-white">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4 text-white bg-[#06010F]">
       <video
         src="https://videos.pexels.com/video-files/26621651/11977308_2560_1440_30fps.mp4"
         autoPlay
@@ -142,11 +142,11 @@ export default function DetailsPage() {
           <h1 className="text-3xl font-bold tracking-tight">
             Tell Us About Yourself
           </h1>
-           <p className="text-muted-foreground mt-2 text-sm">This information helps us personalize your experience.</p>
+           <p className="text-gray-400 mt-2 text-sm">This information helps us personalize your experience.</p>
           <Progress value={(5 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <div className="w-full rounded-2xl border border-white/30 p-8 shadow-[0_0_20px_theme(colors.white/0.3)]">
+        <div className="w-full rounded-2xl border border-white/20 bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
                <div className="space-y-2">
@@ -200,7 +200,7 @@ export default function DetailsPage() {
                     render={({ field }) => (
                         <Popover open={statePopoverOpen} onOpenChange={setStatePopoverOpen}>
                             <PopoverTrigger asChild>
-                                <Button ref={stateTriggerRef} variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.state && "border-destructive")}>
+                                <Button ref={stateTriggerRef} variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-gray-400", errors.state && "border-destructive")}>
                                     {field.value ? (field.value === 'Other' ? 'Other' : countryConfig?.regions?.find(r => r.name === field.value)?.name) : `Select ${countryConfig?.regionLabel || 'state'}`}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
@@ -248,7 +248,7 @@ export default function DetailsPage() {
                     render={({ field }) => (
                         <Popover open={cityPopoverOpen} onOpenChange={setCityPopoverOpen}>
                             <PopoverTrigger asChild>
-                                <Button ref={cityTriggerRef} variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-muted-foreground", errors.city && "border-destructive")} disabled={!selectedState || selectedState === 'Other'}>
+                                <Button ref={cityTriggerRef} variant="outline" role="combobox" className={cn("w-full justify-between", !field.value && "text-gray-400", errors.city && "border-destructive")} disabled={!selectedState || selectedState === 'Other'}>
                                     {field.value ? field.value : "Select city"}
                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>

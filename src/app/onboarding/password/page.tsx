@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -152,7 +153,7 @@ export default function PasswordPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4 text-white">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden p-4 text-white bg-[#06010F]">
       <video
         src="https://videos.pexels.com/video-files/26621651/11977308_2560_1440_30fps.mp4"
         autoPlay
@@ -172,13 +173,13 @@ export default function PasswordPage() {
 
         <div className="mb-8 mt-16 px-4 text-center">
           <h1 className="text-3xl font-bold tracking-tight">Set Your Password</h1>
-          <p className="text-muted-foreground mt-2 text-sm">
+          <p className="text-gray-400 mt-2 text-sm">
             This is the final step! Choose a strong, secure password.
           </p>
           <Progress value={(6 / 6) * 100} className="mt-4 h-2 bg-gray-700" />
         </div>
 
-        <div className="w-full rounded-2xl border border-white/30 p-8 shadow-[0_0_20px_theme(colors.white/0.3)]">
+        <div className="w-full rounded-2xl border border-white/20 bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="password">Password</label>
@@ -193,7 +194,7 @@ export default function PasswordPage() {
                  <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
                 >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
@@ -215,7 +216,7 @@ export default function PasswordPage() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white"
                 >
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
