@@ -4,13 +4,13 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, MapPin, Heart, Siren, Phone, MessageSquare, Shield, Users } from 'lucide-react';
+import { ArrowLeft, MapPin, Heart, Siren, Phone, MessageSquare, Shield, Users, Loader2 } from 'lucide-react';
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { reverseGeocode } from '@/app/actions/reverse-geocode';
 
 const getFromStorage = <T,>(key: string, fallback: T): T => {
     if (typeof window === 'undefined') return fallback;
@@ -39,13 +39,41 @@ export default function SosPage() {
     const { toast } = useToast();
     
     const [userData, setUserData] = useState<{ displayName: string; photoURL: string } | null>(null);
+    const [locationAddress, setLocationAddress] = useState<string | null>("Fetching location...");
     const [progress, setProgress] = useState(0);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         const profile = getFromStorage<{ displayName: string; photoURL: string }>('femigo-user-profile', { displayName: 'User', photoURL: '' });
         setUserData(profile);
-    }, []);
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    try {
+                        const address = await reverseGeocode({ lat: latitude, lng: longitude });
+                        setLocationAddress(address);
+                    } catch (error) {
+                        setLocationAddress("Could not determine address.");
+                        console.error(error);
+                    }
+                },
+                (error) => {
+                    console.error("Geolocation error:", error);
+                    setLocationAddress("Location access denied.");
+                    toast({
+                        variant: "destructive",
+                        title: "Location Error",
+                        description: "Please enable location access for this feature to work.",
+                    });
+                }
+            );
+        } else {
+            setLocationAddress("Geolocation not supported.");
+        }
+
+    }, [toast]);
 
     const handleSosPress = () => {
         const startTime = Date.now();
@@ -106,7 +134,10 @@ export default function SosPage() {
                         <MapPin className="h-5 w-5" />
                         <div>
                             <p className="font-semibold">Current Location</p>
-                            <p className="text-white/80">4th block, CP, New Delhi</p>
+                            <p className="text-white/80 flex items-center gap-2">
+                               {locationAddress === 'Fetching location...' && <Loader2 className="h-4 w-4 animate-spin" />}
+                               {locationAddress}
+                            </p>
                         </div>
                     </div>
                 </header>
@@ -195,4 +226,3 @@ export default function SosPage() {
         </div>
     );
 }
-
