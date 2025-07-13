@@ -116,8 +116,7 @@ export default function SosPage() {
                            <ArrowLeft size={24} />
                          </Link>
                          <div className="flex items-center gap-1 text-2xl font-bold">
-                            Femigo
-                            <Heart className="h-5 w-5 fill-current" />
+                            SOS
                          </div>
                          <div className="w-6" />
                     </div>
