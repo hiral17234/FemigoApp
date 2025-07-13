@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -110,16 +111,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-black p-4 text-white">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-foreground">
       <video
         src="https://media.istockphoto.com/id/1456520455/nl/video/sulfur-cosmos-flowers-bloom-in-the-garden.mp4?s=mp4-480x480-is&k=20&c=xbZAFUX4xgFK_GWD71mYxPUwCZr-qTb9wObCrWMB8ak="
         autoPlay
         muted
         loop
         playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-70"
+        className="absolute top-1/2 left-1/2 w-full h-full min-w-full min-h-full object-cover -translate-x-1/2 -translate-y-1/2 z-0 opacity-40 dark:opacity-70"
       />
-      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background/30 via-background/60 to-transparent" />
+      <div className="absolute inset-0 z-10 bg-gradient-to-t from-background via-background/60 to-transparent" />
       
       <div className="absolute top-8 left-8 z-20">
           <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
@@ -129,7 +130,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
-        <div className="w-full rounded-2xl border border-white/30 p-8 shadow-[0_0_20px_theme(colors.white/0.3)]">
+        <div className="w-full rounded-2xl border border-border bg-background/50 dark:bg-black/50 p-8 shadow-2xl dark:shadow-[0_0_20px_theme(colors.white/0.3)]">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight">Welcome Back</h1>
             <p className="text-muted-foreground mt-2 text-sm">

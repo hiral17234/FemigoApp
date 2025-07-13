@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -39,7 +40,7 @@ export default function ContactUsPage() {
   const t = translations[language as keyof typeof translations];
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-foreground">
       <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
       <div className="absolute top-4 left-4 sm:top-8 sm:left-8">
@@ -50,7 +51,7 @@ export default function ContactUsPage() {
         </Link>
       </div>
 
-      <Card className="relative z-10 w-full max-w-sm animate-in fade-in zoom-in-95 duration-700 rounded-2xl border-none bg-black p-8 text-center shadow-2xl shadow-primary/20">
+      <Card className="relative z-10 w-full max-w-sm animate-in fade-in zoom-in-95 duration-700 rounded-2xl border-border bg-card/80 dark:bg-black/50 p-8 text-center shadow-2xl dark:shadow-primary/20 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-3xl font-bold tracking-tight text-primary">
             {t.title}
@@ -83,7 +84,7 @@ export default function ContactUsPage() {
         </CardContent>
       </Card>
 
-      <div className="absolute bottom-4 right-4 text-xs text-white">
+      <div className="absolute bottom-4 right-4 text-xs text-muted-foreground">
         {t.footer}
       </div>
     </main>

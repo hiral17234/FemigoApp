@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { useState } from "react"
@@ -68,7 +69,7 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-white">
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-foreground">
        <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
        <div className="absolute top-8 left-8 z-10">
@@ -79,7 +80,7 @@ export default function SignupPage() {
         </div>
 
       <div className="relative z-20 w-full max-w-sm animate-in fade-in-0 zoom-in-95 duration-500">
-        <div className="w-full rounded-2xl bg-black/50 p-8 shadow-2xl backdrop-blur-lg">
+        <div className="w-full rounded-2xl bg-background/50 dark:bg-black/50 p-8 shadow-2xl backdrop-blur-lg border border-border">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight">Create Account</h1>
             <p className="text-muted-foreground mt-2 text-sm">Join Femigo and be part of our community.</p>
