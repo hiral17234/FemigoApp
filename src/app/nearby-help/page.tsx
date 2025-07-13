@@ -65,7 +65,7 @@ export default function NearbyHelpPage() {
         if (userLocation) {
             const fetchClosestPlaces = async () => {
                 setIsLoading(true);
-                const searchRadiuses = [1000, 2000, 5000]; // Search in 1km, 2km, then 5km
+                const searchRadiuses = [1000, 2000, 5000]; // Search in 1km, then 2km, then 5km
                 let foundPlaces: Place[] = [];
 
                 for (const radius of searchRadiuses) {
@@ -78,12 +78,12 @@ export default function NearbyHelpPage() {
 
                         if (places.length > 0) {
                             foundPlaces = places;
-                            break; // Stop searching if we found places
+                            break; // IMPORTANT: Stop searching if we found any places
                         }
                     } catch (error) {
                          console.error(`Failed to find nearby places with radius ${radius}:`, error);
                          toast({ variant: 'destructive', title: 'Could not fetch nearby places.' });
-                         break; // Stop on error
+                         break; // Stop on any API error
                     }
                 }
                 
