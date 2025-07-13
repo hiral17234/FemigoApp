@@ -1,8 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, LocateFixed, Search, Siren, Hospital, Trash2, Loader2, MapPin } from 'lucide-react';
 import { APIProvider, Map, AdvancedMarker, MapCameraChangedEvent, useMap } from '@vis.gl/react-google-maps';
 
@@ -111,7 +112,7 @@ const NearbyPlaceMarker = ({ place, icon }: { place: Place, icon: React.ElementT
 };
 
 
-export default function FullscreenMapPage() {
+function FullscreenMap() {
     const { toast } = useToast();
     const [userLocation, setUserLocation] = useState<Point | null>(null);
     const rawPathRef = useRef<Point[]>([]);
@@ -128,6 +129,8 @@ export default function FullscreenMapPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchedLocation, setSearchedLocation] = useState<Point | null>(null);
+    
+    const searchParams = useSearchParams();
 
     const processPath = useCallback(async () => {
         if (isProcessingRef.current || rawPathRef.current.length === 0) return;
@@ -154,6 +157,29 @@ export default function FullscreenMapPage() {
             isProcessingRef.current = false;
         }
     }, [snappedPath]);
+    
+    const handleFindNearby = useCallback(async (type: 'police' | 'hospital') => {
+        if (!userLocation) {
+            toast({ variant: 'destructive', title: 'Your location is not available yet.' });
+            return;
+        }
+        setPlaceType(type);
+        toast({ title: `Searching for nearby ${type}...` });
+        const places = await findNearbyPlaces({ location: userLocation, placeType: type });
+        setNearbyPlaces(places);
+        if (places.length === 0) {
+            toast({ variant: 'destructive', title: 'No places found nearby.' });
+        }
+    }, [userLocation, toast]);
+    
+    // Auto-search effect based on URL param
+    useEffect(() => {
+      const findType = searchParams.get('find');
+      if (userLocation && (findType === 'police' || findType === 'hospital')) {
+        handleFindNearby(findType);
+      }
+    }, [searchParams, userLocation, handleFindNearby]);
+
 
     useEffect(() => {
         let watchId: number;
@@ -211,20 +237,6 @@ export default function FullscreenMapPage() {
     const handleCameraChange = (e: MapCameraChangedEvent) => {
         setMapCenter(e.detail.center);
         setMapZoom(e.detail.zoom);
-    };
-
-    const handleFindNearby = async (type: 'police' | 'hospital') => {
-        if (!userLocation) {
-            toast({ variant: 'destructive', title: 'Your location is not available yet.' });
-            return;
-        }
-        setPlaceType(type);
-        toast({ title: `Searching for nearby ${type}...` });
-        const places = await findNearbyPlaces({ location: userLocation, placeType: type });
-        setNearbyPlaces(places);
-        if (places.length === 0) {
-            toast({ variant: 'destructive', title: 'No places found nearby.' });
-        }
     };
 
     const handleClearPlaces = () => {
@@ -408,4 +420,13 @@ export default function FullscreenMapPage() {
             </APIProvider>
         </main>
     );
+}
+
+
+export default function FullscreenMapPage() {
+    return (
+        <Suspense fallback={<div className="h-screen w-screen bg-background flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>}>
+            <FullscreenMap />
+        </Suspense>
+    )
 }
