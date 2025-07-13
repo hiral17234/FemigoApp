@@ -197,19 +197,19 @@ export default function ChangePasswordPage() {
   const watchedPassword = form.watch("newPassword")
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-[#020617] p-4 text-white">
-      <div className="absolute inset-x-0 top-0 h-1/2 w-full bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center overflow-y-auto bg-background p-4 text-foreground">
+      <div className="dark:absolute inset-x-0 top-0 h-1/2 w-full dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
       <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10">
         <Link href="/settings" aria-label="Back to Settings">
-          <Button variant="ghost" size="icon" className="text-muted-foreground hover:bg-accent/20 hover:text-primary rounded-full">
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:bg-accent hover:text-primary rounded-full">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         </Link>
       </div>
 
         <div className="w-full max-w-md">
-            <Card className="w-full rounded-2xl border-none bg-black/30 p-8 shadow-2xl shadow-primary/10 backdrop-blur-md">
+            <Card className="w-full rounded-2xl border-border bg-card/80 dark:bg-black/30 p-8 shadow-2xl shadow-primary/10 backdrop-blur-md">
                 <CardHeader className="p-0 mb-6 text-center">
                     <CardTitle className="text-3xl font-bold tracking-tight">{t.title}</CardTitle>
                     <CardDescription className="text-muted-foreground">

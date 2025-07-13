@@ -203,17 +203,17 @@ export default function EditProfilePage() {
     };
     
     if (isLoading) {
-        return <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white"><ProfileSkeleton /></main>
+        return <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4"><ProfileSkeleton /></main>
     }
     
     if (!userData) {
-         return <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">Could not load user data.</main>
+         return <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-foreground">Could not load user data.</main>
     }
     
     const userPhoto = userData.photoURL || "https://i.ibb.co/W4PR2Pw2/Whats-App-Image-2025-07-09-at-11-21-29-ca10852e.jpg";
 
     return (
-        <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-[#020617] p-4 text-white">
+        <main className="flex min-h-screen w-full flex-col items-center justify-center overflow-hidden bg-background p-4 text-foreground">
             <div className="w-full max-w-lg">
                 <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
                     <Link href="/settings" aria-label="Back to Settings">

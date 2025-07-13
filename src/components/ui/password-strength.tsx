@@ -1,4 +1,5 @@
 
+
 "use client"
 
 import { cn } from "@/lib/utils"
@@ -41,7 +42,7 @@ const PasswordStrength = ({ password }: { password?: string }) => {
   );
 
   return (
-    <div className="space-y-4 rounded-lg bg-black/30 p-4">
+    <div className="space-y-4 rounded-lg bg-background/50 dark:bg-black/30 p-4">
        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
           <Requirement label="At least 8 characters" met={checks.length} />
           <Requirement label="An uppercase letter (A-Z)" met={checks.uppercase} />
