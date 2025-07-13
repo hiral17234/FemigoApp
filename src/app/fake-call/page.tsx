@@ -38,7 +38,8 @@ export default function FakeCallPage() {
     };
 
     const handleEndCall = () => {
-        router.back();
+        // Navigate to the check-safe page without query params to break the loop
+        router.push('/check-safe');
     };
     
     const formatDuration = (seconds: number) => {
