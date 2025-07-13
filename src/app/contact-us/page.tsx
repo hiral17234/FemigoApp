@@ -53,11 +53,11 @@ export default function ContactUsPage() {
 
       <Card className="relative z-10 w-full max-w-sm animate-in fade-in zoom-in-95 duration-700 rounded-2xl border-border bg-card/80 dark:bg-black/50 p-8 text-center shadow-2xl dark:shadow-primary/20 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold tracking-tight text-primary">
+          <CardTitle className="text-3xl font-bold text-primary">
             {t.title}
           </CardTitle>
         </CardHeader>
-        <CardContent className="mt-6 space-y-6 text-left">
+        <CardContent className="mt-6 space-y-6 text-left text-foreground">
           <div className="flex items-start gap-4">
             <Mail className="h-6 w-6 shrink-0 text-primary" />
             <div>

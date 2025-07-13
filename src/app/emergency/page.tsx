@@ -202,7 +202,7 @@ export default function EmergencyPage() {
             <p className="text-muted-foreground mt-1">{t.emergencyServicesDesc}</p>
             <div className="space-y-3 mt-4">
               {emergencyServices.map(service => (
-                <div key={service.name} className="flex items-center justify-between p-3 bg-card rounded-xl shadow-lg">
+                <div key={service.name} className="flex items-center justify-between p-3 bg-card/80 dark:bg-card rounded-xl shadow-2xl dark:shadow-primary/20 backdrop-blur-sm">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary/10 rounded-lg text-primary">
                       <service.icon className="h-6 w-6" />
@@ -225,7 +225,7 @@ export default function EmergencyPage() {
             <p className="text-muted-foreground mt-1">{t.trustedContactsDesc}</p>
             <div className="space-y-3 mt-4">
               {trustedContacts.length > 0 ? trustedContacts.map(contact => (
-                <div key={contact.id} className="flex items-center justify-between p-3 bg-card rounded-xl shadow-lg">
+                <div key={contact.id} className="flex items-center justify-between p-3 bg-card/80 dark:bg-card rounded-xl shadow-2xl dark:shadow-primary/20 backdrop-blur-sm">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage data-ai-hint="person face" src={`https://placehold.co/60x60.png`} />
@@ -241,7 +241,7 @@ export default function EmergencyPage() {
                   </a>
                 </div>
               )) : (
-                <div className="text-center py-8 text-muted-foreground bg-card rounded-xl">
+                <div className="text-center py-8 text-muted-foreground bg-card/80 dark:bg-card rounded-xl shadow-2xl dark:shadow-primary/20 backdrop-blur-sm">
                     <p>{t.noTrustedContacts}</p>
                 </div>
               )}
