@@ -299,7 +299,7 @@ export default function DashboardLayout({
             </div>
           )}
         </header>
-        <div className="flex-1 overflow-y-auto bg-background text-foreground">
+        <div className="flex-1 overflow-y-auto bg-background dark:bg-background text-foreground light:bg-[#f9fafb]">
             {children}
         </div>
       </SidebarInset>

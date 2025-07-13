@@ -133,7 +133,7 @@ export default function SettingsPage() {
     }
 
   return (
-    <main className="relative flex min-h-full w-full flex-col items-center overflow-y-auto bg-background p-4 text-foreground">
+    <main className="relative flex min-h-full w-full flex-col items-center overflow-y-auto bg-[#f9fafb] dark:bg-background p-4 text-foreground">
       <div className="dark:absolute inset-x-0 top-0 h-1/2 w-full dark:bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/40 via-blue-950/10 to-transparent" />
       
       <div className="w-full max-w-2xl">
@@ -146,7 +146,7 @@ export default function SettingsPage() {
           </div>
           <h1 className="my-6 text-center text-3xl font-bold tracking-tight">{t.settings}</h1>
       
-          <Card className="w-full rounded-2xl border-none bg-card/80 dark:bg-black/30 p-6 shadow-2xl dark:shadow-primary/10 backdrop-blur-md">
+          <Card className="w-full rounded-2xl border-border bg-card/80 dark:bg-black/30 p-6 shadow-2xl dark:shadow-primary/10 backdrop-blur-md">
             <CardContent className="p-0">
                 <div className="flex flex-col items-center gap-4 text-center">
                     <Avatar className="h-24 w-24 border-4 border-primary/50">
