@@ -125,24 +125,6 @@ export default function CheckSafePage() {
     router.push('/fake-call');
   }
   
-  const saveRecording = () => {
-    const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
-    const reader = new FileReader();
-    reader.readAsDataURL(blob);
-    reader.onloadend = () => {
-        const base64data = reader.result as string;
-        const recordings = JSON.parse(localStorage.getItem('femigo-recordings') || '[]');
-        const newRecording = {
-            id: Date.now(),
-            date: new Date().toISOString(),
-            dataUrl: base64data,
-        };
-        localStorage.setItem('femigo-recordings', JSON.stringify([newRecording, ...recordings]));
-        toast({ title: t.toastAudioStop.title, description: t.toastAudioStop.description });
-    };
-    recordedChunksRef.current = [];
-  };
-
   const handleRecordAudio = async () => {
     if (isRecording) {
         mediaRecorderRef.current?.stop();
@@ -154,17 +136,33 @@ export default function CheckSafePage() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
         
+        recordedChunksRef.current = []; // Clear previous chunks
+
         mediaRecorderRef.current.ondataavailable = (event) => {
             if (event.data.size > 0) {
                 recordedChunksRef.current.push(event.data);
             }
         };
-
+        
         mediaRecorderRef.current.onstop = () => {
-            saveRecording();
+            const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                const base64data = reader.result as string;
+                const recordings = JSON.parse(localStorage.getItem('femigo-recordings') || '[]');
+                const newRecording = {
+                    id: Date.now(),
+                    date: new Date().toISOString(),
+                    dataUrl: base64data,
+                };
+                localStorage.setItem('femigo-recordings', JSON.stringify([newRecording, ...recordings]));
+                toast({ title: t.toastAudioStop.title, description: t.toastAudioStop.description });
+            };
             stream.getTracks().forEach(track => track.stop());
-        }
-
+            recordedChunksRef.current = [];
+        };
+        
         mediaRecorderRef.current.start();
         setIsRecording(true);
         toast({ title: t.toastAudio.title, description: t.toastAudio.description });
