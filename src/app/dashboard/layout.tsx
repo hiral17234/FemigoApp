@@ -19,7 +19,8 @@ import {
   Settings,
   LogOut,
   Loader2,
-  PanelLeftClose
+  PanelLeftClose,
+  Mic
 } from "lucide-react"
 
 import {
@@ -61,7 +62,8 @@ const translations = {
         loggedOutDesc: "You have been successfully logged out.",
         logoutFailed: "Logout Failed",
         logoutFailedDesc: "An error occurred while logging out. Please try again.",
-        headerSubtitle: "Safety. Strength. Solidarity."
+        headerSubtitle: "Safety. Strength. Solidarity.",
+        myRecordings: "My Recordings",
     },
     hi: {
         theme: "थीम बदलें",
@@ -83,7 +85,8 @@ const translations = {
         loggedOutDesc: "आप सफलतापूर्वक लॉग आउट हो गए हैं।",
         logoutFailed: "लॉगआउट विफल",
         logoutFailedDesc: "लॉग आउट करते समय एक त्रुटि हुई। कृपया फिर से प्रयास करें।",
-        headerSubtitle: "सुरक्षा। शक्ति। एकजुटता।"
+        headerSubtitle: "सुरक्षा। शक्ति। एकजुटता।",
+        myRecordings: "मेरी रिकॉर्डिंग",
     }
 }
 
@@ -207,6 +210,7 @@ export default function DashboardLayout({
     { href: "/emergency", icon: Siren, label: t.emergencyContacts },
     { href: "/location/fullscreen", icon: Map, label: t.liveMap },
     { href: "/diary", icon: BookHeart, label: t.myDiary },
+    { href: "/recordings", icon: Mic, label: t.myRecordings },
     { href: "/dashboard", icon: Flower2, label: t.myCorner },
     { href: "/ai-assistant", icon: Sparkles, label: t.aiAssistant },
   ]

@@ -21,6 +21,7 @@ const translations = {
         lightMode: "Light Mode",
         fakeCall: "Fake Call",
         recordAudio: "Record Audio",
+        stopRecording: "Stop Recording",
         activateButtonText: "ACTIVATE SAFE MODE",
         deactivateButtonText: "SAFE MODE ACTIVATED",
         footerText: "Stay calm. Your safety tools are now running silently!",
@@ -31,6 +32,10 @@ const translations = {
         toastAudio: {
             title: "Audio Recording Started",
             description: "Recording will continue in the background."
+        },
+        toastAudioStop: {
+            title: "Recording Stopped & Saved",
+            description: "Your audio has been saved to My Recordings."
         },
         toastAudioError: {
             title: "Recording Error",
@@ -45,6 +50,7 @@ const translations = {
         lightMode: "लाइट मोड",
         fakeCall: "फेक कॉल",
         recordAudio: "ऑडियो रिकॉर्ड करें",
+        stopRecording: "रिकॉर्डिंग रोकें",
         activateButtonText: "सेफ मोड सक्रिय करें",
         deactivateButtonText: "सेफ मोड सक्रिय है",
         footerText: "शांत रहें। आपके सुरक्षा उपकरण अब चुपचाप चल रहे हैं!",
@@ -55,6 +61,10 @@ const translations = {
         toastAudio: {
             title: "ऑडियो रिकॉर्डिंग शुरू",
             description: "रिकॉर्डिंग पृष्ठभूमि में जारी रहेगी।"
+        },
+        toastAudioStop: {
+            title: "रिकॉर्डिंग रुकी और सहेजी गई",
+            description: "आपकी ऑडियो मेरी रिकॉर्डिंग में सहेज दी गई है।"
         },
         toastAudioError: {
             title: "रिकॉर्डिंग त्रुटि",
@@ -88,6 +98,7 @@ export default function CheckSafePage() {
   const { toast } = useToast();
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     const storedLang = localStorage.getItem('femigo-language') || 'en';
@@ -113,25 +124,50 @@ export default function CheckSafePage() {
   const handleFakeCall = () => {
     router.push('/fake-call');
   }
+  
+  const saveRecording = () => {
+    const blob = new Blob(recordedChunksRef.current, { type: 'audio/webm' });
+    const reader = new FileReader();
+    reader.readAsDataURL(blob);
+    reader.onloadend = () => {
+        const base64data = reader.result as string;
+        const recordings = JSON.parse(localStorage.getItem('femigo-recordings') || '[]');
+        const newRecording = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            dataUrl: base64data,
+        };
+        localStorage.setItem('femigo-recordings', JSON.stringify([newRecording, ...recordings]));
+        toast({ title: t.toastAudioStop.title, description: t.toastAudioStop.description });
+    };
+    recordedChunksRef.current = [];
+  };
 
   const handleRecordAudio = async () => {
     if (isRecording) {
         mediaRecorderRef.current?.stop();
         setIsRecording(false);
-        toast({ title: "Recording Stopped" });
         return;
     }
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorderRef.current = new MediaRecorder(stream);
+        mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        
+        mediaRecorderRef.current.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                recordedChunksRef.current.push(event.data);
+            }
+        };
+
+        mediaRecorderRef.current.onstop = () => {
+            saveRecording();
+            stream.getTracks().forEach(track => track.stop());
+        }
+
         mediaRecorderRef.current.start();
         setIsRecording(true);
         toast({ title: t.toastAudio.title, description: t.toastAudio.description });
-
-        mediaRecorderRef.current.onstop = () => {
-             stream.getTracks().forEach(track => track.stop());
-        }
 
     } catch (err) {
         console.error("Audio recording error:", err);
@@ -187,7 +223,12 @@ export default function CheckSafePage() {
                         isActive={theme === 'dark'} 
                     />
                     <ToolButton icon={Phone} label={t.fakeCall} onClick={handleFakeCall} />
-                    <ToolButton icon={Mic} label={t.recordAudio} onClick={handleRecordAudio} isActive={isRecording} />
+                    <ToolButton 
+                        icon={Mic} 
+                        label={isRecording ? t.stopRecording : t.recordAudio} 
+                        onClick={handleRecordAudio} 
+                        isActive={isRecording} 
+                    />
                 </div>
                 
                 <Button 
