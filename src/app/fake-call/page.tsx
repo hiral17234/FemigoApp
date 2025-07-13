@@ -51,7 +51,7 @@ export default function FakeCallPage() {
         return (
             <div className="relative h-screen w-full bg-black">
                 <video 
-                    src="https://firebasestorage.googleapis.com/v0/b/genkit-llm-tools.appspot.com/o/shutterstock_3469138955.webm?alt=media"
+                    src="https://v1.pinimg.com/videos/mc/720p/bb/01/43/bb0143851b757a015768a0f7b462609e.mp4"
                     autoPlay
                     loop
                     muted
