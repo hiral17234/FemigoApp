@@ -190,7 +190,7 @@ function LocationPlanner() {
   const [userLocation, setUserLocation] = useState<Point | null>(null);
   const [mapCenter, setMapCenter] = useState<Point>({ lat: 20.5937, lng: 78.9629 });
   const [mapZoom, setMapZoom] = useState(4);
-  const [initialLocationSet, setInitialLocationSet] = useState(false);
+  const [isFetchingLocation, setIsFetchingLocation] = useState(false);
   const [travelMode, setTravelMode] = useState<TravelMode>('WALKING');
 
   // We need to keep the raw text input separate from the validated location object
@@ -223,6 +223,7 @@ function LocationPlanner() {
 
   const handleSetCurrentLocation = useCallback(async (location: Point) => {
     setUserLocation(location);
+    setIsFetchingLocation(true);
     try {
         const address = await reverseGeocode(location);
         setStartPoint({ address: address, location: location });
@@ -230,22 +231,37 @@ function LocationPlanner() {
     } catch {
         setStartPoint({ address: "Your Location", location: location });
         setStartInputText("Your Location");
-    }
-
-    if (!initialLocationSet) {
+    } finally {
+        setIsFetchingLocation(false);
         setMapCenter(location);
         setMapZoom(15);
-        setInitialLocationSet(true);
     }
-}, [initialLocationSet]);
+}, []);
+
+const fetchCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+        toast({ variant: 'destructive', title: 'Geolocation is not supported.' });
+        return;
+    }
+    setIsFetchingLocation(true);
+    toast({ title: 'Fetching your location...' });
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
+            handleSetCurrentLocation(newLocation);
+            toast.dismiss();
+        },
+        () => {
+            toast({ variant: 'destructive', title: 'Could not get your location.', description: "Please enable location services and try again." });
+            setIsFetchingLocation(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}, [handleSetCurrentLocation, toast]);
 
   // Effect to get user's location once, and handle incoming route data from query params
   useEffect(() => {
-    if (!navigator.geolocation) {
-      toast({ variant: 'destructive', title: 'Geolocation is not supported.' });
-      return;
-    }
-
     const destName = searchParams.get('destinationName');
     const destLat = searchParams.get('destinationLat');
     const destLng = searchParams.get('destinationLng');
@@ -259,27 +275,8 @@ function LocationPlanner() {
         });
     }
 
-    toast({ title: 'Fetching your location...' });
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
-        toast.dismiss();
-        // Only set the user's location as the start point if it's not already set
-        // or if the user explicitly wants to use it (e.g., clicks a button).
-        if (!startPoint.location) {
-            handleSetCurrentLocation(newLocation);
-        }
-        setUserLocation(newLocation);
-      },
-      () => {
-        toast({ variant: 'destructive', title: 'Could not get your location.' });
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-    );
-
-    return () => {
-        navigator.geolocation.clearWatch(watchId);
-    }
+    // Try to get location automatically once on load
+    fetchCurrentLocation();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
@@ -684,8 +681,8 @@ function LocationPlanner() {
                            }
                         }, 100)} 
                         className="pl-9 pr-10 bg-muted/20 dark:bg-card" placeholder="Start location or coordinates" />
-                       <Button type="button" variant="ghost" size="icon" onClick={() => userLocation && handleSetCurrentLocation(userLocation)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
-                         <LocateFixed className="h-4 w-4 text-primary" />
+                       <Button type="button" variant="ghost" size="icon" onClick={fetchCurrentLocation} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full" disabled={isFetchingLocation}>
+                         {isFetchingLocation ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4 text-primary" />}
                        </Button>
                   </div>
 
