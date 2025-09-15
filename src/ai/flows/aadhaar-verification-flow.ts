@@ -62,10 +62,10 @@ const aadhaarVerificationFlow = ai.defineFlow(
             if (!extractedName) {
                 return { verificationPassed: false, reason: "Could not read the name from the card." };
             }
-            if (extractedName.toLowerCase() !== 'hiral goyal') {
+            if (extractedName.toLowerCase() !== input.userName.toLowerCase()) {
                 return { 
                     verificationPassed: false, 
-                    reason: `Name does not match. App is for "Hiral Goyal", but card says "${extractedName}".`,
+                    reason: `Name does not match. Expected "${input.userName}", but card says "${extractedName}".`,
                     extractedName,
                 };
             }
