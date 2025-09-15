@@ -110,8 +110,11 @@ export default function DiaryPage() {
     let storedFolders = getFromStorage<Folder[]>('diaryFolders', []);
     let storedEntries = getFromStorage<DiaryEntry[]>('diaryEntries', []);
 
-    // Initialize with placeholder data if empty
-    if (storedFolders.length === 0 && storedEntries.length === 0) {
+    // Check if this is the very first run by checking a flag.
+    const isFirstRun = !getFromStorage('diaryInitialized', false);
+
+    // Initialize with placeholder data if it's the first run and storage is empty.
+    if (isFirstRun && storedFolders.length === 0 && storedEntries.length === 0) {
         const initialFolders: Folder[] = [
             { id: 'journal1', name: 'My Reflections', ...placeholderFolders[0] },
             { id: 'journal2', name: 'Travel Notes', ...placeholderFolders[1] }
@@ -120,6 +123,7 @@ export default function DiaryPage() {
 
         saveToStorage('diaryFolders', initialFolders);
         saveToStorage('diaryEntries', initialEntries);
+        saveToStorage('diaryInitialized', true); // Set the flag to prevent re-initialization
         storedFolders = initialFolders;
         storedEntries = initialEntries;
     }
