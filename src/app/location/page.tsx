@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Car, Bike, TramFront, Footprints, ArrowRightLeft, Share2, MapPin, Circle, Loader2, Maximize, Users, MessageSquare, Mail, Copy, LocateFixed } from 'lucide-react';
@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { geocodeAddress } from '../actions/geocode-address';
 import { type RouteSafetyOutput } from '@/ai/types';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { reverseGeocode } from '../actions/reverse-geocode';
 
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -220,39 +221,36 @@ function LocationPlanner() {
   const routesLibrary = useMapsLibrary('routes');
   const geometryLibrary = useMapsLibrary('geometry');
 
-  const handleSetCurrentLocation = () => {
+  const handleSetCurrentLocation = useCallback(async (location: Point) => {
+    setUserLocation(location);
+    try {
+        const address = await reverseGeocode(location);
+        setStartPoint({ address: address, location: location });
+        setStartInputText(address);
+    } catch {
+        setStartPoint({ address: "Your Location", location: location });
+        setStartInputText("Your Location");
+    }
+
+    if (!initialLocationSet) {
+        setMapCenter(location);
+        setMapZoom(15);
+        setInitialLocationSet(true);
+    }
+}, [initialLocationSet]);
+
+  // Effect to get user's location once, and handle incoming route data from query params
+  useEffect(() => {
     if (!navigator.geolocation) {
       toast({ variant: 'destructive', title: 'Geolocation is not supported.' });
       return;
     }
-    toast({ title: 'Fetching your location...' });
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
-        setUserLocation(newLocation);
-        setStartPoint({ address: "Your Location", location: newLocation });
-        setStartInputText("Your Location");
-        setMapCenter(newLocation);
-        setMapZoom(15);
-        toast.dismiss();
-      },
-      () => {
-        toast({ variant: 'destructive', title: 'Could not get your location.' });
-      },
-      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
-    );
-  };
-
-  // Effect to get user's location once, and handle incoming route data from query params
-  useEffect(() => {
-    if (initialLocationSet) return;
 
     const destName = searchParams.get('destinationName');
     const destLat = searchParams.get('destinationLat');
     const destLng = searchParams.get('destinationLng');
     const destAddress = searchParams.get('destinationAddress');
     
-    // This part handles pre-filling the destination from the nearby-help page
     if (destName && destLat && destLng && destAddress) {
         setDestInputText(destAddress);
         setDestinationPoint({
@@ -261,11 +259,29 @@ function LocationPlanner() {
         });
     }
 
-    handleSetCurrentLocation();
-    setInitialLocationSet(true);
+    toast({ title: 'Fetching your location...' });
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation: Point = { lat: position.coords.latitude, lng: position.coords.longitude };
+        toast.dismiss();
+        // Only set the user's location as the start point if it's not already set
+        // or if the user explicitly wants to use it (e.g., clicks a button).
+        if (!startPoint.location) {
+            handleSetCurrentLocation(newLocation);
+        }
+        setUserLocation(newLocation);
+      },
+      () => {
+        toast({ variant: 'destructive', title: 'Could not get your location.' });
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
 
+    return () => {
+        navigator.geolocation.clearWatch(watchId);
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialLocationSet, searchParams]);
+  }, []);
   
   // Effect to handle coordinate input for start point
   useEffect(() => {
@@ -668,7 +684,7 @@ function LocationPlanner() {
                            }
                         }, 100)} 
                         className="pl-9 pr-10 bg-muted/20 dark:bg-card" placeholder="Start location or coordinates" />
-                       <Button type="button" variant="ghost" size="icon" onClick={handleSetCurrentLocation} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
+                       <Button type="button" variant="ghost" size="icon" onClick={() => userLocation && handleSetCurrentLocation(userLocation)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full">
                          <LocateFixed className="h-4 w-4 text-primary" />
                        </Button>
                   </div>
@@ -835,7 +851,7 @@ export default function LocationPage() {
 
   return (
     <main className="h-screen w-full flex flex-col bg-background">
-       <APIProvider apiKey={GOOGLE_MAPS_API_KEY as string} libraries={['marker', 'places', 'routes', 'geometry']}>
+       <APIProvider apiKey={GOOGLE_MAPS_API_KEY as string} libraries={['marker', 'places', 'routes', 'geometry', 'geocoding']}>
         <LocationPlanner />
       </APIProvider>
     </main>
